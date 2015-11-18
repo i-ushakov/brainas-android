@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.logic.TilesManager;
-import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.SyncManager;
 
 
@@ -89,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 tilesManager.addTilesWithTasks();
 
                 SyncManager.getInstance().attach(tilesManager);
-                SyncManager.getInstance().globalSynchronization();
+                SyncManager.getInstance().startSynchronization();
             }
         });
     }

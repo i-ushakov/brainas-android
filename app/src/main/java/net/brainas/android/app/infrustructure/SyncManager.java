@@ -29,6 +29,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -55,6 +58,11 @@ public class SyncManager {
 
     private List<TaskSyncObserver> observers = new ArrayList<>();
 
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> syncThreadHandle = null;
+
+
     private SyncManager() {}
 
     public static synchronized SyncManager getInstance() {
@@ -64,8 +72,19 @@ public class SyncManager {
         return instance;
     }
 
-    public void globalSynchronization() {
-        new AllTasksSync().execute();
+    public void startSynchronization() {
+        final Runnable syncThread = new Runnable() {
+            public void run() {
+                synchronization();
+            }
+        };
+
+        syncThreadHandle =
+                scheduler.scheduleAtFixedRate(syncThread, 0, 5, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    public void stopSynchronization() {
+        syncThreadHandle.cancel(true);
     }
 
     public interface TaskSyncObserver {
@@ -76,10 +95,8 @@ public class SyncManager {
         observers.add(observer);
     }
 
-    public void notifyAllObservers() {
-        for (TaskSyncObserver observer : observers) {
-            observer.update();
-        }
+    private void synchronization() {
+        new AllTasksSync().execute();
     }
 
     private class AllTasksSync extends AsyncTask<File, Void, Void> {
@@ -265,5 +282,11 @@ public class SyncManager {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private void notifyAllObservers() {
+        for (TaskSyncObserver observer : observers) {
+            observer.update();
+        }
     }
 }
