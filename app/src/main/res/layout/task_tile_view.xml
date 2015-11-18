@@ -5,6 +5,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@drawable/task_tile_border"
+    android:padding="4dp"
     >
 
     <ImageView
