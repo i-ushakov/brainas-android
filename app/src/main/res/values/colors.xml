@@ -5,4 +5,7 @@
     <color name="colorAccent">#FF4081</color>
     <color name="skyBlue">#87CEEB</color>
     <color name="deepSkyBlue">#00BFFF</color>
+    <color name="turquoise">#2EFEC7</color>
+    <color name="dark_grey_custom">#515151</color>
+    <color name="north_sea">#38a398</color>
 </resources>
