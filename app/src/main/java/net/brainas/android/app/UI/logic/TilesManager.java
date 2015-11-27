@@ -29,7 +29,7 @@ public class TilesManager implements SyncManager.TaskSyncObserver {
 
     public void addTilesWithTasks() {
         TasksManager tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        List<Task> tasks = tasksManager.getTasks();
+        List<Task> tasks = tasksManager.getTasksFromDB(null);
         List<TaskTileView> tiles = this.initTiles(tasks);
         this.placeTiles(tiles);
     }
