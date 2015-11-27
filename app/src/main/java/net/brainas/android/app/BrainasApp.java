@@ -5,7 +5,11 @@ import android.content.Context;
 
 import net.brainas.android.app.activities.MainActivity;
 import net.brainas.android.app.domain.helpers.TasksManager;
+import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
@@ -16,6 +20,7 @@ public class BrainasApp extends Application {
     private MainActivity mainActivity;
     private TasksManager tasksManager;
     private TaskDbHelper taskDbHelper;
+    private List<Task> waitingList = new ArrayList<>();
 
     public void onCreate() {
         super.onCreate();
@@ -39,4 +44,20 @@ public class BrainasApp extends Application {
     }
 
     public TaskDbHelper getTaskDbHelper() {return this.taskDbHelper;}
+
+    public void addTaskToWaitingList(Task task) {
+        synchronized (waitingList) {
+            waitingList.add(task);
+        }
+    }
+
+    public void cleanWaitingList() {
+        synchronized (waitingList) {
+            waitingList.clear();
+        }
+    }
+
+    public List<Task> getWaitingList() {
+        return waitingList;
+    }
 }
