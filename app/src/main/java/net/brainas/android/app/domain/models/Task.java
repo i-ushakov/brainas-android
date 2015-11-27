@@ -1,5 +1,8 @@
 package net.brainas.android.app.domain.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by innok on 11/9/2015.
  */
@@ -9,6 +12,7 @@ public class Task {
     private String message = null;
     private String description = null;
     private boolean haveImage = false;
+    private List<Condition> conditions = new ArrayList<>();
 
     public Task(String message) {
         this.message = message;
@@ -56,6 +60,11 @@ public class Task {
     public boolean haveImage() {
         return haveImage;
     }
+
+    public void addCondition(Condition condition) {
+        conditions.add(condition);
+    }
+
 
 
 
