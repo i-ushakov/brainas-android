@@ -3,6 +3,8 @@ package net.brainas.android.app.infrustructure;
 import android.os.AsyncTask;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.domain.models.Condition;
+import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
 
 import org.w3c.dom.Document;
@@ -50,7 +52,7 @@ public class SyncManager {
     private static SyncManager instance = null;
 
     static String attachmentFileName = "fresh_task.xml";
-    static String serverUrl = "http://192.168.1.105/backend/web/connection/";
+    static String serverUrl = "http://192.168.1.104/backend/web/connection/";
     //static String serverUrl = "http://brainas.net/backend/web/connection/";
     static String lineEnd = "\r\n";
     static String boundary =  "*****";
@@ -245,11 +247,30 @@ public class SyncManager {
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
         for (int i = 0; i < taskList.getLength(); ++i) {
-            Element taskEl = (Element) taskList.item(i);
+            Element taskEl = (Element)taskList.item(i);
             int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             Task task = new Task(message);
             task.setGlobalId(globalId);
+            NodeList conditions = taskEl.getElementsByTagName("condition");
+            for (int j = 0; j < conditions.getLength(); ++j) {
+                Element conditionEl = (Element)conditions.item(j);
+                Condition condition = new Condition();
+                NodeList events = conditionEl.getElementsByTagName("event");
+                for(int k = 0; k < events.getLength(); ++k) {
+                    EventGPS event = null;
+                    Element eventEl = (Element)events.item(k);
+                    String type = eventEl.getAttribute("type");
+                    switch (type) {
+                        case "GPS" :
+                            event = new EventGPS();
+                            event.fillInParamsFromXML(eventEl);
+                            break;
+                    }
+                    condition.addEvent(event);
+                }
+                task.addCondition(condition);
+            }
             tasks.add(task);
         }
 

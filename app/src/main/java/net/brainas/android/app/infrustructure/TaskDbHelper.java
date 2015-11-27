@@ -7,10 +7,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
+import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by innok on 11/12/2015.
@@ -28,6 +30,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_MESSAGE = "message";
     public static final String COLUMN_NAME_DESCRIPTION = "description";
     public static final String COLUMN_NAME_IMAGE = "image";
+    public static final String COLUMN_NAME_STATUS = "status";
 
 
     SQLiteDatabase db;
@@ -39,7 +42,8 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     COLUMN_NAME_USER + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_MESSAGE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_DESCRIPTION + " TEXT" + COMMA_SEP +
-                    COLUMN_NAME_IMAGE + " INTEGER" + " )";
+                    COLUMN_NAME_IMAGE + " INTEGER" + COMMA_SEP +
+                    COLUMN_NAME_STATUS + " TEXT" + " )";
 
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -50,7 +54,8 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             COLUMN_NAME_USER,
             COLUMN_NAME_MESSAGE,
             COLUMN_NAME_DESCRIPTION,
-            COLUMN_NAME_IMAGE
+            COLUMN_NAME_IMAGE,
+            COLUMN_NAME_STATUS
     };
 
     public TaskDbHelper(Context context) {
@@ -72,30 +77,38 @@ public class TaskDbHelper extends SQLiteOpenHelper {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    public List<Task> getTasks(){
+    public List<Task> getTasks(Map<String,Object> params){
         List<Task> tasks = new ArrayList<Task>();
-
 
         /*
         String sortOrder =
                 FeedEntry.COLUMN_NAME_UPDATED + " DESC";
                 */
 
-        //String selection = COLUMN_NAME_TASK_ID + " LIKE ?";
-
-        //String[] selectionArgs = { String.valueOf(1) };
+        String selection = "1";
+        List<String> selectionArgsList = new ArrayList<String>();
+        if (params != null && params.containsKey("GROUP_OF_TASKS")) {
+            TasksManager.GROUP_OF_TASKS group = (TasksManager.GROUP_OF_TASKS)params.get("GROUP_OF_TASKS");
+            switch (group) {
+                case ACTIVE :
+                    selection = selection + " and " + COLUMN_NAME_STATUS + " LIKE ?";
+                    selectionArgsList.add(group.toString());
+                    break;
+            }
+        }
+        String[] selectionArgs = selectionArgsList.toArray(new String[selectionArgsList.size()]);
 
         Cursor cursor = db.query(
-                TABLE_NAME,  // The table to query
-                projection,                               // The columns to return
-                null, //selection,                                // The columns for the WHERE clause
-                null, //selectionArgs,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null //sortOrder                                 // The sort order
+                TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,                  // The values for the WHERE clause
+                null,                           // don't group the rows
+                null,                           // don't filter by row groups
+                null                            // The sort order
         );
 
-        Task task = null;
+        Task task;
         if (cursor.moveToFirst()) {
             do {
                 int id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASK_ID) ));

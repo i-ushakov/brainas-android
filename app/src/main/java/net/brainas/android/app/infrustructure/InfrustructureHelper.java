@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.domain.models.Task;
 
 import java.io.File;
@@ -16,10 +17,16 @@ import java.util.List;
 public class InfrustructureHelper {
     static private String PATH_TO_TASK_IMAGES_FOLDER = "/app_images/task_images/";
 
-    static public Bitmap getTaskImage(Task task) {
+    static public Bitmap getTaskImage(Task task) throws BrainasAppException {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
         File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getId() + "/");
+        if(parentDir == null) {
+            throw new BrainasAppException("Wrong directory with image for task with id = " + task.getId());
+        }
         List<File> fileList = InfrustructureHelper.getListOfFiles(parentDir);
+        if(fileList == null) {
+            throw new BrainasAppException("No image for task with id = " + task.getId());
+        }
         if (fileList.size() > 0) {
             File imageFile = fileList.get(0);
             Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
@@ -31,6 +38,9 @@ public class InfrustructureHelper {
     static public List<File> getListOfFiles(File parentDir) {
         ArrayList<File> inFiles = new ArrayList<File>();
         File[] files = parentDir.listFiles();
+        if (files == null) {
+            return null;
+        }
         for (File file : files) {
             if (file.isDirectory()) {
                 inFiles.addAll(getListOfFiles(file));
