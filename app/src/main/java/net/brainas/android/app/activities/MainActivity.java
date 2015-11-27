@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
@@ -20,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
 
     private BrainasApp app;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
+    private ViewGroup massagesPanel;
+    private View menuPanel;
+    private ImageView slideButton;
+    private ImageView addTaskButton;
 
     public enum ActivePanel {
         MESSAGES, GENERAL
@@ -33,7 +39,13 @@ public class MainActivity extends AppCompatActivity {
         app = (BrainasApp)this.getApplication();
         app.setMainActivity(this);
 
+        massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
+        menuPanel = findViewById(R.id.menu_panel);
+        slideButton = (ImageView)this.findViewById(R.id.slide_button);
+        addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
+
         setOnTouchListenerForSlideButton();
+        setOnClickListenerForTasksMenuItem();
         initLayout();
     }
 
@@ -60,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setOnTouchListenerForSlideButton() {
-        ImageView slideButton = (ImageView)this.findViewById(R.id.slide_button);
         slideButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -75,20 +86,37 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setOnClickListenerForTasksMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_tasks);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent tasksIntent = new Intent(MainActivity.this, TasksActivity.class);
+                startActivity(tasksIntent);
+            }
+        });
+    }
+
     private void initLayout(){
-        final View view = findViewById(R.id.general_panel);
+        final View view = findViewById(R.id.menu_panel);
         view.post(new Runnable() {
             @Override
             public void run() {
                 MainActivity m = (MainActivity) view.getContext();
-                m.slideDown();
+                m.recalculateSlideButtonHeight();
+            }
+        });
 
-                ViewGroup massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
                 TilesManager tilesManager = new TilesManager(massagesPanel);
                 tilesManager.addTilesWithTasks();
 
                 SyncManager.getInstance().attach(tilesManager);
                 SyncManager.getInstance().startSynchronization();
+
+                MainActivity m = (MainActivity) view.getContext();
+                m.slideDown();
             }
         });
     }
@@ -116,18 +144,22 @@ public class MainActivity extends AppCompatActivity {
         return this.activePanel;
     }
 
-    private void slideDown(){
-        View generalPanel = findViewById(R.id.general_panel);
-        ImageView slideButton = (ImageView)this.findViewById(R.id.slide_button);
-        int distanceY = generalPanel.getHeight() - slideButton.getHeight();
-        generalPanel.animate().translationY(distanceY);
+    private void slideDown() {
+        int distanceY = menuPanel.getHeight() - slideButton.getLayoutParams().height - addTaskButton.getHeight();
+        menuPanel.animate().translationY(distanceY);
         slideButton.setImageResource(R.drawable.slide_up_icon);
     }
 
-    private void slideUp(){
-        View generalPanel = findViewById(R.id.general_panel);
+    private void slideUp() {
+        View generalPanel = findViewById(R.id.menu_panel);
         generalPanel.animate().translationY(0);
         ImageView slideButton = (ImageView)this.findViewById(R.id.slide_button);
         slideButton.setImageResource(R.drawable.slide_down_icon);
+    }
+
+    private void recalculateSlideButtonHeight() {
+        ViewGroup.LayoutParams layoutParams = slideButton.getLayoutParams();
+        layoutParams.height = massagesPanel.getHeight() - (massagesPanel.getWidth()/15) * 20 - addTaskButton.getHeight();
+        slideButton.setLayoutParams(layoutParams);
     }
 }
