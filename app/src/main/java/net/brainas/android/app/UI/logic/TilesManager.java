@@ -20,35 +20,37 @@ public class TilesManager implements SyncManager.TaskSyncObserver {
     private ViewGroup tilesPanel;
     private List<TileCell> tilesGrid = new ArrayList<>();
     private int panelWidth;
+    private TasksManager tasksManager;
 
     public TilesManager(ViewGroup tilesPanel) {
         this.tilesPanel = tilesPanel;
         this.panelWidth = tilesPanel.getWidth();
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
+        tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
     }
 
     public void addTilesWithTasks() {
-        TasksManager tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        List<Task> tasks = tasksManager.getTasksFromDB(null);
-        List<TaskTileView> tiles = this.initTiles(tasks);
+        List<Task> activeTasks = tasksManager.getActiveList();
+        List<TaskTileView> tiles = this.initTiles(activeTasks);
         this.placeTiles(tiles);
     }
 
     private List<TaskTileView> initTiles(List<Task> tasks) {
         List<TaskTileView> tiles = new ArrayList<TaskTileView>();
         for (int i = 0; i < tasks.size(); i++) {
-            tiles.add(new TaskTileView(tilesPanel.getContext(), tasks.get(i)));
+            //tiles.add(new TaskTileView(tilesPanel.getContext(), null, 0, tasks.get(i)));
         }
         return tiles;
     }
 
     private void placeTiles(List<TaskTileView> tiles) {
+        this.tilesPanel.removeAllViews();
         for (int i = 0; i < tiles.size() && i < 5; i++) {
             TaskTileView tile = tiles.get(i);
             TileCell tc = tilesGrid.get(i);
             int cellSize = tc.getSize();
             Point position = tc.getPosition();
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(cellSize,cellSize);
+            ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(cellSize,cellSize);
             params.setMargins(position.y, position.x, 0, 0);
             tile.setLayoutParams(params);
             this.tilesPanel.addView(tile);
@@ -71,7 +73,7 @@ public class TilesManager implements SyncManager.TaskSyncObserver {
     }
 
     @Override
-    public void update() {
+    public void updateAfterSync() {
         addTilesWithTasks();
     }
 }

@@ -1,5 +1,9 @@
 package net.brainas.android.app.domain.models;
 
+import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.infrustructure.TaskDbHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +16,15 @@ public class Task {
     private String message = null;
     private String description = null;
     private boolean haveImage = false;
-    private List<Condition> conditions = new ArrayList<>();
+    private STATUSES status = null;
+    private ArrayList<Condition> conditions = new ArrayList<>();
+
+    public enum STATUSES {
+        ACTIVE,
+        WAITING,
+        DONE,
+        DISABLED
+    }
 
     public Task(String message) {
         this.message = message;
@@ -61,12 +73,79 @@ public class Task {
         return haveImage;
     }
 
+    public void setStatus(String status){
+        if (status == null) {
+            setStatus(STATUSES.DISABLED);
+            return;
+        }
+        switch (status) {
+            case "ACTIVE" :
+                setStatus(STATUSES.ACTIVE);
+                break;
+            case "WAITING" :
+                setStatus(STATUSES.WAITING);
+                break;
+
+            default:
+                setStatus(STATUSES.DISABLED);
+                break;
+        }
+    }
+
+    public void setStatus(STATUSES status){
+        this.status = status;
+    }
+
+    public STATUSES getStatus() {
+        return status;
+    }
+
     public void addCondition(Condition condition) {
         conditions.add(condition);
     }
 
+    public void addConditions(ArrayList<Condition> conditions) {
+        this.conditions.addAll(conditions);
+    }
+
+    public ArrayList<Condition> getConditions() {
+        return conditions;
+    }
+
+    public boolean isConditionsSatisfied(ActivationManager activationManager) {
+        for(Condition condition : conditions) {
+            ArrayList<Event> events = condition.getEvents();
+            boolean haveToBeActivated = false;
+            for(Event evnet : events) {
+                if (evnet.isTriggered(activationManager)) {
+                    haveToBeActivated = true;
+                } else {
+                    haveToBeActivated = false;
+                    break;
+                }
+            }
+            if (haveToBeActivated) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void changeStatus(STATUSES newStatus) {
+        if (this.status == STATUSES.WAITING && newStatus == STATUSES.ACTIVE) {
+            notifyAboutTask();
+        }
+        setStatus(newStatus);
+        save();
+    }
+
+    public void save(){
+        TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
+        taskDbHelper.addOrUpdateTask(this);
+    }
 
 
-
-
+    private void notifyAboutTask() {
+        // TODO notivication of User  (NotificationManager.class /TaskManager.class)
+    }
 }

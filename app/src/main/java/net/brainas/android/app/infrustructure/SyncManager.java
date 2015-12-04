@@ -1,6 +1,7 @@
 package net.brainas.android.app.infrustructure;
 
 import android.os.AsyncTask;
+import android.os.Build;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.Condition;
@@ -31,9 +32,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import android.os.Handler;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,8 +55,8 @@ public class SyncManager {
     private static SyncManager instance = null;
 
     static String attachmentFileName = "fresh_task.xml";
-    static String serverUrl = "http://192.168.1.104/backend/web/connection/";
-    //static String serverUrl = "http://brainas.net/backend/web/connection/";
+    //static String serverUrl = "http://192.168.1.103/backend/web/connection/";
+    static String serverUrl = "http://brainas.net/backend/web/connection/";
     static String lineEnd = "\r\n";
     static String boundary =  "*****";
     static String xmlOutDirPath = "/app_sync/xml/out";
@@ -63,6 +66,8 @@ public class SyncManager {
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> syncThreadHandle = null;
+    private boolean debug_one_time = false;
+    private AllTasksSync asyncTask;
 
 
     private SyncManager() {}
@@ -75,14 +80,23 @@ public class SyncManager {
     }
 
     public void startSynchronization() {
-        final Runnable syncThread = new Runnable() {
+        final Handler handler = new Handler();
+        TimerTask syncTask = new TimerTask() {
             public void run() {
-                synchronization();
+                handler.post(new Runnable() {
+                    public void run() {
+                        if (debug_one_time) {
+                            return;
+                        }
+                        debug_one_time = true;
+                        synchronization();
+                    }
+                });
             }
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncThread, 0, 5, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 12, 5, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -90,7 +104,7 @@ public class SyncManager {
     }
 
     public interface TaskSyncObserver {
-        void update();
+        void updateAfterSync();
     }
 
     public void attach(TaskSyncObserver observer){
@@ -98,7 +112,12 @@ public class SyncManager {
     }
 
     private void synchronization() {
-        new AllTasksSync().execute();
+        asyncTask = new AllTasksSync();
+        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
+            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        else {
+            asyncTask.execute();
+        }
     }
 
     private class AllTasksSync extends AsyncTask<File, Void, Void> {
@@ -252,18 +271,25 @@ public class SyncManager {
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             Task task = new Task(message);
             task.setGlobalId(globalId);
+            Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
+            if (statusEl != null) {
+                task.setStatus(statusEl.getTextContent());
+            }
             NodeList conditions = taskEl.getElementsByTagName("condition");
             for (int j = 0; j < conditions.getLength(); ++j) {
                 Element conditionEl = (Element)conditions.item(j);
-                Condition condition = new Condition();
+                Integer conditionId = Integer.parseInt(conditionEl.getAttribute("id"));
+                Integer taskId = Integer.parseInt(conditionEl.getAttribute("task-id"));
+                Condition condition = new Condition(null,conditionId, taskId);
                 NodeList events = conditionEl.getElementsByTagName("event");
                 for(int k = 0; k < events.getLength(); ++k) {
                     EventGPS event = null;
                     Element eventEl = (Element)events.item(k);
                     String type = eventEl.getAttribute("type");
+                    int eventId = Integer.parseInt(eventEl.getAttribute("id"));
                     switch (type) {
                         case "GPS" :
-                            event = new EventGPS();
+                            event = new EventGPS(null, eventId, conditionId);
                             event.fillInParamsFromXML(eventEl);
                             break;
                     }
@@ -297,17 +323,12 @@ public class SyncManager {
 
         result.put("added", addedTasksLocalIds);
         result.put("updated", updatedTasksGlobalIds);
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         return result;
     }
 
     private void notifyAllObservers() {
         for (TaskSyncObserver observer : observers) {
-            observer.update();
+            observer.updateAfterSync();
         }
     }
 }

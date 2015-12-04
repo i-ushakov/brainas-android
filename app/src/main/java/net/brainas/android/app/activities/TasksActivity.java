@@ -17,13 +17,14 @@ import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.SyncManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TasksActivity extends AppCompatActivity {
+public class TasksActivity extends AppCompatActivity implements SyncManager.TaskSyncObserver {
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private GridView tasksGrid;
@@ -50,8 +51,14 @@ public class TasksActivity extends AppCompatActivity {
         setTabLayoutListeners(tabLayout);
 
         tasksGrid = (GridView) findViewById(R.id.tasks_grid);
-        tasksGrid.setAdapter(new TaskTileAdapter(this, TasksManager.GROUP_OF_TASKS.ALL));
+        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
 
+        SyncManager.getInstance().attach(this);
+    }
+
+    private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group) {
+        tasksGrid.setAdapter(new TaskTileAdapter(this, group));
+        tasksGrid.setOnItemClickListener(null);
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
@@ -61,8 +68,26 @@ public class TasksActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void updateAfterSync() {
+        TasksManager.GROUP_OF_TASKS group;
+        switch (tabLayout.getSelectedTabPosition()) {
+            case 0 :
+                group = TasksManager.GROUP_OF_TASKS.ALL;
+                break;
+            case 1 :
+                group = TasksManager.GROUP_OF_TASKS.ACTIVE;
+                break;
+            default:
+                group = TasksManager.GROUP_OF_TASKS.ALL;
+                TabLayout.Tab tab = tabLayout.getTabAt(0);
+                tab.select();
+                break;
+        }
+        updateTasksGrid(group);
+    }
 
-    public class TaskTileAdapter extends BaseAdapter {
+    private class TaskTileAdapter extends BaseAdapter {
         private Context context;
         private List<Task> tasks = new ArrayList<Task>();
 
@@ -90,13 +115,14 @@ public class TasksActivity extends AppCompatActivity {
             TaskTileView taskTileView;
             if (convertView == null) {
                 Task task = tasks.get(position);
-                taskTileView = new TaskTileView(context, task);
-                taskTileView.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
-                taskTileView.setPadding(8, 8, 8, 8);
+                //taskTileView = new TaskTileView(context, null, 0, task);
+                //taskTileView.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
+                //taskTileView.setPadding(8, 8, 8, 8);
             } else {
                 taskTileView = (TaskTileView) convertView;
             }
-            return taskTileView;
+            //return taskTileView;
+            return null;
         }
     }
 
@@ -106,10 +132,10 @@ public class TasksActivity extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 switch (tab.getPosition()) {
                     case 0:
-                        tasksGrid.setAdapter(new TaskTileAdapter(TasksActivity.this, TasksManager.GROUP_OF_TASKS.ALL));
+                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
                         break;
                     case 1:
-                        tasksGrid.setAdapter(new TaskTileAdapter(TasksActivity.this, TasksManager.GROUP_OF_TASKS.ACTIVE));
+                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ACTIVE);
                         break;
                 }
             }
