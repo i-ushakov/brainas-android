@@ -2,14 +2,20 @@ package net.brainas.android.app;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Handler;
 
+import net.brainas.android.app.UI.logic.TilesManager;
 import net.brainas.android.app.activities.MainActivity;
+import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
@@ -18,15 +24,22 @@ public class BrainasApp extends Application {
     private static Context context;
 
     private MainActivity mainActivity;
-    private TasksManager tasksManager;
+    public TasksManager tasksManager;
+    private TilesManager tilesManager;
+    private NotificationManager notificationManager;
     private TaskDbHelper taskDbHelper;
-    private List<Task> waitingList = new ArrayList<>();
+    private ActivationManager activationManager;
 
     public void onCreate() {
         super.onCreate();
         BrainasApp.context = getApplicationContext();
-        this.tasksManager = new TasksManager();
-        this.taskDbHelper = new TaskDbHelper(context);
+        tasksManager = new TasksManager();
+        notificationManager = new NotificationManager();
+        taskDbHelper = new TaskDbHelper(context);
+        tasksManager.fillInWLFromDB();
+        tasksManager.fiilInALFromDB();
+        activationManager = new ActivationManager(tasksManager);
+        activationManager.initCheckConditionsInWL();
     }
 
     public static Context getAppContext() {
@@ -37,27 +50,26 @@ public class BrainasApp extends Application {
         this.mainActivity = mainActivity;
     }
 
-    public MainActivity getMainActivity() {return this.mainActivity;}
+    public MainActivity getMainActivity() {
+        return this.mainActivity;
+    }
 
-    public TasksManager getTasksManager(){
+    public TasksManager getTasksManager() {
         return this.tasksManager;
     }
 
-    public TaskDbHelper getTaskDbHelper() {return this.taskDbHelper;}
-
-    public void addTaskToWaitingList(Task task) {
-        synchronized (waitingList) {
-            waitingList.add(task);
-        }
+    public void setTilesManager(TilesManager tilesManager) {
+        this.tilesManager = tilesManager;
     }
 
-    public void cleanWaitingList() {
-        synchronized (waitingList) {
-            waitingList.clear();
-        }
+    public TilesManager getTilesManager() {
+        return tilesManager;
     }
 
-    public List<Task> getWaitingList() {
-        return waitingList;
+    public NotificationManager getNotificationManager(){ return this.notificationManager; }
+
+    public TaskDbHelper getTaskDbHelper() {
+        return this.taskDbHelper;
     }
+
 }
