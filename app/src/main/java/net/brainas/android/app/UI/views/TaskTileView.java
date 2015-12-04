@@ -16,14 +16,40 @@ import net.brainas.android.app.R;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
+public class TaskTileView extends RelativeLayout {
+    public TaskTileView(Context context) {
+        super(context);
+        init();
+    }
+
+    public TaskTileView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public TaskTileView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init() {
+        inflate(getContext(), R.layout.view_task_tile, this);
+        //this.header = (TextView)findViewById(R.id.header);
+        //this.description = (TextView)findViewById(R.id.description);
+        //this.thumbnail = (ImageView)findViewById(R.id.thumbnail);
+        //this.icon = (ImageView)findViewById(R.id.icon);
+    }
+}
+
 /**
  * Created by Kit Ushakov on 11/8/2015.
  */
-public class TaskTileView extends RelativeLayout {
+/*public class TaskTileView extends View {
     private Task task;
 
     public TaskTileView(Context context) {
-        this(context, null);
+        super(context, null);
+       // this(context, null);
     }
 
     public TaskTileView(Context context, AttributeSet attrs) {
@@ -31,11 +57,13 @@ public class TaskTileView extends RelativeLayout {
     }
 
     public TaskTileView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs);
+        super(context, attrs, defStyle);
 
-        LayoutInflater inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.view_task_tile, this, true);
+        //LayoutInflater inflater = LayoutInflater.from(context);
+
+        //LayoutInflater inflater = (LayoutInflater) context
+                //.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        //inflater.inflate(R.layout.view_task_tile, this, true);
         //LayoutInflater inflater = (LayoutInflater) context
                 //.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         //inflater.inflate(R.layout.view_task_tile, this, true);
@@ -59,7 +87,7 @@ public class TaskTileView extends RelativeLayout {
                 }
             //}
        // });*/
-    }
+    /*}
 
     @Override
     protected void onFinishInflate() {
@@ -77,14 +105,14 @@ public class TaskTileView extends RelativeLayout {
         } else {
             setMessageText();
         }*/
-    }
+   /* }
 
     private int getTextSize() {
         int textSize = (int)((double) this.getWidth()/20); // 35 - coun of symbol/4
         return textSize;
     }
 
-    private void setTaskImage(TaskTileView taskTile) throws BrainasAppException {
+    /*private void setTaskImage(TaskTileView taskTile) throws BrainasAppException {
         ImageView taskImageView = (ImageView)taskTile.findViewById(R.id.taskImage);
         TextView taskMessageView = (TextView)taskTile.findViewById(R.id.taskMessage);
         int imageSize = (int)((double)taskTile.getWidth()/1.5);
@@ -95,9 +123,9 @@ public class TaskTileView extends RelativeLayout {
         taskImageView.setLayoutParams(layoutParams);
         taskImageView.setImageBitmap(InfrustructureHelper.getTaskImage(taskTile.task));
         ((ViewGroup)taskMessageView.getParent()).removeView(taskMessageView);
-    }
+    }*/
 
-    private void setMessageText() {
+    /*private void setMessageText() {
         ImageView taskImageView = (ImageView)this.findViewById(R.id.taskImage);
         TextView taskMessageView = (TextView)this.findViewById(R.id.taskMessage);
         ((LinearLayout) (taskMessageView.getParent())).setGravity(Gravity.CENTER);
@@ -109,10 +137,10 @@ public class TaskTileView extends RelativeLayout {
         vg.removeView(taskMessageView);
         vg.addView(taskMessageView);
         vg.invalidate();
-    }
+    }*/
 
 
-    @Override
+  /*  @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, widthMeasureSpec);
     }
@@ -120,5 +148,5 @@ public class TaskTileView extends RelativeLayout {
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
 
-    }
-}
+    }*/
+/*}*/

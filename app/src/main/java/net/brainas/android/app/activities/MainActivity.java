@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -21,7 +22,7 @@ import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.SyncManager;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private BrainasApp app;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
@@ -39,27 +40,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        app = (BrainasApp)this.getApplication();
-        app.setMainActivity(this);
+        //app = (BrainasApp)this.getApplication();
+        //app.setMainActivity(this);
 
-        massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
-        Task task = new Task("Meesage");
-        TaskTileView taskTIle = new TaskTileView(this);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
-        taskTIle.setLayoutParams(params);
-        massagesPanel.addView(taskTIle);
-        massagesPanel.invalidate();
-
-        TextView t =  new TextView(this);
-        t.setText("111");
+        ViewGroup massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
+        TaskTileView t = new TaskTileView(this);
         massagesPanel.addView(t);
-        menuPanel = findViewById(R.id.menu_panel);
-        slideButton = (ImageView)this.findViewById(R.id.slide_button);
-        addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
 
-        setOnTouchListenerForSlideButton();
-        setOnClickListenerForTasksMenuItem();
-        initLayout();
+        //Task task = new Task("Meesage");
+        //TaskTileView taskTIle = new TaskTileView(this);
+        //RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
+        //params.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+        //params.setMargins(100, 100, 100, 100);
+        //taskTIle.setLayoutParams(params);
+        //massagesPanel.addView(taskTIle);
+        //massagesPanel.invalidate();
+
+       // TextView t2 =  new TextView(this);
+       // t2.setText("333");
+        //taskTIle.addView(t2);
+
+
+        //menuPanel = findViewById(R.id.menu_panel);
+        //slideButton = (ImageView)this.findViewById(R.id.slide_button);
+        //addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
+
+        //setOnTouchListenerForSlideButton();
+        //setOnClickListenerForTasksMenuItem();
+        //initLayout();
     }
 
     @Override
