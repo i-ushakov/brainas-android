@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 ReminderScreenManager reminderScreenManager = new ReminderScreenManager(massagesPanel);
                 app.setReminderScreenManager(reminderScreenManager);
-                reminderScreenManager.addTilesWithActiveTasks();
+                reminderScreenManager.refreshTilesWithActiveTasks();
 
 
                 SyncManager.getInstance().attach(reminderScreenManager);
