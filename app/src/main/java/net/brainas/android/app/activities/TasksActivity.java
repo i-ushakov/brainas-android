@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
@@ -115,14 +116,13 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
             TaskTileView taskTileView;
             if (convertView == null) {
                 Task task = tasks.get(position);
-                //taskTileView = new TaskTileView(context, null, 0, task);
-                //taskTileView.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
-                //taskTileView.setPadding(8, 8, 8, 8);
+                taskTileView = new TaskTileView(context, task);
+                taskTileView.setLayoutParams(new RelativeLayout.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
+                taskTileView.setPadding(8, 8, 8, 8);
             } else {
                 taskTileView = (TaskTileView) convertView;
             }
-            //return taskTileView;
-            return null;
+            return taskTileView;
         }
     }
 
