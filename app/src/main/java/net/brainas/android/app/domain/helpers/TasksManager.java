@@ -70,7 +70,7 @@ public class TasksManager {
         //Task task1 = new Task(1,1,"test1");
         //task1.setImage(true);
         //tasks.add(task1);
-        tasks.add(new Task(2, 2, "test2"));
+        //tasks.add(new Task(2, 2, "test2"));
         //tasks.add(new Task(3, 3, "test3 big big big so big test3 big big big so big1 1234 1234")); //60
         //tasks.add(new Task(4, 4, "test4"));
 
