@@ -19,7 +19,7 @@ import java.util.List;
 public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
     private int panelWidth;
     private ViewGroup tilesPanel;
-    private List<TileCell> tilesGrid = new ArrayList<>();
+    private List<ReminderTileCell> tilesGrid = new ArrayList<>();
     private TasksManager tasksManager;
 
     public ReminderScreenManager(ViewGroup tilesPanel) {
@@ -29,10 +29,15 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
     }
 
-    public void addTilesWithTasks() {
+    public void refreshTilesWithActiveTasks() {
         List<Task> activeTasks = tasksManager.getActiveList();
         List<TaskTileView> tiles = this.initTiles(activeTasks);
         this.placeTiles(tiles);
+    }
+
+    @Override
+    public void updateAfterSync() {
+        refreshTilesWithActiveTasks();
     }
 
     private List<TaskTileView> initTiles(List<Task> tasks) {
@@ -47,7 +52,7 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
         this.tilesPanel.removeAllViews();
         for (int i = 0; i < tiles.size() && i < 5; i++) {
             TaskTileView tile = tiles.get(i);
-            TileCell tc = tilesGrid.get(i);
+            ReminderTileCell tc = tilesGrid.get(i);
             int cellSize = tc.getSize();
             Point position = tc.getPosition();
             RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(cellSize, cellSize);
@@ -57,23 +62,18 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
         }
     }
 
-    private List<TileCell> calculateTilesGrid(int panelWidth) {
+    private List<ReminderTileCell> calculateTilesGrid(int panelWidth) {
         int gridStep = panelWidth/15;
 
         // 10x10
-        this.tilesGrid.add(new TileCell(0,0,10*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(0,0,10*gridStep));
 
         // 5x5
-        this.tilesGrid.add(new TileCell(10*gridStep,0,5*gridStep));
-        this.tilesGrid.add(new TileCell(10*gridStep,5*gridStep,5*gridStep));
-        this.tilesGrid.add(new TileCell(15*gridStep,0,5*gridStep));
-        this.tilesGrid.add(new TileCell(15*gridStep,5*gridStep,5*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(10*gridStep,0,5*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(10*gridStep,5*gridStep,5*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(15*gridStep,0,5*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(15 * gridStep, 5 * gridStep, 5 * gridStep));
 
         return  this.tilesGrid;
-    }
-
-    @Override
-    public void updateAfterSync() {
-        addTilesWithTasks();
     }
 }
