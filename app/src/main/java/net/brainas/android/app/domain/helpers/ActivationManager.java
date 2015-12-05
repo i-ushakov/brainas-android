@@ -4,7 +4,7 @@ import android.location.Location;
 import android.os.Handler;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.UI.logic.TilesManager;
+import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.GPSProvider;
 
@@ -18,6 +18,8 @@ import java.util.TimerTask;
  * Created by innok on 12/1/2015.
  */
 public class ActivationManager {
+    static final int CHECK_CONDITIONS_START_TIME = 20000;
+    static final int CHECK_CONDITIONS_INTERVAL = 20000;
     private Timer timer;
     private TimerTask task;
     private final Handler handler = new Handler();
@@ -42,7 +44,7 @@ public class ActivationManager {
                 });
             }
         };
-        timer.schedule(task, 20000, 20000);
+        timer.schedule(task, CHECK_CONDITIONS_START_TIME, CHECK_CONDITIONS_INTERVAL);
     }
 
     public Location getGPSLocation() {
@@ -79,16 +81,12 @@ public class ActivationManager {
     private void addTaskToActiveList(List<Task> tasks) {
         BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
         NotificationManager notificationManager = app.getNotificationManager();
-        TilesManager tilesManager = app.getTilesManager();
-        //ArrayList<Task> waitingList = app.getWaitingList();
-        //ArrayList<Task> activeList = app.getActiveList();
+        ReminderScreenManager reminderScreenManager = app.getReminderScreenManager();
         synchronized (lock) {
             for (int i = 0; i < tasks.size(); i++) {
                 Task task = tasks.get(i);
-                //waitingList.remove(task);
-                //activeList.add(task);
                 notificationManager.notifyAboutTask(task);
-                tilesManager.updateAfterSync();
+                reminderScreenManager.refreshTilesWithActiveTasks();
             }
         }
     }
