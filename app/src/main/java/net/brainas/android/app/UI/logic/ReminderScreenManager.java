@@ -16,13 +16,13 @@ import java.util.List;
 /**
  * Created by Kit Ushakov on 11/8/2015.
  */
-public class TilesManager implements SyncManager.TaskSyncObserver {
+public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
+    private int panelWidth;
     private ViewGroup tilesPanel;
     private List<TileCell> tilesGrid = new ArrayList<>();
-    private int panelWidth;
     private TasksManager tasksManager;
 
-    public TilesManager(ViewGroup tilesPanel) {
+    public ReminderScreenManager(ViewGroup tilesPanel) {
         this.tilesPanel = tilesPanel;
         this.panelWidth = tilesPanel.getWidth();
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
@@ -38,7 +38,7 @@ public class TilesManager implements SyncManager.TaskSyncObserver {
     private List<TaskTileView> initTiles(List<Task> tasks) {
         List<TaskTileView> tiles = new ArrayList<TaskTileView>();
         for (int i = 0; i < tasks.size(); i++) {
-            //tiles.add(new TaskTileView(tilesPanel.getContext(), null, 0, tasks.get(i)));
+            tiles.add(new TaskTileView(tilesPanel.getContext(), tasks.get(i)));
         }
         return tiles;
     }
@@ -50,7 +50,7 @@ public class TilesManager implements SyncManager.TaskSyncObserver {
             TileCell tc = tilesGrid.get(i);
             int cellSize = tc.getSize();
             Point position = tc.getPosition();
-            ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(cellSize,cellSize);
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(cellSize, cellSize);
             params.setMargins(position.y, position.x, 0, 0);
             tile.setLayoutParams(params);
             this.tilesPanel.addView(tile);
