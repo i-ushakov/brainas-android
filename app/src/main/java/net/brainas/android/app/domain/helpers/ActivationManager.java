@@ -30,6 +30,7 @@ public class ActivationManager {
     public ActivationManager(TasksManager tasksManager) {
         this.tasksManager = tasksManager;
         gpsProvider = new GPSProvider();
+        initCheckConditionsInWL();
     }
 
     public void initCheckConditionsInWL() {

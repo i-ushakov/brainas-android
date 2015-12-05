@@ -25,7 +25,10 @@ public class TasksManager {
     private ArrayList<Task> waitingList = new ArrayList<>();
     private ArrayList<Task> activeList = new ArrayList<>();
 
-    public TasksManager() {}
+    public TasksManager() {
+        fillInWLFromDB();
+        fiilInALFromDB();
+    }
 
     public void addTasksToWaitingList(List<Task> tasks) {
         synchronized (waitingList) {
