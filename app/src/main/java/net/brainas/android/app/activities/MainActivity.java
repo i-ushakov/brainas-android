@@ -1,6 +1,5 @@
 package net.brainas.android.app.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -11,18 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.UI.logic.TilesManager;
-import net.brainas.android.app.UI.views.TaskTileView;
-import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.infrustructure.SyncManager;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private BrainasApp app;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
@@ -40,34 +35,17 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //app = (BrainasApp)this.getApplication();
-        //app.setMainActivity(this);
+        app = (BrainasApp)this.getApplication();
+        app.setMainActivity(this);
 
-        ViewGroup massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
-        TaskTileView t = new TaskTileView(this);
-        massagesPanel.addView(t);
+        massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
+        menuPanel = findViewById(R.id.menu_panel);
+        slideButton = (ImageView)this.findViewById(R.id.slide_button);
+        addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
 
-        //Task task = new Task("Meesage");
-        //TaskTileView taskTIle = new TaskTileView(this);
-        //RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
-        //params.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-        //params.setMargins(100, 100, 100, 100);
-        //taskTIle.setLayoutParams(params);
-        //massagesPanel.addView(taskTIle);
-        //massagesPanel.invalidate();
-
-       // TextView t2 =  new TextView(this);
-       // t2.setText("333");
-        //taskTIle.addView(t2);
-
-
-        //menuPanel = findViewById(R.id.menu_panel);
-        //slideButton = (ImageView)this.findViewById(R.id.slide_button);
-        //addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
-
-        //setOnTouchListenerForSlideButton();
-        //setOnClickListenerForTasksMenuItem();
-        //initLayout();
+        setOnTouchListenerForSlideButton();
+        setOnClickListenerForTasksMenuItem();
+        initLayout();
     }
 
     @Override
@@ -131,17 +109,13 @@ public class MainActivity extends Activity {
         messagesPanel.post(new Runnable() {
             @Override
             public void run() {
-                //TilesManager tilesManager = new TilesManager(massagesPanel);
-                //Task task = new Task("Meesage");
-                //TaskTileView taskTIle = new TaskTileView(massagesPanel.getContext(), null, 0,task);
-                //massagesPanel.addView(taskTIle);
+                ReminderScreenManager reminderScreenManager = new ReminderScreenManager(massagesPanel);
+                app.setReminderScreenManager(reminderScreenManager);
+                reminderScreenManager.addTilesWithActiveTasks();
 
-                //massagesPanel.postInvalidate();
-                //app.setTilesManager(tilesManager);
-                //tilesManager.addTilesWithTasks();
 
-                //SyncManager.getInstance().attach(tilesManager);
-                //SyncManager.getInstance().startSynchronization();
+                SyncManager.getInstance().attach(reminderScreenManager);
+                SyncManager.getInstance().startSynchronization();
 
                 findViewById(R.id.messages_panel).postInvalidate();
                 MainActivity m = (MainActivity) view.getContext();
