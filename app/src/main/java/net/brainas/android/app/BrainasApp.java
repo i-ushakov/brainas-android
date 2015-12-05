@@ -2,20 +2,13 @@ package net.brainas.android.app;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Handler;
 
-import net.brainas.android.app.UI.logic.TilesManager;
+import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
@@ -23,23 +16,27 @@ import java.util.TimerTask;
 public class BrainasApp extends Application {
     private static Context context;
 
+    // Activities
     private MainActivity mainActivity;
-    public TasksManager tasksManager;
-    private TilesManager tilesManager;
-    private NotificationManager notificationManager;
-    private TaskDbHelper taskDbHelper;
+
+    // Domain Layer Managers
+    private TasksManager tasksManager;
     private ActivationManager activationManager;
+    private NotificationManager notificationManager;
+
+    // UI Layer Managers
+    private ReminderScreenManager reminderScreenManager;
+
+    // Infrastructure Layer Managers
+    private TaskDbHelper taskDbHelper;
 
     public void onCreate() {
         super.onCreate();
         BrainasApp.context = getApplicationContext();
         tasksManager = new TasksManager();
+        activationManager = new ActivationManager(tasksManager);
         notificationManager = new NotificationManager();
         taskDbHelper = new TaskDbHelper(context);
-        tasksManager.fillInWLFromDB();
-        tasksManager.fiilInALFromDB();
-        activationManager = new ActivationManager(tasksManager);
-        activationManager.initCheckConditionsInWL();
     }
 
     public static Context getAppContext() {
@@ -58,12 +55,12 @@ public class BrainasApp extends Application {
         return this.tasksManager;
     }
 
-    public void setTilesManager(TilesManager tilesManager) {
-        this.tilesManager = tilesManager;
+    public void setReminderScreenManager(ReminderScreenManager reminderScreenManager) {
+        this.reminderScreenManager = reminderScreenManager;
     }
 
-    public TilesManager getTilesManager() {
-        return tilesManager;
+    public ReminderScreenManager getReminderScreenManager() {
+        return reminderScreenManager;
     }
 
     public NotificationManager getNotificationManager(){ return this.notificationManager; }
