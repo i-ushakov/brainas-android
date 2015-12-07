@@ -96,7 +96,7 @@ public class SyncManager {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 12, 5, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 15, 5, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -158,11 +158,8 @@ public class SyncManager {
             updateTasksInDb(tasks);
 
             // notify about fresh tasks
-            ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
-                public void run() {
-                    notifyAllObservers();
-                }
-            });
+            notifyAllObservers();
+
             return null;
         }
     }

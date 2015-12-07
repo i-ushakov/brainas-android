@@ -16,6 +16,7 @@ import android.widget.Toast;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.TaskTileView;
+import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.SyncManager;
@@ -25,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TasksActivity extends AppCompatActivity implements SyncManager.TaskSyncObserver {
+public class TasksActivity extends AppCompatActivity implements SyncManager.TaskSyncObserver, ActivationManager.ActivationObserver {
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private GridView tasksGrid;
@@ -55,6 +56,7 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
         updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
 
         SyncManager.getInstance().attach(this);
+        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
     }
 
     private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group) {
@@ -71,6 +73,22 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
 
     @Override
     public void updateAfterSync() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTaskGrid();
+            }
+        });
+    }
+
+    public void updateAfterActivation() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTaskGrid();
+            }
+        });
+    }
+
+    private void refreshTaskGrid() {
         TasksManager.GROUP_OF_TASKS group;
         switch (tabLayout.getSelectedTabPosition()) {
             case 0 :
@@ -117,7 +135,7 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
             if (convertView == null) {
                 Task task = tasks.get(position);
                 taskTileView = new TaskTileView(context, task);
-                taskTileView.setLayoutParams(new RelativeLayout.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
+                taskTileView.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
                 taskTileView.setPadding(8, 8, 8, 8);
             } else {
                 taskTileView = (TaskTileView) convertView;

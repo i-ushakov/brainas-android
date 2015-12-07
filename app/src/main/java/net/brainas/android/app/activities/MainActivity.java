@@ -113,8 +113,6 @@ public class MainActivity extends AppCompatActivity {
                 app.setReminderScreenManager(reminderScreenManager);
                 reminderScreenManager.refreshTilesWithActiveTasks();
 
-
-                SyncManager.getInstance().attach(reminderScreenManager);
                 SyncManager.getInstance().startSynchronization();
 
                 findViewById(R.id.messages_panel).postInvalidate();

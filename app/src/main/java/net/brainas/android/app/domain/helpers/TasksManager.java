@@ -14,6 +14,7 @@ import java.util.Map;
  */
 public class TasksManager {
 
+    private TaskDbHelper taskDbHelper;
 
     public enum GROUP_OF_TASKS {
         ALL,
@@ -25,7 +26,8 @@ public class TasksManager {
     private ArrayList<Task> waitingList = new ArrayList<>();
     private ArrayList<Task> activeList = new ArrayList<>();
 
-    public TasksManager() {
+    public TasksManager(TaskDbHelper taskDbHelper) {
+        this.taskDbHelper = taskDbHelper;
         fillInWLFromDB();
         fiilInALFromDB();
     }
@@ -81,20 +83,18 @@ public class TasksManager {
     }
 
     public ArrayList<Task> fiilInALFromDB() {
-        TasksManager tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         Map<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", GROUP_OF_TASKS.ACTIVE);
-        ArrayList<Task> activeTasks = tasksManager.getTasksFromDB(params);
+        ArrayList<Task> activeTasks = this.getTasksFromDB(params);
         cleanActiveList();
         addTasksToActiveList(activeTasks);
         return activeTasks;
     }
 
     public ArrayList<Task> fillInWLFromDB() {
-        TasksManager tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         Map<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", TasksManager.GROUP_OF_TASKS.WAITING);
-        ArrayList<Task> waitingTasks = tasksManager.getTasksFromDB(params);
+        ArrayList<Task> waitingTasks = this.getTasksFromDB(params);
         cleanWaitingList();
         addTasksToWaitingList(waitingTasks);
         return waitingTasks;

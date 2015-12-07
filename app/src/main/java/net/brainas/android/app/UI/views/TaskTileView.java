@@ -1,6 +1,7 @@
 package net.brainas.android.app.UI.views;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.ViewGroup;
@@ -58,17 +59,23 @@ public class TaskTileView extends RelativeLayout {
         taskImageView = (ImageView)this.findViewById(R.id.taskImage);
         taskMessageView = (TextView)this.findViewById(R.id.taskMessage);
 
-        if (this.task.haveImage()) {
-            try {
-                setTaskImage();
-            } catch (BrainasAppException e) {
-                // e.getMessage()
-                e.printStackTrace();
-                setMessageText();
+        taskMessageView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (task.haveImage()) {
+                    try {
+                        setTaskImage();
+                    } catch (BrainasAppException e) {
+                        // e.getMessage()
+                        e.printStackTrace();
+                        setMessageText();
+                    }
+                } else {
+                    setMessageText();
+                }
             }
-        } else {
-            setMessageText();
-        }
+        });
+
         isContentSet = true;
     }
 
@@ -84,15 +91,19 @@ public class TaskTileView extends RelativeLayout {
     }
 
     private void setMessageText() {
-        ((RelativeLayout) (taskMessageView.getParent())).setGravity(Gravity.CENTER);
+        ViewGroup vg = ((ViewGroup)taskImageView.getParent());
+        vg.removeView(taskImageView);
         taskMessageView.setGravity(Gravity.CENTER);
         taskMessageView.setTextSize(this.getTextSize());
         taskMessageView.setText(this.task.getMessage());
-        ((ViewGroup)taskImageView.getParent()).removeView(taskImageView);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)taskMessageView.getLayoutParams();
+        params.setMargins(8, 8, 8, 8);
+        taskMessageView.setLayoutParams(params);
+        //this.invalidate();
     }
 
     private int getTextSize() {
-        int textSize = (int)((double) this.getWidth()/20); // 35 - coun of symbol/4
+        int textSize = (int)((double) this.getWidth()/10); // 35 - coun of symbol/4
         return textSize;
     }
 }

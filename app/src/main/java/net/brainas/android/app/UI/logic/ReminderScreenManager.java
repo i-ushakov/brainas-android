@@ -6,6 +6,7 @@ import android.widget.RelativeLayout;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.UI.views.TaskTileView;
+import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.SyncManager;
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * Created by Kit Ushakov on 11/8/2015.
  */
-public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
+public class ReminderScreenManager implements SyncManager.TaskSyncObserver, ActivationManager.ActivationObserver {
     private int panelWidth;
     private ViewGroup tilesPanel;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
@@ -27,6 +28,8 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
         this.panelWidth = tilesPanel.getWidth();
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
+        SyncManager.getInstance().attach(this);
+        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
     }
 
     public void refreshTilesWithActiveTasks() {
@@ -37,8 +40,31 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver {
 
     @Override
     public void updateAfterSync() {
-        refreshTilesWithActiveTasks();
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
     }
+
+    @Override
+    public void updateAfterActivation() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
+    }
+
+    public void updateAfterCheckConditions() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
+    }
+
+;
 
     private List<TaskTileView> initTiles(List<Task> tasks) {
         List<TaskTileView> tiles = new ArrayList<TaskTileView>();

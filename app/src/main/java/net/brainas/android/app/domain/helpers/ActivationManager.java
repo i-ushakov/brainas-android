@@ -5,6 +5,7 @@ import android.os.Handler;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
+import net.brainas.android.app.activities.TasksActivity;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.GPSProvider;
 
@@ -26,6 +27,15 @@ public class ActivationManager {
     private Object lock = new Object();
     private TasksManager tasksManager;
     private GPSProvider gpsProvider;
+    private List<ActivationObserver> observers = new ArrayList<>();
+
+    public interface ActivationObserver {
+        void updateAfterActivation();
+    }
+
+    public void attach(ActivationObserver observer){
+        observers.add(observer);
+    }
 
     public ActivationManager(TasksManager tasksManager) {
         this.tasksManager = tasksManager;
@@ -49,10 +59,10 @@ public class ActivationManager {
     }
 
     public Location getGPSLocation() {
-        if (gpsProvider.canGetGPSLocation()){
+        //if (gpsProvider.canGetGPSLocation()){
             return gpsProvider.getLocation();
-        }
-        return null;
+        //}
+        //return null;
     }
 
     public boolean canGPSLocation() {
@@ -86,10 +96,15 @@ public class ActivationManager {
         synchronized (lock) {
             for (int i = 0; i < tasks.size(); i++) {
                 Task task = tasks.get(i);
-                notificationManager.notifyAboutTask(task);
-                reminderScreenManager.refreshTilesWithActiveTasks();
+                notificationManager.notifyAboutTask(task); //TODO mov to notifyAllObservers
+                notifyAllObservers();
             }
         }
     }
 
+    private void notifyAllObservers() {
+        for (ActivationObserver observer : observers) {
+            observer.updateAfterActivation();
+        }
+    }
 }

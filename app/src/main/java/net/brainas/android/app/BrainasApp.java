@@ -5,6 +5,7 @@ import android.content.Context;
 
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
+import net.brainas.android.app.activities.TasksActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
@@ -33,10 +34,10 @@ public class BrainasApp extends Application {
     public void onCreate() {
         super.onCreate();
         BrainasApp.context = getApplicationContext();
-        tasksManager = new TasksManager();
+        taskDbHelper = new TaskDbHelper(context);
+        tasksManager = new TasksManager(taskDbHelper);
         activationManager = new ActivationManager(tasksManager);
         notificationManager = new NotificationManager();
-        taskDbHelper = new TaskDbHelper(context);
     }
 
     public static Context getAppContext() {
@@ -67,6 +68,10 @@ public class BrainasApp extends Application {
 
     public TaskDbHelper getTaskDbHelper() {
         return this.taskDbHelper;
+    }
+
+    public ActivationManager getActivationManager() {
+        return activationManager;
     }
 
 }

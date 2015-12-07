@@ -19,6 +19,7 @@
         android:text="Message"
         android:id="@+id/taskMessage"
         android:layout_below="@+id/taskImage"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"  />
 
 </RelativeLayout>

@@ -60,22 +60,17 @@ public class EventGPS extends Event {
 
     @Override
     public boolean isTriggered(ActivationManager activationManager) {
-        if (activationManager.canGPSLocation()) {
-            Location location = activationManager.getGPSLocation();
-            if (location != null) {
-                double currentLat = location.getLatitude();
-                double currentLng = location.getLongitude();
-                Double distance = distance(lat, lng, currentLat, currentLng, "M");
-                if (distance <= radius) {
-                    return true;
-                }
-                return false;
+        Location location = activationManager.getGPSLocation();
+        if (location != null) {
+            double currentLat = location.getLatitude();
+            double currentLng = location.getLongitude();
+            Double distance = distance(lat, lng, currentLat, currentLng, "M");
+            if (distance <= radius) {
+                return true;
             }
             return false;
-        } else {
-            return false;
         }
-
+        return false;
     }
 
     private static double distance(double lat1, double lon1, double lat2, double lon2, String unit) {
