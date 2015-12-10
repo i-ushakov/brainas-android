@@ -8,4 +8,6 @@
     <color name="turquoise">#2EFEC7</color>
     <color name="dark_grey_custom">#515151</color>
     <color name="north_sea">#38a398</color>
+    <color name="black">#000000</color>
+    <color name="lightyellow">#FFFFE0</color>
 </resources>
