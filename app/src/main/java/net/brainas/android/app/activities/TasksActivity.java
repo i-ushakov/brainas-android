@@ -1,6 +1,7 @@
 package net.brainas.android.app.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -67,6 +68,8 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
                                     int position, long id) {
                 Toast.makeText(TasksActivity.this, "" + position,
                         Toast.LENGTH_SHORT).show();
+                Intent tasksIntent = new Intent(TasksActivity.this, TaskCardActivity.class);
+                startActivity(tasksIntent);
             }
         });
     }
