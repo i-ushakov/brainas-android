@@ -66,10 +66,13 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Toast.makeText(TasksActivity.this, "" + position,
+                Toast.makeText(TasksActivity.this, "" + id,
                         Toast.LENGTH_SHORT).show();
-                Intent tasksIntent = new Intent(TasksActivity.this, TaskCardActivity.class);
-                startActivity(tasksIntent);
+                Intent taskCardIntent = new Intent(TasksActivity.this, TaskCardActivity.class);
+                Bundle b = new Bundle();
+                b.putLong("taskId", id);
+                taskCardIntent.putExtras(b);
+                startActivity(taskCardIntent);
             }
         });
     }
@@ -126,11 +129,11 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
         }
 
         public Object getItem(int position) {
-            return null;
+            return tasks.get(position);
         }
 
         public long getItemId(int position) {
-            return 0;
+            return tasks.get(position).getId();
         }
 
         public TaskTileView getView(int position, View convertView, ViewGroup parent) {

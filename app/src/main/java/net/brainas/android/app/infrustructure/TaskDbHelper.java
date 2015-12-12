@@ -139,6 +139,8 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
         String selection = "1";
         List<String> selectionArgsList = new ArrayList<String>();
+
+        // by group
         if (params != null && params.containsKey("GROUP_OF_TASKS")) {
             TasksManager.GROUP_OF_TASKS group = (TasksManager.GROUP_OF_TASKS)params.get("GROUP_OF_TASKS");
             switch (group) {
@@ -152,6 +154,12 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     selectionArgsList.add(group.toString());
                     break;
             }
+        }
+
+        // by id
+        if (params != null && params.containsKey("TASK_ID")) {
+            selection = selection + " and " + COLUMN_NAME_TASKS_ID + " LIKE ?";
+            selectionArgsList.add(params.get("TASK_ID").toString());
         }
         String[] selectionArgs = selectionArgsList.toArray(new String[selectionArgsList.size()]);
 
@@ -183,11 +191,9 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
                 String status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
                 task.setStatus(status);
-                //task.setTitle(cursor.getString(1));
-                //task.setAuthor(cursor.getString(2));
-
-                // Add book to books
                 task.addConditions(getConditions(task));
+                String description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
+                task.setDescription(description);
                 tasks.add(task);
             } while (cursor.moveToNext());
         }
@@ -203,6 +209,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
         values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
+        values.put(COLUMN_NAME_TASKS_DESCRIPTION, task.getDescription().toString());
 
         int nRowsEffected = db.update(
                 TABLE_TASKS,

@@ -266,8 +266,10 @@ public class SyncManager {
             Element taskEl = (Element)taskList.item(i);
             int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
+            String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
             Task task = new Task(message);
             task.setGlobalId(globalId);
+            task.setDescription(description);
             Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
             if (statusEl != null) {
                 task.setStatus(statusEl.getTextContent());

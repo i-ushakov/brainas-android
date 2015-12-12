@@ -26,7 +26,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     public static MapFragment newInstance(AppCompatActivity appCompatActivity, int containerId, LatLng lanLng) {
-        appCompatActivity.getSupportFragmentManager();
+        //appCompatActivity.getSupportFragmentManager();
         MapFragment mapFragment = new MapFragment();
         mapFragment.setAppCompatActivity(appCompatActivity);
         mapFragment.setContainerId(containerId);

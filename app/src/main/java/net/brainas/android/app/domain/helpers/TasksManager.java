@@ -82,6 +82,13 @@ public class TasksManager {
         return tasks;
     }
 
+    public Task getTaskById(long id) {
+        Map<String,Object> params = new HashMap<>();
+        params.put("TASK_ID", id);
+        Task task = getTasksFromDB(params).get(0);
+        return task;
+    }
+
     public ArrayList<Task> fiilInALFromDB() {
         Map<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", GROUP_OF_TASKS.ACTIVE);
