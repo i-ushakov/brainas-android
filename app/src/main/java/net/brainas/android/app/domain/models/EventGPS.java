@@ -2,6 +2,7 @@ package net.brainas.android.app.domain.models;
 
 import android.location.Location;
 
+import net.brainas.android.app.R;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 
 import org.json.JSONException;
@@ -71,6 +72,18 @@ public class EventGPS extends Event {
             return false;
         }
         return false;
+    }
+
+    public int getIconDrawableId() {
+        return R.drawable.gps_icon;
+    }
+
+    public double getLat() {
+        return this.lat;
+    }
+
+    public double getLng() {
+        return this.lng;
     }
 
     private static double distance(double lat1, double lon1, double lat2, double lon2, String unit) {

@@ -40,6 +40,8 @@ public abstract class Event {
 
     abstract public boolean isTriggered(ActivationManager activationManager);
 
+    abstract public int getIconDrawableId();
+
     public void setId(Integer id) {
         this.id = id;
     }
