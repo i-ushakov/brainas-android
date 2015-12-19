@@ -1,9 +1,16 @@
 package net.brainas.android.app.UI.views;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.Display;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -12,10 +19,13 @@ import android.widget.TextView;
 
 import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
+import net.brainas.android.app.activities.TaskCardActivity;
+import net.brainas.android.app.activities.TasksActivity;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
-public class TaskTileView extends RelativeLayout {
+public class TaskTileView extends RelativeLayout implements View.OnClickListener{
+    private Context context;
     private boolean isContentSet = false;
     private Task task;
     private ImageView taskImageView;
@@ -23,17 +33,19 @@ public class TaskTileView extends RelativeLayout {
 
     public TaskTileView(Context context, Task task) {
         super(context);
-        init(task);
+        init(task, context);
     }
 
     public TaskTileView(Context context, AttributeSet attrs, Task task) {
         super(context, attrs);
-        init(task);
+        this.context = context;
+        init(task, context);
     }
 
     public TaskTileView(Context context, AttributeSet attrs, int defStyle, Task task) {
         super(context, attrs, defStyle);
-        init(task);
+        this.context = context;
+        init(task, context);
     }
 
     @Override
@@ -50,9 +62,11 @@ public class TaskTileView extends RelativeLayout {
     }
 
 
-    private void init(Task task) {
+    private void init(Task task, Context context) {
         this.task = task;
+        this.context = context;
         inflate(getContext(), R.layout.view_task_tile, this);
+        this.setOnClickListener(this);
     }
 
     private void setContent() {
@@ -94,16 +108,25 @@ public class TaskTileView extends RelativeLayout {
         ViewGroup vg = ((ViewGroup)taskImageView.getParent());
         vg.removeView(taskImageView);
         taskMessageView.setGravity(Gravity.CENTER);
-        taskMessageView.setTextSize(this.getTextSize());
+        //taskMessageView.setTextSize(this.getTextSize());
+        taskMessageView.setTextSize(TypedValue.COMPLEX_UNIT_PX, this.getTextSize());
         taskMessageView.setText(this.task.getMessage());
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)taskMessageView.getLayoutParams();
         params.setMargins(8, 8, 8, 8);
         taskMessageView.setLayoutParams(params);
-        //this.invalidate();
     }
 
     private int getTextSize() {
-        int textSize = (int)((double) this.getWidth()/10); // 35 - coun of symbol/4
+        int textSize = (int)((double) this.getWidth()/7); // 35 - coun of symbol/4
         return textSize;
+    }
+
+    @Override
+    public void onClick(View v) {
+        Intent taskCardIntent = new Intent(context, TaskCardActivity.class);
+        Bundle b = new Bundle();
+        b.putLong("taskId", task.getId());
+        taskCardIntent.putExtras(b);
+        context.startActivity(taskCardIntent);
     }
 }

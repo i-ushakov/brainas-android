@@ -1,6 +1,7 @@
 package net.brainas.android.app.fragments;
 
 
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 
@@ -60,8 +61,12 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     private void addMapFragemntToContainer(){
-        appCompatActivity.getSupportFragmentManager().beginTransaction().replace(containerId, this).commit();
-    }
+        final MapFragment self = this;
+        new Handler().post(new Runnable() {
+            public void run() {
+                appCompatActivity.getSupportFragmentManager().beginTransaction().replace(containerId, self).commit();
+            }});
+        }
 
     private void setLanLng(LatLng lanLng) {
         this.lanLng = lanLng;

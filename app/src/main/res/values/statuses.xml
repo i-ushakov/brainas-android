@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ACTIVE">Active</string>
+    <string name="WAITING">Waiting</string>
+    <string name="DONE">Done</string>
+    <string name="CANCELED">Canceled</string>
+    <string name="DISABLED">Disabled</string>
+</resources>

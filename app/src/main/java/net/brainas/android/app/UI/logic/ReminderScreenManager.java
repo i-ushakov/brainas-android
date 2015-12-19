@@ -17,7 +17,10 @@ import java.util.List;
 /**
  * Created by Kit Ushakov on 11/8/2015.
  */
-public class ReminderScreenManager implements SyncManager.TaskSyncObserver, ActivationManager.ActivationObserver {
+public class ReminderScreenManager implements
+        SyncManager.TaskSyncObserver,
+        ActivationManager.ActivationObserver,
+        Task.TaskChangesObserver {
     private int panelWidth;
     private ViewGroup tilesPanel;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
@@ -56,6 +59,15 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver, Acti
         });
     }
 
+    @Override
+    public void updateAfterTaskWasChanged() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
+    }
+
     public void updateAfterCheckConditions() {
         ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
             public void run() {
@@ -69,7 +81,9 @@ public class ReminderScreenManager implements SyncManager.TaskSyncObserver, Acti
     private List<TaskTileView> initTiles(List<Task> tasks) {
         List<TaskTileView> tiles = new ArrayList<TaskTileView>();
         for (int i = 0; i < tasks.size(); i++) {
-            tiles.add(new TaskTileView(tilesPanel.getContext(), tasks.get(i)));
+            Task task = tasks.get(i);
+            tiles.add(new TaskTileView(tilesPanel.getContext(), task));
+            task.attachObserver(this);
         }
         return tiles;
     }

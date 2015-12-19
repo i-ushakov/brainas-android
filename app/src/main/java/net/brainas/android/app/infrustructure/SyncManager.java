@@ -111,6 +111,10 @@ public class SyncManager {
         observers.add(observer);
     }
 
+    public void detach(TaskSyncObserver observer){
+        observers.remove(observer);
+    }
+
     private void synchronization() {
         asyncTask = new AllTasksSync();
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)

@@ -22,13 +22,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingTop="8dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="123 123 123 123 123 123 123 123 123 123123 123123 123"
-            android:textStyle=""
-            android:textSize="12dp"
-            android:textColor="@color/black"/>
         <FrameLayout
             android:id="@+id/mapContainer1"
             android:layout_width="match_parent"

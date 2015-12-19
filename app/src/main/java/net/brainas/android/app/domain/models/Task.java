@@ -1,11 +1,18 @@
 package net.brainas.android.app.domain.models;
 
+import android.content.Context;
+import android.content.res.Resources;
+
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.R;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Created by innok on 11/9/2015.
@@ -18,12 +25,41 @@ public class Task {
     private boolean haveImage = false;
     private STATUSES status = null;
     private ArrayList<Condition> conditions = new ArrayList<>();
+    private CopyOnWriteArrayList<TaskChangesObserver> observers = new CopyOnWriteArrayList<TaskChangesObserver>();
+    private Object lock = new Object();
+
+    public interface TaskChangesObserver {
+        void updateAfterTaskWasChanged();
+    }
+
+    public void attachObserver(TaskChangesObserver observer){
+        observers.add(observer);
+    }
+
+    public void detachObserver(TaskChangesObserver observer){
+        observers.remove(observer);
+    }
+
+    public CopyOnWriteArrayList<TaskChangesObserver> getTaskChangesObservers() {
+        return observers;
+    }
+
 
     public enum STATUSES {
         ACTIVE,
         WAITING,
         DONE,
-        DISABLED
+        CANCELED,
+        DISABLED;
+
+        public String getLabel(Context context) {
+            Resources res = context.getResources();
+            int resId = res.getIdentifier(this.name(), "string", context.getPackageName());
+            if (0 != resId) {
+                return (res.getString(resId));
+            }
+            return (name());
+        }
     }
 
     public Task(String message) {
@@ -85,12 +121,19 @@ public class Task {
             case "WAITING" :
                 setStatus(STATUSES.WAITING);
                 break;
+            case "DONE" :
+                setStatus(STATUSES.DONE);
+                break;
+            case "CANCLED" :
+                setStatus(STATUSES.CANCELED);
+                break;
 
             default:
                 setStatus(STATUSES.DISABLED);
                 break;
         }
     }
+
 
     public void setStatus(STATUSES status){
         this.status = status;
@@ -142,10 +185,19 @@ public class Task {
     public void save(){
         TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         taskDbHelper.addOrUpdateTask(this);
+        notifyAllObservers();
     }
 
 
     private void notifyAboutTask() {
         // TODO notivication of User  (NotificationManager.class /TaskManager.class)
+    }
+
+    private void notifyAllObservers() {
+        Iterator<TaskChangesObserver> it = observers.listIterator();
+        while (it.hasNext()) {
+            TaskChangesObserver observer = it.next();
+            observer.updateAfterTaskWasChanged();
+        }
     }
 }

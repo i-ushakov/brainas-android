@@ -5,5 +5,7 @@
     <string name="title_activity_card_of_task">TasksActivity</string>
     <string name="action_make_done">Make the task done</string>
     <string name="action_cancel_task">Cancel task</string>
+    <string name="action_restore_task">Restore task</string>
+    <string name="action_remove_task">Remove task</string>
     <string name="title_activity_maps">Map</string>
 </resources>

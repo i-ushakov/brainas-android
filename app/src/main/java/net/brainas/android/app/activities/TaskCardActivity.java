@@ -1,39 +1,35 @@
 package net.brainas.android.app.activities;
 
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.Transformation;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.taskcard.ConditionBlockView;
-import net.brainas.android.app.UI.views.taskcard.EventRowView;
+import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
-import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.fragments.MapFragment;
+import net.brainas.android.app.infrustructure.SyncManager;
 
 import java.util.ArrayList;
 
 /**
  * Created by innok on 12/7/2015.
  */
-public class TaskCardActivity extends AppCompatActivity {
+public class TaskCardActivity extends AppCompatActivity implements ActivationManager.ActivationObserver, SyncManager.TaskSyncObserver{
 
     private Toolbar toolbar;
     private Task task;
+    private long taskId;
+    private TasksManager tasksManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,22 +46,87 @@ public class TaskCardActivity extends AppCompatActivity {
                 onBackPressed();
             }
         });
-        toolbar.inflateMenu(R.menu.task_card);
 
         Bundle b = getIntent().getExtras();
-        long taskId = b.getLong("taskId");
-        TasksManager taskManadger = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        Task task = taskManadger.getTaskById(taskId);
-        this.task = task;
+        this.taskId = b.getLong("taskId");
+        this.task = getTaskById();
 
+        setTaskStatus();
         fillTheCardWithTaskInfo();
+
+        tasksManager = ((BrainasApp) BrainasApp.getAppContext()).getTasksManager();
+
+        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
+        SyncManager.getInstance().attach(this);
+    }
+
+    //@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Task.STATUSES status = task.getStatus();
+
+        if (status == Task.STATUSES.ACTIVE) {
+            getMenuInflater().inflate(R.menu.task_card_active, menu);
+        } else if (status == Task.STATUSES.DONE || status == Task.STATUSES.CANCELED) {
+            getMenuInflater().inflate(R.menu.task_card_used, menu);
+        }
+        return true;
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.task_card, menu);
-        return true;
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_done_task:
+                task.changeStatus(Task.STATUSES.DONE);
+                setTaskStatus(Task.STATUSES.DONE);
+                invalidateOptionsMenu();
+                return true;
+            case R.id.action_cancel_task:
+                task.changeStatus(Task.STATUSES.CANCELED);
+                setTaskStatus(Task.STATUSES.CANCELED);
+                invalidateOptionsMenu();
+                return true;
+            case R.id.action_remove_task :
+                tasksManager.removeTask(task);
+                finish();
+                return true;
+            case R.id.action_restore_task :
+                if (tasksManager.restoreTaskToWaiting(task.getId())) {
+                    setTaskStatus(Task.STATUSES.WAITING);
+                    invalidateOptionsMenu();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void updateAfterActivation() {
+        this.task = getTaskById();
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                setTaskStatus();
+                invalidateOptionsMenu();
+            }
+        });
+    }
+
+    public void updateAfterSync() {
+        this.task = getTaskById();
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                setTaskStatus();
+                invalidateOptionsMenu();
+                fillTheCardWithTaskInfo();
+            }
+        });
+
+    }
+
+    private Task getTaskById() {
+        TasksManager taskManadger = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
+        Task task = taskManadger.getTaskById(taskId);
+        return task;
     }
 
     private void fillTheCardWithTaskInfo() {
@@ -79,11 +140,30 @@ public class TaskCardActivity extends AppCompatActivity {
 
         // conditions
         ViewGroup conditionsCont = (ViewGroup)findViewById(R.id.task_card_conditions);
+        conditionsCont.removeAllViews();
         ArrayList<Condition> conditions = task.getConditions();
         for(Condition condition : conditions) {
             LinearLayout conditionBlock = new ConditionBlockView(this, condition);
             conditionsCont.addView(conditionBlock);
         }
+    }
+
+    private void setTaskStatus() {
+        String statusLable = task.getStatus().getLabel(this);
+        setTitle(statusLable);
+    }
+
+    private void setTaskStatus(Task.STATUSES status) {
+        String statusLable = status.getLabel(this);
+        setTitle(statusLable);
+    }
+
+    @Override
+    protected void onDestroy() {
+        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
+        SyncManager.getInstance().detach(this);
+        super.onDestroy();
+
     }
 }
 

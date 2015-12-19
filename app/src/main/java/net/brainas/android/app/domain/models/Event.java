@@ -42,6 +42,8 @@ public abstract class Event {
 
     abstract public int getIconDrawableId();
 
+    abstract public boolean isExecutable();
+
     public void setId(Integer id) {
         this.id = id;
     }

@@ -59,4 +59,16 @@ public class Condition {
     public ArrayList<Event> getEvents() {
         return events;
     }
+
+    public boolean isValid() {
+        if (events.size() == 0) {
+            return false;
+        }
+        for(Event event : events) {
+            if(!event.isExecutable()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

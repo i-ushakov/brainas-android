@@ -12,5 +12,5 @@
         android:id="@+id/action_cancel_task"
         android:icon="@drawable/cancel_icon_white"
         android:title="@string/action_cancel_task"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="never"/>
 </menu>

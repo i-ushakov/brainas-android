@@ -41,7 +41,7 @@
                 android:text="Detailed card of task"
                 android:textStyle="bold|italic"
                 android:textColor="@color/black"
-                android:textAlignment="center"
+                android:gravity="center"
                 android:textSize="16dp"/>
 
             <LinearLayout

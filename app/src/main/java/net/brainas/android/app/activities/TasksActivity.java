@@ -27,7 +27,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TasksActivity extends AppCompatActivity implements SyncManager.TaskSyncObserver, ActivationManager.ActivationObserver {
+public class TasksActivity extends AppCompatActivity implements
+        SyncManager.TaskSyncObserver,
+        ActivationManager.ActivationObserver,
+        Task.TaskChangesObserver {
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private GridView tasksGrid;
@@ -36,6 +39,8 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
+
+        setTitle("Tasks");
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -50,7 +55,8 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
 
         tabLayout = (TabLayout) findViewById(R.id.taskTabs);
         tabLayout.addTab(tabLayout.newTab().setText("ALL"), 0, true);
-        tabLayout.addTab(tabLayout.newTab().setText("ACTIVE"), 1);
+        tabLayout.addTab(tabLayout.newTab().setText("WAITING"), 1);
+        tabLayout.addTab(tabLayout.newTab().setText("USED"), 2);
         setTabLayoutListeners(tabLayout);
 
         tasksGrid = (GridView) findViewById(R.id.tasks_grid);
@@ -66,8 +72,6 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Toast.makeText(TasksActivity.this, "" + id,
-                        Toast.LENGTH_SHORT).show();
                 Intent taskCardIntent = new Intent(TasksActivity.this, TaskCardActivity.class);
                 Bundle b = new Bundle();
                 b.putLong("taskId", id);
@@ -94,6 +98,14 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
         });
     }
 
+    public void updateAfterTaskWasChanged() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTaskGrid();
+            }
+        });
+    }
+
     private void refreshTaskGrid() {
         TasksManager.GROUP_OF_TASKS group;
         switch (tabLayout.getSelectedTabPosition()) {
@@ -101,7 +113,10 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
                 group = TasksManager.GROUP_OF_TASKS.ALL;
                 break;
             case 1 :
-                group = TasksManager.GROUP_OF_TASKS.ACTIVE;
+                group = TasksManager.GROUP_OF_TASKS.WAITING;
+                break;
+            case 2 :
+                group = TasksManager.GROUP_OF_TASKS.USED;
                 break;
             default:
                 group = TasksManager.GROUP_OF_TASKS.ALL;
@@ -122,6 +137,9 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
             params.put("GROUP_OF_TASKS", group);
             TasksManager taskManager = ((BrainasApp)(BrainasApp.getAppContext())).getTasksManager();
             tasks = taskManager.getTasksFromDB(params);
+            for (Task task : tasks) {
+                task.attachObserver(TasksActivity.this);
+            }
         }
 
         public int getCount() {
@@ -159,7 +177,10 @@ public class TasksActivity extends AppCompatActivity implements SyncManager.Task
                         updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
                         break;
                     case 1:
-                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ACTIVE);
+                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.WAITING);
+                        break;
+                    case 2:
+                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.USED);
                         break;
                 }
             }

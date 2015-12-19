@@ -37,6 +37,10 @@ public class ActivationManager {
         observers.add(observer);
     }
 
+    public void detach(ActivationObserver observer){
+        observers.remove(observer);
+    }
+
     public ActivationManager(TasksManager tasksManager) {
         this.tasksManager = tasksManager;
         gpsProvider = new GPSProvider();

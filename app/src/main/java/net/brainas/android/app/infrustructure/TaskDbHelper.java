@@ -153,6 +153,12 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     selection = selection + " and " + COLUMN_NAME_TASKS_STATUS + " LIKE ?";
                     selectionArgsList.add(group.toString());
                     break;
+
+                case USED :
+                    selection = selection + " and (" + COLUMN_NAME_TASKS_STATUS + " LIKE ? OR " + COLUMN_NAME_TASKS_STATUS + " LIKE ?)";
+                    selectionArgsList.add("DONE");
+                    selectionArgsList.add("CANCELED");
+                    break;
             }
         }
 
@@ -200,6 +206,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
         return tasks;
     }
 
+
     public long addOrUpdateTask(Task task) {
         long newRowId = 0;
         String selection = COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
@@ -228,6 +235,13 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
 
         return newRowId;
+    }
+
+    public boolean deleteTaskById(int taskId) {
+        String selection = COLUMN_NAME_TASKS_ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(taskId) };
+        db.delete(TABLE_TASKS, selection, selectionArgs);
+        return true;
     }
 
     private void saveConditions(ArrayList<Condition> conditions) {

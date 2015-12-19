@@ -20,7 +20,8 @@ public class GPSProvider implements LocationListener {
 
     private double latitude;
     private double longtitude;
-    private boolean isGPSEnabled;
+    private boolean isGPSEnabled = false;
+    private boolean isNetworkEnabled = false;
 
     protected LocationManager locationManager;
 
@@ -46,17 +47,39 @@ public class GPSProvider implements LocationListener {
         }
     }
 
+    private Location initNetwork() {
+        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (isNetworkEnabled) {
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                    MIN_TIME_BW_UPDATES,
+                    this);
+
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            return location;
+        } else {
+            return null;
+        }
+    }
+
 
     public Location getLocation() {
         if (!isGPSEnabled) {
             location = initGPS();
+            if (location == null) {
+                if(!isNetworkEnabled) {
+                    location = initNetwork();
+                } else {
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+            }
         } else {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
         return location;
     }
-
-
 
     @Override
     public void onLocationChanged(Location location) {
