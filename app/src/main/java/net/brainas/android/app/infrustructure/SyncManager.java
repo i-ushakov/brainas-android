@@ -269,6 +269,10 @@ public class SyncManager {
         for (int i = 0; i < taskList.getLength(); ++i) {
             Element taskEl = (Element)taskList.item(i);
             int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
+            String timeChanges = taskEl.getAttribute("time-changes");
+            if (!isActualChanges(globalId, timeChanges)) {
+                continue;
+            }
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
             Task task = new Task(message);
@@ -333,5 +337,9 @@ public class SyncManager {
         for (TaskSyncObserver observer : observers) {
             observer.updateAfterSync();
         }
+    }
+
+    private boolean isActualChanges(long taskId, String datetime) {
+        return true;
     }
 }
