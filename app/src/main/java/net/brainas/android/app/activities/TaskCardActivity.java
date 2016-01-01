@@ -149,8 +149,10 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
     }
 
     private void setTaskStatus() {
-        String statusLable = task.getStatus().getLabel(this);
-        setTitle(statusLable);
+        if (task.getStatus() != null) {
+            String statusLable = task.getStatus().getLabel(this);
+            setTitle(statusLable);
+        }
     }
 
     private void setTaskStatus(Task.STATUSES status) {

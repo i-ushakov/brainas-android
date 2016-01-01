@@ -4,10 +4,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -24,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -37,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import android.os.Handler;
+import android.util.Log;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -66,8 +71,9 @@ public class SyncManager {
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> syncThreadHandle = null;
-    private boolean debug_one_time = false;
     private AllTasksSync asyncTask;
+    private JSONObject synchronizedChanges = new JSONObject();
+    private JSONObject synchronizedTaskChanges = new JSONObject();
 
 
     private SyncManager() {}
@@ -85,18 +91,16 @@ public class SyncManager {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        if (debug_one_time) {
-                            return;
-                        }
-                        debug_one_time = true;
+                        Log.v("SYNC", "Sync was start!");
                         synchronization();
+                        Log.v("SYNC", "Sync was done!");
                     }
                 });
             }
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 15, 5, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 15, 15, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -130,6 +134,7 @@ public class SyncManager {
             File xmlFile;
             String response;
             List<Task> tasks;
+            ArrayList<Integer> deletedTasks;
 
             // Prepare xml
             try {
@@ -151,9 +156,14 @@ public class SyncManager {
 
             // parse received xml
             try {
-                tasks = parseResponse(response);
+                JSONObject syncDate = parseResponse(response);
+                tasks = (ArrayList<Task>)syncDate.get("tasks");
+                deletedTasks = (ArrayList<Integer>)syncDate.get("deletedTasks");
             } catch (IOException | SAXException | ParserConfigurationException e) {
                 // Cannot parse xml-document that gotten from server
+                e.printStackTrace();
+                return null;
+            } catch (JSONException e) {
                 e.printStackTrace();
                 return null;
             }
@@ -161,6 +171,17 @@ public class SyncManager {
             // refreshes tasks in DB
             updateTasksInDb(tasks);
 
+            deleteTasksFromDb(deletedTasks);
+
+            try {
+                sendSynchronizedChanges();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             // notify about fresh tasks
             notifyAllObservers();
 
@@ -256,7 +277,8 @@ public class SyncManager {
         return response;
     }
 
-    private  List<Task> parseResponse(String xmlStr) throws ParserConfigurationException, IOException, SAXException {
+    private  JSONObject parseResponse(String xmlStr) throws ParserConfigurationException, IOException, SAXException, JSONException {
+        JSONObject syncDate = new JSONObject();
         List<Task> tasks = new ArrayList<Task>();
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -271,6 +293,7 @@ public class SyncManager {
             int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
             String timeChanges = taskEl.getAttribute("time-changes");
             if (!isActualChanges(globalId, timeChanges)) {
+                synchronizedTaskChanges.put(Integer.toString(globalId), "Rejected");
                 continue;
             }
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
@@ -287,7 +310,7 @@ public class SyncManager {
                 Element conditionEl = (Element)conditions.item(j);
                 Integer conditionId = Integer.parseInt(conditionEl.getAttribute("id"));
                 Integer taskId = Integer.parseInt(conditionEl.getAttribute("task-id"));
-                Condition condition = new Condition(null,conditionId, taskId);
+                Condition condition = new Condition(null,conditionId, null);
                 NodeList events = conditionEl.getElementsByTagName("event");
                 for(int k = 0; k < events.getLength(); ++k) {
                     EventGPS event = null;
@@ -296,7 +319,7 @@ public class SyncManager {
                     int eventId = Integer.parseInt(eventEl.getAttribute("id"));
                     switch (type) {
                         case "GPS" :
-                            event = new EventGPS(null, eventId, conditionId);
+                            event = new EventGPS(null, eventId, null);
                             event.fillInParamsFromXML(eventEl);
                             break;
                     }
@@ -305,9 +328,14 @@ public class SyncManager {
                 task.addCondition(condition);
             }
             tasks.add(task);
+            synchronizedTaskChanges.put(Integer.toString(globalId), "Accepted");
         }
+        syncDate.put("tasks", tasks);
 
-        return tasks;
+        ArrayList<Integer> deletedTasks = parseDeletedXmlBlock(xmlDocument, "deletedTask");
+        syncDate.put("deletedTasks", deletedTasks);
+
+        return syncDate;
     }
 
     private Map<String,List<Integer>> updateTasksInDb(List<Task> tasks) {
@@ -330,7 +358,16 @@ public class SyncManager {
 
         result.put("added", addedTasksLocalIds);
         result.put("updated", updatedTasksGlobalIds);
+        taskDbHelper.close();
         return result;
+    }
+
+    private void deleteTasksFromDb(ArrayList<Integer> deletedTasks) {
+        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        TasksManager tasksManager = app.getTasksManager();
+        for(Integer deletedTaskId : deletedTasks) {
+            tasksManager.deleteTaskByGlobalId(deletedTaskId);
+        }
     }
 
     private void notifyAllObservers() {
@@ -341,5 +378,58 @@ public class SyncManager {
 
     private boolean isActualChanges(long taskId, String datetime) {
         return true;
+    }
+
+    private ArrayList<Integer> parseDeletedXmlBlock(Document xmlDocument, String type) throws JSONException {
+        ArrayList<Integer> deletedTasks = new ArrayList<Integer>();
+        NodeList deletedTasksList = xmlDocument.getElementsByTagName(type);
+        for (int i = 0; i < deletedTasksList.getLength(); ++i) {
+            Element deletedTaskEl = (Element)deletedTasksList.item(i);
+            int globalId = Integer.parseInt(deletedTaskEl.getAttribute("global-id"));
+            String timeChanges = deletedTaskEl.getAttribute("time-changes");
+            if(isActualChanges(globalId, timeChanges)){
+                deletedTasks.add(globalId);
+                synchronizedTaskChanges.put(Integer.toString(globalId), "Accepted");
+            } else {
+                synchronizedTaskChanges.put(Integer.toString(globalId), "Rejected");
+            }
+        }
+        return deletedTasks;
+    }
+
+    private void sendSynchronizedChanges() throws JSONException, IOException {
+        synchronizedChanges.put("tasks", synchronizedTaskChanges);
+
+        String url = serverUrl + "accepted-changes";
+        URL urlObj = new URL(url);
+
+        HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestMethod("POST");
+        connection.setUseCaches(false);
+
+        connection.setRequestProperty("Content-Type", "text/plain");
+        connection.setRequestProperty("Accept-Encoding", "" );
+        connection.connect();
+
+        DataOutputStream printout = new DataOutputStream(connection.getOutputStream());
+        //wr.write(synchronizedChanges.toString());
+        String str = synchronizedChanges.toString();
+        byte[] data=str.getBytes("UTF-8");
+        printout.write(data);
+        printout.flush();
+        printout.close();
+
+        InputStream stream = ((HttpURLConnection)connection).getInputStream();
+        InputStreamReader isReader = new InputStreamReader(stream);
+        BufferedReader br = new BufferedReader(isReader);
+        String response = "";
+        String line;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+            response+= line;
+        }
+
+        //return response;
     }
 }

@@ -77,6 +77,10 @@ public class Task {
         this.message = message;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public int getId() {
         return id;
     }
@@ -87,6 +91,10 @@ public class Task {
 
     public int getExternalId() {
         return globalId;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public String getMessage() {
@@ -147,7 +155,8 @@ public class Task {
         conditions.add(condition);
     }
 
-    public void addConditions(ArrayList<Condition> conditions) {
+    public void setConditions(ArrayList<Condition> conditions) {
+        this.conditions.clear();
         this.conditions.addAll(conditions);
     }
 
