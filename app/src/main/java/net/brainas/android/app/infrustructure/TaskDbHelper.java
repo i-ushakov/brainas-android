@@ -197,12 +197,14 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
                 String status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
                 task.setStatus(status);
-                task.addConditions(getConditions(task));
+                task.setConditions(getConditions(task));
                 String description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
                 tasks.add(task);
             } while (cursor.moveToNext());
         }
+
+        cursor.close();
         return tasks;
     }
 
@@ -231,27 +233,51 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     values);
         }
 
-        saveConditions(task.getConditions());
+        task.setId(getLocalIdByGlobal(task.getGlobalId(), TABLE_TASKS));
+        saveConditions(task.getConditions(), task.getId());
 
 
         return newRowId;
     }
 
     public boolean deleteTaskById(int taskId) {
+        // delete task
         String selection = COLUMN_NAME_TASKS_ID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(taskId) };
         db.delete(TABLE_TASKS, selection, selectionArgs);
+
+        // delete conditions
+        String selectQuery = "SELECT * FROM " + TABLE_CONDITIONS + " WHERE task_id = " + taskId;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        if (cursor.moveToFirst()) {
+            int conditionId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_ID)));
+
+            // delete events
+            String selectionForEvents = COLUMN_NAME_EVENTS_CONDITION + " LIKE ?";
+            String[] selectionArgsForEvent = { String.valueOf(conditionId) };
+            db.delete(TABLE_EVENTS, selectionForEvents, selectionArgsForEvent);
+        }
+        String selectionForConditions = COLUMN_NAME_CONDITIONS_TASK + " LIKE ?";
+        String[]  selectionArgsForConditions = { String.valueOf(taskId) };
+        db.delete(TABLE_CONDITIONS, selectionForConditions, selectionArgsForConditions);
+        cursor.close();
         return true;
     }
 
-    private void saveConditions(ArrayList<Condition> conditions) {
+    public boolean deleteTaskByGlobalId(int taskGlobalId) {
+        int localId = getLocalIdByGlobal(taskGlobalId, TABLE_TASKS);
+        deleteTaskById(localId);
+        return true;
+    }
+
+    private void saveConditions(ArrayList<Condition> conditions, int taskId) {
         long newRowId = 0;
         for (Condition condition : conditions) {
             String selection = COLUMN_NAME_CONDITIONS_GLOBALID + " LIKE ?";
             String[] selectionArgs = { String.valueOf(condition.getGlobalId()) };
 
             ContentValues values = new ContentValues();
-            values.put(COLUMN_NAME_CONDITIONS_TASK, condition.getTaskId());
+            values.put(COLUMN_NAME_CONDITIONS_TASK, taskId);
             values.put(COLUMN_NAME_CONDITIONS_GLOBALID, condition.getGlobalId());
 
             int nRowsEffected = db.update(
@@ -267,19 +293,20 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                         values);
             }
 
-            saveEvents(condition.getEvents());
+            condition.setId(getLocalIdByGlobal(condition.getGlobalId(), TABLE_CONDITIONS));
+            saveEvents(condition.getEvents(), condition.getId());
         }
     }
 
-    private void saveEvents(ArrayList<Event> events) {
+    private void saveEvents(ArrayList<Event> events, int conditionId) {
         long newRowId = 0;
         for (Event event : events) {
-            String selection = COLUMN_NAME_EVENTS_CONDITION + " LIKE ?";
+            String selection = COLUMN_NAME_EVENTS_GLOBALID + " LIKE ?";
             String[] selectionArgs = { String.valueOf(event.getGlobalId()) };
 
             ContentValues values = new ContentValues();
             values.put(COLUMN_NAME_EVENTS_GLOBALID, event.getGlobalId());
-            values.put(COLUMN_NAME_EVENTS_CONDITION, event.getConditionId());
+            values.put(COLUMN_NAME_EVENTS_CONDITION, conditionId);
             values.put(COLUMN_NAME_EVENTS_TYPE, event.getType().toString());
             values.put(COLUMN_NAME_EVENTS_PARAMS, event.getJSONStringWithParams());
 
@@ -315,6 +342,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
+        cursor.close();
         return conditions;
     }
 
@@ -341,6 +369,20 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
+        cursor.close();
         return events;
+    }
+
+    int getLocalIdByGlobal(int globalId, String tableName) {
+        int localId = 1;
+        String selectQuery = "SELECT * FROM " + tableName + " WHERE global_id = " + globalId;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            localId = Integer.parseInt(cursor.getString(cursor.getColumnIndex("id")));
+        }
+
+        cursor.close();
+        return localId;
     }
 }

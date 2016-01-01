@@ -80,7 +80,7 @@ public class TasksManager {
         //tasksHashMap.add(new Task(2, 2, "test2"));
         //tasksHashMap.add(new Task(3, 3, "test3 big big big so big test3 big big big so big1 1234 1234")); //60
         //tasksHashMap.add(new Task(4, 4, "test4"));
-
+        taskDbHelper.close();
         return tasks;
     }
 
@@ -148,17 +148,44 @@ public class TasksManager {
         return true;
     }
 
+    public void deleteTaskById(int taskId) {
+        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        taskDbHelper.deleteTaskById(taskId);
+        taskDbHelper.close();
+    }
+
+    public void deleteTaskByGlobalId(int taskGlobalId) {
+        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
+        taskDbHelper.close();
+    }
+
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
         for (Task task : tasks){
             Integer taskId = task.getId();
             if(tasksHashMap.containsKey(taskId)) {
-                mappedTasks.add(tasksHashMap.get(taskId));
+                Task refreshedTask = tasksHashMap.get(taskId);
+                refreshedTask = refreshTaskObject(refreshedTask, task);
+                mappedTasks.add(refreshedTask);
             } else {
                 mappedTasks.add(task);
-                tasksHashMap.put(taskId, task);
+                //tasksHashMap.put(taskId, task);
             }
         }
+        tasksHashMap.clear();
+        for(Task mappedTask : mappedTasks) {
+            tasksHashMap.put(mappedTask.getId(), mappedTask);
+        }
         return mappedTasks;
+    }
+
+    private Task refreshTaskObject(Task heapTask, Task dbTask) {
+        heapTask.setMessage(dbTask.getMessage());
+        heapTask.setDescription(dbTask.getDescription());
+        heapTask.setConditions(dbTask.getConditions());
+        return heapTask;
     }
 }
