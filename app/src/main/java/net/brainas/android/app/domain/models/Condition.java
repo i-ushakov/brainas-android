@@ -21,7 +21,9 @@ public class Condition {
             setGlobalId(globalId);
         }
 
-        setTaskId(taskId);
+        if (taskId != null) {
+            setTaskId(taskId);
+        }
     }
 
     public void setId(int id) {

@@ -67,7 +67,7 @@ public class BrainasApp extends Application {
     public NotificationManager getNotificationManager(){ return this.notificationManager; }
 
     public TaskDbHelper getTaskDbHelper() {
-        return this.taskDbHelper;
+        return new TaskDbHelper(context);
     }
 
     public ActivationManager getActivationManager() {

@@ -12,18 +12,21 @@ import android.widget.LinearLayout;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.brainas.android.app.R;
+import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.fragments.MapFragment;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by innok on 12/11/2015.
  */
 public class ConditionBlockView extends LinearLayout {
     private Condition condition;
+    private int containerId = 0;
 
     public ConditionBlockView(Context context, Condition condition) {
         this(context, null, condition);
@@ -36,6 +39,8 @@ public class ConditionBlockView extends LinearLayout {
         inflate(getContext(), R.layout.view_condition_block, this);
 
         ViewGroup eventsRowViewGroup = (ViewGroup) findViewById(R.id.condition_events_row);
+        //containerId = Utils.generateViewId();
+        //eventsRowViewGroup.setId(containerId);
         ArrayList<Event> events = condition.getEvents();
         for (Event event : events) {
             LinearLayout eventView = new EventRowView(context, event);
@@ -115,7 +120,7 @@ public class ConditionBlockView extends LinearLayout {
         if (gpsCoordinates != null) {
             MapFragment.newInstance(
                     context,
-                    getResources().getIdentifier("mapContainer" + condition.getId(), "id", context.getPackageName()),
+                    getResources().getIdentifier("mapContainer1", "id", context.getPackageName()),
                     gpsCoordinates
             );
         }
