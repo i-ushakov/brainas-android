@@ -13,6 +13,8 @@ public abstract class Event {
     private int id;
     private int globalId;
     private int conditionId;
+    private int globalConditionId;
+
     public enum TYPES {
         GPS
     }
@@ -27,7 +29,9 @@ public abstract class Event {
             this.setGlobalId(globalId);
         }
 
-        this.conditionId = conditionId;
+        if (conditionId != null) {
+            this.conditionId = conditionId;
+        }
     }
 
     abstract public void fillInParamsFromXML(Element xmlParams);

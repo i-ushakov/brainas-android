@@ -1,6 +1,7 @@
 package net.brainas.android.app.fragments;
 
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
@@ -11,6 +12,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.lang.ref.WeakReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -27,6 +31,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     public static MapFragment newInstance(AppCompatActivity appCompatActivity, int containerId, LatLng lanLng) {
+
         //appCompatActivity.getSupportFragmentManager();
         MapFragment mapFragment = new MapFragment();
         mapFragment.setAppCompatActivity(appCompatActivity);
@@ -51,6 +56,11 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 .position(lanLng));
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        //No call for super(). Bug on API Level > 11.
+    }
+
 
     private void setAppCompatActivity(AppCompatActivity appCompatActivity) {
         this.appCompatActivity = appCompatActivity;
@@ -64,7 +74,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         final MapFragment self = this;
         new Handler().post(new Runnable() {
             public void run() {
-                appCompatActivity.getSupportFragmentManager().beginTransaction().replace(containerId, self).commit();
+                appCompatActivity.getSupportFragmentManager().beginTransaction().replace(self.containerId, self).commitAllowingStateLoss();
             }});
         }
 
