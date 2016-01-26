@@ -36,9 +36,11 @@ public class ReminderScreenManager implements
     }
 
     public void refreshTilesWithActiveTasks() {
-        List<Task> activeTasks = tasksManager.getActiveList();
-        List<TaskTileView> tiles = this.initTiles(activeTasks);
-        this.placeTiles(tiles);
+        if (((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().isUserSingIn()) {
+            List<Task> activeTasks = tasksManager.getActiveList();
+            List<TaskTileView> tiles = this.initTiles(activeTasks);
+            this.placeTiles(tiles);
+        }
     }
 
     @Override

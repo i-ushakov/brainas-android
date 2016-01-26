@@ -68,6 +68,8 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
             getMenuInflater().inflate(R.menu.task_card_active, menu);
         } else if (status == Task.STATUSES.DONE || status == Task.STATUSES.CANCELED) {
             getMenuInflater().inflate(R.menu.task_card_used, menu);
+        } else if (status == Task.STATUSES.WAITING) {
+            getMenuInflater().inflate(R.menu.task_card_waiting, menu);
         }
         return true;
     }
@@ -149,7 +151,7 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
     }
 
     private void setTaskStatus() {
-        if (task.getStatus() != null) {
+        if (task != null && task.getStatus() != null) {
             String statusLable = task.getStatus().getLabel(this);
             setTitle(statusLable);
         }

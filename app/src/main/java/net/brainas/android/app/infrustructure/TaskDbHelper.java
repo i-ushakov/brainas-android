@@ -4,8 +4,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Created by Kit Ushakov on 11/12/2015.
  */
-public class TaskDbHelper extends SQLiteOpenHelper {
+public class TaskDbHelper {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "Brainas.db";
 
@@ -104,32 +104,28 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             COLUMN_NAME_TASKS_STATUS
     };
 
-    public TaskDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
-        this.db = this.getWritableDatabase();
+    public TaskDbHelper(AppDbHelper appDbHelper) {
+        this.db = appDbHelper.getDbAccess();
     }
 
-    public void onCreate(SQLiteDatabase db) {
+    public static void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_TASKS);
         db.execSQL(CREATE_TABLE_CONDITIONS);
         db.execSQL(CREATE_TABLE_EVENTS);
         db.execSQL(CREATE_TABLE_EVENT_TYPES);
     }
 
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public static void onUpgrade(SQLiteDatabase db) {
         db.execSQL(DELETE_TABLE_TASKS);
         db.execSQL(DELETE_TABLE_CONDITIONS);
         db.execSQL(DELETE_TABLE_EVENTS);
         db.execSQL(DELETE_TABLE_EVENT_TYPES);
-        onCreate(db);
     }
 
-    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        onUpgrade(db, oldVersion, newVersion);
+    public static void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    public ArrayList<Task> getTasks(Map<String,Object> params){
+    public ArrayList<Task> getTasks(Map<String,Object> params, Integer accountId){
         ArrayList<Task> tasks = new ArrayList<Task>();
 
         /*
@@ -137,8 +133,9 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                 FeedEntry.COLUMN_NAME_UPDATED + " DESC";
                 */
 
-        String selection = "1";
+        String selection = COLUMN_NAME_TASKS_USER + " LIKE ?";
         List<String> selectionArgsList = new ArrayList<String>();
+        selectionArgsList.add(accountId.toString());
 
         // by group
         if (params != null && params.containsKey("GROUP_OF_TASKS")) {
@@ -187,7 +184,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                 int id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_ID) ));
                 String message = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_MESSAGE) );
 
-                task = new Task(id, message);
+                task = new Task(id, accountId, message);
 
                 String globalIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_GLOBAL_ID));
                 if (globalIdStr != null) {
@@ -215,6 +212,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
         String[] selectionArgs = { String.valueOf(task.getGlobalId()) };
 
         ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
         values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
@@ -384,5 +382,9 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
         cursor.close();
         return localId;
+    }
+
+    public void close() {
+        db.close();
     }
 }

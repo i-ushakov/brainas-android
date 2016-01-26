@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
@@ -31,15 +32,18 @@ public class TasksActivity extends AppCompatActivity implements
         SyncManager.TaskSyncObserver,
         ActivationManager.ActivationObserver,
         Task.TaskChangesObserver {
+    private BrainasApp app;
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private GridView tasksGrid;
+    private TextView userNotSignedInMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
 
+        app = ((BrainasApp)BrainasApp.getAppContext());
         setTitle("Tasks");
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -60,14 +64,16 @@ public class TasksActivity extends AppCompatActivity implements
         setTabLayoutListeners(tabLayout);
 
         tasksGrid = (GridView) findViewById(R.id.tasks_grid);
-        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
+        userNotSignedInMessage = (TextView) findViewById(R.id.user_not_signed_in_message);
+        refreshTaskGrid();
 
         SyncManager.getInstance().attach(this);
-        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
+        app.getActivationManager().attach(this);
     }
 
-    private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group) {
-        tasksGrid.setAdapter(new TaskTileAdapter(this, group));
+    private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group, int accountId) {
+        userNotSignedInMessage.setVisibility(View.GONE);
+        tasksGrid.setAdapter(new TaskTileAdapter(this, group, accountId));
         tasksGrid.setOnItemClickListener(null);
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -107,36 +113,41 @@ public class TasksActivity extends AppCompatActivity implements
     }
 
     private void refreshTaskGrid() {
-        TasksManager.GROUP_OF_TASKS group;
-        switch (tabLayout.getSelectedTabPosition()) {
-            case 0 :
-                group = TasksManager.GROUP_OF_TASKS.ALL;
-                break;
-            case 1 :
-                group = TasksManager.GROUP_OF_TASKS.WAITING;
-                break;
-            case 2 :
-                group = TasksManager.GROUP_OF_TASKS.USED;
-                break;
-            default:
-                group = TasksManager.GROUP_OF_TASKS.ALL;
-                TabLayout.Tab tab = tabLayout.getTabAt(0);
-                tab.select();
-                break;
+        if (app.getAccountsManager().isUserSingIn()) {
+            TasksManager.GROUP_OF_TASKS group;
+            switch (tabLayout.getSelectedTabPosition()) {
+                case 0:
+                    group = TasksManager.GROUP_OF_TASKS.ALL;
+                    break;
+                case 1:
+                    group = TasksManager.GROUP_OF_TASKS.WAITING;
+                    break;
+                case 2:
+                    group = TasksManager.GROUP_OF_TASKS.USED;
+                    break;
+                default:
+                    group = TasksManager.GROUP_OF_TASKS.ALL;
+                    TabLayout.Tab tab = tabLayout.getTabAt(0);
+                    tab.select();
+                    break;
+            }
+            int accountId = app.getAccountsManager().getUserAccount().getAccountId();
+            updateTasksGrid(group, accountId);
+        } else {
+            showUserNotSignedInMessage();
         }
-        updateTasksGrid(group);
     }
 
     private class TaskTileAdapter extends BaseAdapter {
         private Context context;
         private List<Task> tasks = new ArrayList<Task>();
 
-        public TaskTileAdapter(Context context, TasksManager.GROUP_OF_TASKS group) {
+        public TaskTileAdapter(Context context, TasksManager.GROUP_OF_TASKS group, int accountId) {
             this.context = context;
             Map<String,Object> params = new HashMap<>();
             params.put("GROUP_OF_TASKS", group);
             TasksManager taskManager = ((BrainasApp)(BrainasApp.getAppContext())).getTasksManager();
-            tasks = taskManager.getTasksFromDB(params);
+            tasks = taskManager.getTasksFromDB(params, accountId);
             for (Task task : tasks) {
                 task.attachObserver(TasksActivity.this);
             }
@@ -174,13 +185,13 @@ public class TasksActivity extends AppCompatActivity implements
             public void onTabSelected(TabLayout.Tab tab) {
                 switch (tab.getPosition()) {
                     case 0:
-                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.ALL);
+                        refreshTaskGrid();
                         break;
                     case 1:
-                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.WAITING);
+                        refreshTaskGrid();
                         break;
                     case 2:
-                        updateTasksGrid(TasksManager.GROUP_OF_TASKS.USED);
+                        refreshTaskGrid();
                         break;
                 }
             }
@@ -193,4 +204,9 @@ public class TasksActivity extends AppCompatActivity implements
         });
     }
 
+    private void showUserNotSignedInMessage() {
+        userNotSignedInMessage.setVisibility(View.VISIBLE);
+        tasksGrid.setAdapter(null);
+        tasksGrid.setVisibility(View.VISIBLE);
+    }
 }

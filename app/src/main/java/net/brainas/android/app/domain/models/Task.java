@@ -4,21 +4,19 @@ import android.content.Context;
 import android.content.res.Resources;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.R;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Created by innok on 11/9/2015.
  */
 public class Task {
     private int id;
+    private Integer accountId = null;
     private int globalId;
     private String message = null;
     private String description = null;
@@ -62,20 +60,23 @@ public class Task {
         }
     }
 
-    public Task(String message) {
+    public Task(int user, String message) {
+        this.accountId = user;
         this.message = message;
     }
 
-    public Task(int id, String message) {
+    public Task(int id, int user, String message) {
         this.id = id;
+        this.accountId = user;
         this.message = message;
     }
 
-    public Task(int id, int globalId, String message) {
+    /*public Task(int id, int globalId, int accountId, String message) {
         this.id = id;
+        this.accountId = accountId;
         this.globalId = globalId;
         this.message = message;
-    }
+    }*/
 
     public void setId(int id) {
         this.id = id;
@@ -83,6 +84,10 @@ public class Task {
 
     public int getId() {
         return id;
+    }
+
+    public Integer getAccountId() {
+        return this.accountId;
     }
 
     public void setGlobalId(int globalId) { this.globalId = globalId; }
@@ -132,7 +137,7 @@ public class Task {
             case "DONE" :
                 setStatus(STATUSES.DONE);
                 break;
-            case "CANCLED" :
+            case "CANCELED" :
                 setStatus(STATUSES.CANCELED);
                 break;
 

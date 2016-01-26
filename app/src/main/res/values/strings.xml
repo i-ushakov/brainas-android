@@ -8,4 +8,13 @@
     <string name="action_restore_task">Restore task</string>
     <string name="action_remove_task">Remove task</string>
     <string name="title_activity_maps">Map</string>
+    <string name="loading">Pleas wait...</string>
+
+    <!-- TasksActivity -->
+    <string name="user_must_be_signed_id">You must sign in to Brain Assistant\'s app to continue.</string>
+
+    <!-- AccountsActivity -->
+    <string name="activity_accounts_title">Accounts</string>
+    <string name="accounts_header_signedin">You are signed in via your google account</string>
+    <string name="accounts_header_not_signedin">You are not signed in to brainas app</string>
 </resources>

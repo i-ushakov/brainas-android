@@ -1,8 +1,11 @@
 package net.brainas.android.app.domain.helpers;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
+import net.brainas.android.app.infrustructure.SyncManager;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+import net.brainas.android.app.infrustructure.UserAccount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,10 +16,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
-public class TasksManager {
+public class TasksManager implements AccountsManager.SingInObserver {
 
     private TaskDbHelper taskDbHelper;
     private  HashMap<Integer, Task> tasksHashMap = new HashMap<>();
+    private Integer accountId = null;
 
     public enum GROUP_OF_TASKS {
         ALL,
@@ -29,32 +33,43 @@ public class TasksManager {
     private ArrayList<Task> activeList = new ArrayList<>();
 
     public TasksManager(TaskDbHelper taskDbHelper) {
+        ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().attach(this);
+        accountId = ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrenAccountId();
+
         this.taskDbHelper = taskDbHelper;
-        fillInWLFromDB();
-        fiilInALFromDB();
+        //fillInWLFromDB();
+        //fiilInALFromDB();
     }
 
     public void addTasksToWaitingList(List<Task> tasks) {
-        synchronized (waitingList) {
-            waitingList.addAll(tasks);
+        if (activeList != null) {
+            synchronized (waitingList) {
+                waitingList.addAll(tasks);
+            }
         }
     }
 
     public void addTasksToActiveList(List<Task> tasks) {
-        synchronized (activeList) {
-            activeList.addAll(tasks);
+        if (activeList != null) {
+            synchronized (activeList) {
+                activeList.addAll(tasks);
+            }
         }
     }
 
     public void cleanActiveList() {
-        synchronized (activeList) {
-            activeList.clear();
+        if (activeList != null) {
+            synchronized (activeList) {
+                activeList.clear();
+            }
         }
     }
 
     public void cleanWaitingList() {
-        synchronized (waitingList) {
-            waitingList.clear();
+        if (waitingList != null) {
+            synchronized (waitingList) {
+                waitingList.clear();
+            }
         }
     }
 
@@ -68,10 +83,10 @@ public class TasksManager {
         return activeList;
     }
 
-    public ArrayList<Task> getTasksFromDB(Map<String, Object> params) {
+    public ArrayList<Task> getTasksFromDB(Map<String, Object> params, int accountId) {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
-        ArrayList<Task> tasks = taskDbHelper.getTasks(params);
+        ArrayList<Task> tasks = taskDbHelper.getTasks(params, accountId);
         tasks = objectsMapping(tasks);
         /* TODO */
         //Task task1 = new Task(1,1,"test1");
@@ -80,16 +95,21 @@ public class TasksManager {
         //tasksHashMap.add(new Task(2, 2, "test2"));
         //tasksHashMap.add(new Task(3, 3, "test3 big big big so big test3 big big big so big1 1234 1234")); //60
         //tasksHashMap.add(new Task(4, 4, "test4"));
-        taskDbHelper.close();
+        //taskDbHelper.close();
         return tasks;
     }
 
     public Task getTaskById(long id) {
+        // We cannot get tasks if we don't know current user account id
+        if (accountId == null) {
+            return null;
+        }
         Map<String,Object> params = new HashMap<>();
         params.put("TASK_ID", id);
         Task task = null;
-        if (getTasksFromDB(params).size() > 0) {
-            task = getTasksFromDB(params).get(0);
+        List<Task> tasks = getTasksFromDB(params, accountId);
+        if (tasks.size() > 0) {
+            task = tasks.get(0);
         } else {
             // TODO (For example, situation when task , was deleted through a web interface, and was removed from android database after synchronization)
         }
@@ -97,18 +117,26 @@ public class TasksManager {
     }
 
     public ArrayList<Task> fiilInALFromDB() {
+        // We cannot get tasks if we don't know current user account id
+        if (accountId == null) {
+            return null;
+        }
         Map<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", GROUP_OF_TASKS.ACTIVE);
-        ArrayList<Task> activeTasks = this.getTasksFromDB(params);
+        ArrayList<Task> activeTasks = this.getTasksFromDB(params, accountId);
         cleanActiveList();
         addTasksToActiveList(activeTasks);
         return activeTasks;
     }
 
     public ArrayList<Task> fillInWLFromDB() {
+        // We cannot get tasks if we don't know current user account id
+        if (accountId == null) {
+            return null;
+        }
         Map<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", TasksManager.GROUP_OF_TASKS.WAITING);
-        ArrayList<Task> waitingTasks = this.getTasksFromDB(params);
+        ArrayList<Task> waitingTasks = this.getTasksFromDB(params, accountId);
         cleanWaitingList();
         addTasksToWaitingList(waitingTasks);
         return waitingTasks;
@@ -152,14 +180,22 @@ public class TasksManager {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         taskDbHelper.deleteTaskById(taskId);
-        taskDbHelper.close();
+        //taskDbHelper.close();
     }
 
     public void deleteTaskByGlobalId(int taskGlobalId) {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
-        taskDbHelper.close();
+        //taskDbHelper.close();
+    }
+
+    public void updateAfterSingIn(UserAccount userAccount) {
+        accountId = userAccount.getAccountId();
+    }
+
+    public void updateAfterSingOut() {
+        accountId = null;
     }
 
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {

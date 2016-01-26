@@ -11,13 +11,17 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.infrustructure.SyncManager;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     private BrainasApp app;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
@@ -45,7 +49,11 @@ public class MainActivity extends AppCompatActivity {
 
         setOnTouchListenerForSlideButton();
         setOnClickListenerForTasksMenuItem();
-        initLayout();
+        setOnClickListenerForAccountsMenuItem();
+
+        if (!app.getAccountsManager().initialSingIn(this)) {
+            startAccountsActivity();
+        }
     }
 
     @Override
@@ -53,6 +61,13 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+
+        initLayout();
     }
 
     @Override
@@ -93,6 +108,20 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(tasksIntent);
             }
         });
+    }
+
+    private void setOnClickListenerForAccountsMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_accounts);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startAccountsActivity();
+            }
+        });
+    }
+
+    private void startAccountsActivity() {
+        Intent tasksIntent = new Intent(MainActivity.this, AccountsActivity.class);
+        startActivity(tasksIntent);
     }
 
     private void initLayout(){
@@ -162,5 +191,19 @@ public class MainActivity extends AppCompatActivity {
         ViewGroup.LayoutParams layoutParams = slideButton.getLayoutParams();
         layoutParams.height = massagesPanel.getHeight() - (massagesPanel.getWidth()/15) * 20 - addTaskButton.getHeight();
         slideButton.setLayoutParams(layoutParams);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == AccountsManager.RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (!app.getAccountsManager().handleSignInResult(result, this) || !app.getAccountsManager().isUserSingIn()) {
+                startAccountsActivity();
+            }
+        }
     }
 }

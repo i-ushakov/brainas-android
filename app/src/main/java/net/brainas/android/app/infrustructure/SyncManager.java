@@ -60,7 +60,7 @@ public class SyncManager {
     private static SyncManager instance = null;
 
     static String attachmentFileName = "fresh_task.xml";
-    //static String serverUrl = "http://192.168.1.103/backend/web/connection/";
+    //static String serverUrl = "http://192.168.1.104/backend/web/connection/";
     static String serverUrl = "http://brainas.net/backend/web/connection/";
     static String lineEnd = "\r\n";
     static String boundary =  "*****";
@@ -91,9 +91,11 @@ public class SyncManager {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        Log.v("SYNC", "Sync was start!");
-                        synchronization();
-                        Log.v("SYNC", "Sync was done!");
+                        if (((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().isUserAuthorized()) {
+                            Log.v("SYNC", "Sync was start!");
+                            synchronization();
+                            Log.v("SYNC", "Sync was done!");
+                        }
                     }
                 });
             }
@@ -263,6 +265,15 @@ public class SyncManager {
         request.writeBytes("--" + boundary + lineEnd);
         streamOfXmlDocument.close();
 
+        String accessToken = ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getAccessToken();
+        request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
+        request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+        request.writeBytes("Content-Length: " + accessToken.length() + lineEnd);
+        request.writeBytes(lineEnd);
+        request.writeBytes(accessToken); // mobile_no is String variable
+        request.writeBytes(lineEnd);
+        request.writeBytes("--" + boundary + lineEnd);
+
         // parse server response
         InputStream stream = ((HttpURLConnection)connection).getInputStream();
         InputStreamReader isReader = new InputStreamReader(stream);
@@ -298,7 +309,8 @@ public class SyncManager {
             }
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
-            Task task = new Task(message);
+            int accountId = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount().getAccountId();
+            Task task = new Task(accountId, message);
             task.setGlobalId(globalId);
             task.setDescription(description);
             Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
@@ -358,7 +370,7 @@ public class SyncManager {
 
         result.put("added", addedTasksLocalIds);
         result.put("updated", updatedTasksGlobalIds);
-        taskDbHelper.close();
+        //taskDbHelper.close();
         return result;
     }
 
