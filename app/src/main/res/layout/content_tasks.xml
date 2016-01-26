@@ -8,11 +8,22 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_tasks"
-    tools:context="net.brainas.android.app.activities.TasksActivity">
+    tools:context="net.brainas.android.app.activities.TasksActivity"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/user_must_be_signed_id"
+        android:id="@+id/user_not_signed_in_message"
+        android:layout_gravity="center" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/tasks_panel">
+        android:id="@+id/tasks_panel"
+        android:orientation="vertical">
         <GridView
             android:id="@+id/tasks_grid"
             android:layout_width="match_parent"
@@ -20,4 +31,5 @@
             android:numColumns="3">
         </GridView >
     </LinearLayout>
+
 </LinearLayout>

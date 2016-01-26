@@ -76,15 +76,20 @@ public class ActivationManager {
 
 
     private void checkConditionsInWL() {
+        if (!((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().isUserSingIn()) {
+            return;
+        }
         List<Task> activatedTasks = new ArrayList<>();
         ArrayList<Task> waitingList = tasksManager.getWaitingList();
-        synchronized (lock) {
-            Iterator<Task> iterator = waitingList.iterator();
-            while (iterator.hasNext()) {
-                Task task = iterator.next();
-                if (task.isConditionsSatisfied(this)) {
-                    task.changeStatus(Task.STATUSES.ACTIVE);
-                    activatedTasks.add(task);
+        if (waitingList != null) {
+            synchronized (lock) {
+                Iterator<Task> iterator = waitingList.iterator();
+                while (iterator.hasNext()) {
+                    Task task = iterator.next();
+                    if (task.isConditionsSatisfied(this)) {
+                        task.changeStatus(Task.STATUSES.ACTIVE);
+                        activatedTasks.add(task);
+                    }
                 }
             }
         }

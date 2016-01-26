@@ -2,20 +2,27 @@ package net.brainas.android.app;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
-import net.brainas.android.app.activities.TasksActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
+import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.infrustructure.UserAccountDbHelper;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
 public class BrainasApp extends Application {
+    public static final String BRAINAS_APP_PREFS = "BrainasAppPrefs";
+
     private static Context context;
+
+    private UserAccount userAccount;
 
     // Activities
     private MainActivity mainActivity;
@@ -29,12 +36,20 @@ public class BrainasApp extends Application {
     private ReminderScreenManager reminderScreenManager;
 
     // Infrastructure Layer Managers
+    private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
+    private UserAccountDbHelper userAccountDbHelper;
+
+    // Application Layer Managers
+    private AccountsManager accountsManager;
 
     public void onCreate() {
         super.onCreate();
         BrainasApp.context = getApplicationContext();
-        taskDbHelper = new TaskDbHelper(context);
+        accountsManager = new AccountsManager();
+        AppDbHelper appDbHelper = new AppDbHelper(context);
+        taskDbHelper = new TaskDbHelper(appDbHelper);
+        userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
         tasksManager = new TasksManager(taskDbHelper);
         activationManager = new ActivationManager(tasksManager);
         notificationManager = new NotificationManager();
@@ -67,11 +82,50 @@ public class BrainasApp extends Application {
     public NotificationManager getNotificationManager(){ return this.notificationManager; }
 
     public TaskDbHelper getTaskDbHelper() {
-        return new TaskDbHelper(context);
+        return taskDbHelper;
+    }
+
+    public UserAccountDbHelper getUserAccountDbHelper() {
+        return userAccountDbHelper;
     }
 
     public ActivationManager getActivationManager() {
         return activationManager;
+    }
+
+    public void setUserAccount(UserAccount userAccount) {
+        this.userAccount = userAccount;
+        userAccountDbHelper.setUserAccount(userAccount);
+        userAccount.setAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
+        SharedPreferences preferences = getAppPreferences();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("lastUsedAccount", userAccount.getAccountName());
+        editor.commit();
+    }
+
+    public UserAccount getUserAccount() {
+        return userAccount;
+    }
+
+    public UserAccount getLastUsedAccount() {
+        UserAccount userAccount = null;
+        SharedPreferences preferences = getAppPreferences();
+        String accountName = preferences.getString("lastUsedAccount", null);
+        if (accountName != null) {
+            userAccount = userAccountDbHelper.retrieveUserAccountFromDB(accountName);
+            return userAccount;
+        } else {
+            return null;
+        }
+    }
+
+    public SharedPreferences getAppPreferences() {
+        SharedPreferences preferences = getSharedPreferences(BRAINAS_APP_PREFS, 0);
+        return preferences;
+    }
+
+    public AccountsManager getAccountsManager() {
+        return this.accountsManager;
     }
 
 }

@@ -50,7 +50,17 @@
                     android:background="@color/colorPrimaryDark"
                     android:src="@drawable/task_list_icon"
                     android:id="@+id/menu_item_tasks"
-                    android:adjustViewBounds="true"/>
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/account_icon"
+                    android:id="@+id/menu_item_accounts"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
             </LinearLayout>
 
             <LinearLayout
