@@ -68,7 +68,7 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
             getMenuInflater().inflate(R.menu.task_card_active, menu);
         } else if (status == Task.STATUSES.DONE || status == Task.STATUSES.CANCELED) {
             getMenuInflater().inflate(R.menu.task_card_used, menu);
-        } else if (status == Task.STATUSES.WAITING) {
+        } else if (status == Task.STATUSES.WAITING || status == Task.STATUSES.DISABLED) {
             getMenuInflater().inflate(R.menu.task_card_waiting, menu);
         }
         return true;

@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity  {
         setOnTouchListenerForSlideButton();
         setOnClickListenerForTasksMenuItem();
         setOnClickListenerForAccountsMenuItem();
+        setOnClickListenerForAddTaskButton();
 
         if (!app.getAccountsManager().initialSingIn(this)) {
             startAccountsActivity();
@@ -121,6 +122,19 @@ public class MainActivity extends AppCompatActivity  {
 
     private void startAccountsActivity() {
         Intent tasksIntent = new Intent(MainActivity.this, AccountsActivity.class);
+        startActivity(tasksIntent);
+    }
+
+    private void setOnClickListenerForAddTaskButton() {
+        addTaskButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startEditTaskActivity();
+            }
+        });
+    }
+
+    private void startEditTaskActivity() {
+        Intent tasksIntent = new Intent(MainActivity.this, EditTaskActivity.class);
         startActivity(tasksIntent);
     }
 

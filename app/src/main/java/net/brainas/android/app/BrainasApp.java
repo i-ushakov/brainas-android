@@ -10,6 +10,7 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
+import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.infrustructure.UserAccountDbHelper;
@@ -38,6 +39,7 @@ public class BrainasApp extends Application {
     // Infrastructure Layer Managers
     private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
+    private TaskChangesDbHelper taskChangesDbHelper;
     private UserAccountDbHelper userAccountDbHelper;
 
     // Application Layer Managers
@@ -49,6 +51,7 @@ public class BrainasApp extends Application {
         accountsManager = new AccountsManager();
         AppDbHelper appDbHelper = new AppDbHelper(context);
         taskDbHelper = new TaskDbHelper(appDbHelper);
+        taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
         tasksManager = new TasksManager(taskDbHelper);
         activationManager = new ActivationManager(tasksManager);
@@ -83,6 +86,10 @@ public class BrainasApp extends Application {
 
     public TaskDbHelper getTaskDbHelper() {
         return taskDbHelper;
+    }
+
+    public TaskChangesDbHelper getTasksChangesDbHelper() {
+        return taskChangesDbHelper;
     }
 
     public UserAccountDbHelper getUserAccountDbHelper() {

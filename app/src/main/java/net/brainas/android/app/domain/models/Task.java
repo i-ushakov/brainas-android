@@ -5,9 +5,11 @@ import android.content.res.Resources;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -15,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Created by innok on 11/9/2015.
  */
 public class Task {
-    private int id;
+    private long id;
     private Integer accountId = null;
     private int globalId;
     private String message = null;
@@ -25,6 +27,7 @@ public class Task {
     private ArrayList<Condition> conditions = new ArrayList<>();
     private CopyOnWriteArrayList<TaskChangesObserver> observers = new CopyOnWriteArrayList<TaskChangesObserver>();
     private Object lock = new Object();
+    private HashMap<String, String> warnings = new HashMap();
 
     public interface TaskChangesObserver {
         void updateAfterTaskWasChanged();
@@ -78,11 +81,11 @@ public class Task {
         this.message = message;
     }*/
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -149,11 +152,21 @@ public class Task {
 
 
     public void setStatus(STATUSES status){
+        if (status == STATUSES.WAITING) {
+            if (!checkActualityOfConditions()) {
+                this.status = STATUSES.DISABLED;
+                return;
+            }
+        }
         this.status = status;
     }
 
     public STATUSES getStatus() {
         return status;
+    }
+
+    public HashMap<String, String> getWarnings() {
+        return warnings;
     }
 
     public void addCondition(Condition condition) {
@@ -198,10 +211,20 @@ public class Task {
 
     public void save(){
         TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
-        taskDbHelper.addOrUpdateTask(this);
+        long taskId = taskDbHelper.addOrUpdateTask(this);
+        this.setId(taskId);
+        TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
+        taskChangesDbHelper.loggingChanges(this);
         notifyAllObservers();
     }
 
+    public boolean checkActualityOfConditions() {
+        if (this.conditions.size() == 0) {
+            warnings.put("no_conditions", "The task was set in disabled status, because it dosn't have conditions");
+            return false;
+        }
+        return true;
+    }
 
     private void notifyAboutTask() {
         // TODO notivication of User  (NotificationManager.class /TaskManager.class)

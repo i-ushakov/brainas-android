@@ -8,7 +8,14 @@ import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.domain.models.Task;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -51,6 +58,38 @@ public class InfrustructureHelper {
             }
         }
         return inFiles;
+    }
+
+    public static File createFileInDir(String dir, String fileName, String ext) throws IOException {
+        File file;
+
+        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        Calendar cal = Calendar.getInstance();
+        String xmlFileName = fileName + "_" + dateFormat.format(cal.getTime()) + "." + ext;
+
+        file = new File(dataDir + dir +  xmlFileName);
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+
+        return file;
+    }
+
+    public static HttpURLConnection createHttpMultipartConn(String url) throws IOException {
+        URL urlObj = new URL(url);
+
+        HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
+        connection.setRequestMethod("POST");
+
+        connection.setRequestProperty("Connection", "Keep-Alive");
+        connection.setRequestProperty("Cache-Control", "no-cache");
+        connection.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
+        connection.setRequestProperty("Accept","*/*");
+        connection.setRequestProperty(
+                "Content-Type", "multipart/form-data;boundary=" + SyncManager.boundary);
+
+        return connection;
     }
 
     /*

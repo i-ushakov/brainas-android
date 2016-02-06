@@ -39,6 +39,10 @@
             android:name=".activities.AccountsActivity"
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".activities.EditTaskActivity"
+            android:label="@string/activity_accounts_title"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <meta-data
             android:name="com.google.android.gms.version"

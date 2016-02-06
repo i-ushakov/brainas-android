@@ -3,7 +3,6 @@ package net.brainas.android.app.domain.helpers;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
-import net.brainas.android.app.infrustructure.SyncManager;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -19,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class TasksManager implements AccountsManager.SingInObserver {
 
     private TaskDbHelper taskDbHelper;
-    private  HashMap<Integer, Task> tasksHashMap = new HashMap<>();
+    private HashMap<Long, Task> tasksHashMap = new HashMap<>();
     private Integer accountId = null;
 
     public enum GROUP_OF_TASKS {
@@ -155,7 +154,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
         }
     }
 
-    public boolean restoreTaskToWaiting(int takId) {
+    public boolean restoreTaskToWaiting(long takId) {
         Task task = getTaskById(takId);
         if (conditionsValidation(task.getConditions())) {
             task.changeStatus(Task.STATUSES.WAITING);
@@ -201,7 +200,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
         for (Task task : tasks){
-            Integer taskId = task.getId();
+            long taskId = task.getId();
             if(tasksHashMap.containsKey(taskId)) {
                 Task refreshedTask = tasksHashMap.get(taskId);
                 refreshedTask = refreshTaskObject(refreshedTask, task);

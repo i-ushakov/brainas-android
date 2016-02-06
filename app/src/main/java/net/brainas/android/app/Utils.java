@@ -3,7 +3,17 @@ package net.brainas.android.app;
 import android.os.Build;
 import android.view.View;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * Created by innok on 12/28/2015.
@@ -36,5 +46,24 @@ public class Utils {
                 return result;
             }
         }
+    }
+
+    public static String getDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
+    public static String getDateTimeGMT() {
+        Date date = new Date();
+        SimpleDateFormat writeDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        writeDate.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return writeDate.format(date);
+    }
+
+    public static String printFileToString(File file) throws IOException {
+        String contents = Files.toString(file, Charsets.UTF_8);
+        return contents;
     }
 }

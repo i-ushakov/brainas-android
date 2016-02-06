@@ -1,11 +1,9 @@
 package net.brainas.android.app.infrustructure;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -29,7 +27,7 @@ public class TaskDbHelper {
 
     /* TABLE TASKS */
     public static final String TABLE_TASKS = "tasks";
-    public static final String COLUMN_NAME_TASKS_ID = "id";
+    public static final String COLUMN_NAME_TASKS_ID = "_id";
     public static final String COLUMN_NAME_TASKS_GLOBAL_ID = "global_id";
     public static final String COLUMN_NAME_TASKS_USER = "user";
     public static final String COLUMN_NAME_TASKS_MESSAGE = "message";
@@ -38,7 +36,7 @@ public class TaskDbHelper {
     public static final String COLUMN_NAME_TASKS_STATUS = "status";
     private static final String CREATE_TABLE_TASKS =
             "CREATE TABLE " + TABLE_TASKS + " (" +
-                    COLUMN_NAME_TASKS_ID + " INTEGER PRIMARY KEY," +
+                    COLUMN_NAME_TASKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     COLUMN_NAME_TASKS_GLOBAL_ID + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_TASKS_USER + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_TASKS_MESSAGE + " TEXT" + COMMA_SEP +
@@ -207,38 +205,50 @@ public class TaskDbHelper {
 
 
     public long addOrUpdateTask(Task task) {
-        long newRowId = 0;
-        String selection = COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
-        String[] selectionArgs = { String.valueOf(task.getGlobalId()) };
+        long taskId = 0;
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
         values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
-        values.put(COLUMN_NAME_TASKS_DESCRIPTION, task.getDescription().toString());
+        values.put(COLUMN_NAME_TASKS_DESCRIPTION, task.getDescription());
 
-        int nRowsEffected = db.update(
-                TABLE_TASKS,
-                values,
-                selection,
-                selectionArgs);
+        int nRowsEffected = 0;
+        if (task.getGlobalId() != 0) {
+            String selection = COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
+            String[] selectionArgs = {String.valueOf(task.getGlobalId())};
+            nRowsEffected = db.update(
+                    TABLE_TASKS,
+                    values,
+                    selection,
+                    selectionArgs);
+            taskId = getLocalIdByGlobal(task.getGlobalId(), TABLE_TASKS);
+        } else if (task.getId() != 0){
+            String selection = COLUMN_NAME_TASKS_ID + " LIKE ?";
+            String[] selectionArgs = {String.valueOf(task.getId())};
+            nRowsEffected = db.update(
+                    TABLE_TASKS,
+                    values,
+                    selection,
+                    selectionArgs);
+            taskId = task.getId();
+        }
 
         if (nRowsEffected == 0) {
-            newRowId = db.insert(
+            long newRowId = db.insert(
                     TABLE_TASKS,
                     null,
                     values);
+            taskId = newRowId;
         }
 
-        task.setId(getLocalIdByGlobal(task.getGlobalId(), TABLE_TASKS));
         saveConditions(task.getConditions(), task.getId());
 
-
-        return newRowId;
+        return taskId;
     }
 
-    public boolean deleteTaskById(int taskId) {
+    public boolean deleteTaskById(long taskId) {
         // delete task
         String selection = COLUMN_NAME_TASKS_ID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(taskId) };
@@ -268,7 +278,7 @@ public class TaskDbHelper {
         return true;
     }
 
-    private void saveConditions(ArrayList<Condition> conditions, int taskId) {
+    private void saveConditions(ArrayList<Condition> conditions, long taskId) {
         long newRowId = 0;
         for (Condition condition : conditions) {
             String selection = COLUMN_NAME_CONDITIONS_GLOBALID + " LIKE ?";

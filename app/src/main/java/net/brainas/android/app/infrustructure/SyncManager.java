@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.EventGPS;
@@ -58,6 +59,7 @@ import javax.xml.transform.stream.StreamResult;
 
 public class SyncManager {
     private static SyncManager instance = null;
+    private boolean firstSync = true;
 
     static String attachmentFileName = "fresh_task.xml";
     //static String serverUrl = "http://192.168.1.104/backend/web/connection/";
@@ -65,6 +67,8 @@ public class SyncManager {
     static String lineEnd = "\r\n";
     static String boundary =  "*****";
     static String xmlOutDirPath = "/app_sync/xml/out";
+
+    static String TAG = "SYNC";
 
     private List<TaskSyncObserver> observers = new ArrayList<>();
 
@@ -74,9 +78,13 @@ public class SyncManager {
     private AllTasksSync asyncTask;
     private JSONObject synchronizedChanges = new JSONObject();
     private JSONObject synchronizedTaskChanges = new JSONObject();
+    private SyncHelper syncHelper;
 
 
-    private SyncManager() {}
+    private SyncManager() {
+        TaskChangesDbHelper tasksChangesDbHelper = ((BrainasApp)((BrainasApp.getAppContext()))).getTasksChangesDbHelper();
+        this.syncHelper = new SyncHelper(tasksChangesDbHelper);
+    }
 
     public static synchronized SyncManager getInstance() {
         if(instance == null) {
@@ -134,9 +142,31 @@ public class SyncManager {
         @Override
         protected Void doInBackground(File... files) {
             File xmlFile;
+            File allTasksChangesInJSON;
             String response;
             List<Task> tasks;
             ArrayList<Integer> deletedTasks;
+
+            // For first sync getting AllTasksChangesListInJSON
+            if (firstSync == true) {
+                Log.v(TAG, "This is the first sync iteration");
+                try {
+                    allTasksChangesInJSON = syncHelper.getAllChangesInJSON();
+                    Log.v(TAG, allTasksChangesInJSON.getName() + " was created");
+                    Log.v(TAG, Utils.printFileToString(allTasksChangesInJSON));
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, "Cannot create json file with all changes");
+                    e.printStackTrace();
+                    return null;
+                }
+
+                try {
+                    sendAllTaskChanges(allTasksChangesInJSON);
+                } catch (IOException e) {
+                    Log.e(TAG, "Cannot send json file with all changes");
+                    e.printStackTrace();
+                }
+            }
 
             // Prepare xml
             try {
@@ -230,19 +260,66 @@ public class SyncManager {
         return xmlFile;
     }
 
+    private String sendAllTaskChanges(File allChangesInJSON) throws IOException {
+        HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(serverUrl + "get-tasks");
+
+        DataOutputStream request = new DataOutputStream(
+                connection.getOutputStream());
+
+        request.writeBytes("--" + boundary + lineEnd);
+
+        // set firstSync param
+        String firstSync= "true";
+        request.writeBytes("Content-Disposition: form-data; name=\"firstSync\"" + lineEnd);
+        request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+        request.writeBytes("Content-Length: " + firstSync.length() + lineEnd);
+        request.writeBytes(lineEnd);
+        request.writeBytes(firstSync);
+        request.writeBytes(lineEnd);
+        request.writeBytes("--" + boundary + lineEnd);
+
+        // set user identity token
+        String accessToken = ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getAccessToken();
+        request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
+        request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+        request.writeBytes("Content-Length: " + accessToken.length() + lineEnd);
+        request.writeBytes(lineEnd);
+        request.writeBytes(accessToken);
+        request.writeBytes(lineEnd);
+        request.writeBytes("--" + boundary + lineEnd);
+
+        // attach file with all changes
+        request.writeBytes("Content-Disposition: form-data; " +
+                "name=\"" + "all_changes.json" + "\"" +
+                "; filename=\"" + allChangesInJSON.getName() + "\"" + lineEnd);
+        request.writeBytes("Content-Type: text/json" + SyncManager.lineEnd);
+        request.writeBytes("Content-Length: " + allChangesInJSON.length() + SyncManager.lineEnd);
+        request.writeBytes(SyncManager.lineEnd);
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(allChangesInJSON));
+        byte[] buffer = new byte[(int) allChangesInJSON.length()];
+        bis.read(buffer);
+        request.write(buffer);
+        request.writeBytes(lineEnd);
+        request.writeBytes("--" + boundary + lineEnd);
+        bis.close();
+
+        // parse server response
+        InputStream stream = ((HttpURLConnection)connection).getInputStream();
+        InputStreamReader isReader = new InputStreamReader(stream);
+        BufferedReader br = new BufferedReader(isReader);
+        String response = "";
+        String line;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+            response+= line;
+        }
+
+        return response;
+
+    }
+
     private String sendFreshTasks(File xmlFileForUpload) throws IOException {
-        String url = serverUrl + "get-tasks";
-        URL urlObj = new URL(url);
-
-        HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
-        connection.setRequestMethod("POST");
-
-        connection.setRequestProperty("Connection", "Keep-Alive");
-        connection.setRequestProperty("Cache-Control", "no-cache");
-        connection.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
-        connection.setRequestProperty("Accept","*/*");
-        connection.setRequestProperty(
-                "Content-Type", "multipart/form-data;boundary=" + SyncManager.boundary);
+        HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(serverUrl + "get-tasks");
 
         DataOutputStream request = new DataOutputStream(
                 connection.getOutputStream());
