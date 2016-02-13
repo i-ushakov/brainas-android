@@ -8,6 +8,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -65,5 +66,25 @@ public class Utils {
     public static String printFileToString(File file) throws IOException {
         String contents = Files.toString(file, Charsets.UTF_8);
         return contents;
+    }
+
+    /*
+     * If date1 > date2 => 1
+     * date1 = date2 => 0
+     * date1 < date2 => -1
+     */
+    public static int compareTwoDates(String dateStr1, String dateStr2) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        Date date1 = null;
+        Date date2 = null;
+        try {
+            date1 = formatter.parse(dateStr1);
+            date2 = formatter.parse(dateStr2);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return date1.compareTo(date2);
     }
 }

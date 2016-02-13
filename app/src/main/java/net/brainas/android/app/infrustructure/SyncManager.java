@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -59,7 +58,7 @@ import javax.xml.transform.stream.StreamResult;
 
 public class SyncManager {
     private static SyncManager instance = null;
-    private boolean firstSync = true;
+    private boolean initSync = true;
 
     static String attachmentFileName = "fresh_task.xml";
     //static String serverUrl = "http://192.168.1.104/backend/web/connection/";
@@ -79,11 +78,13 @@ public class SyncManager {
     private JSONObject synchronizedChanges = new JSONObject();
     private JSONObject synchronizedTaskChanges = new JSONObject();
     private SyncHelper syncHelper;
+    private String initSyncTime =null;
 
 
     private SyncManager() {
         TaskChangesDbHelper tasksChangesDbHelper = ((BrainasApp)((BrainasApp.getAppContext()))).getTasksChangesDbHelper();
-        this.syncHelper = new SyncHelper(tasksChangesDbHelper);
+        TasksManager tasksManager = ((BrainasApp)((BrainasApp.getAppContext()))).getTasksManager();
+        this.syncHelper = new SyncHelper(tasksChangesDbHelper, tasksManager);
     }
 
     public static synchronized SyncManager getInstance() {
@@ -110,7 +111,7 @@ public class SyncManager {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 15, 15, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 15, 45, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -142,52 +143,71 @@ public class SyncManager {
         @Override
         protected Void doInBackground(File... files) {
             File xmlFile;
-            File allTasksChangesInJSON;
-            String response;
+            File allChangesInXML;
+            String response = null;
             List<Task> tasks;
             ArrayList<Integer> deletedTasks;
 
             // For first sync getting AllTasksChangesListInJSON
-            if (firstSync == true) {
+            if (initSync == true) {
                 Log.v(TAG, "This is the first sync iteration");
                 try {
-                    allTasksChangesInJSON = syncHelper.getAllChangesInJSON();
-                    Log.v(TAG, allTasksChangesInJSON.getName() + " was created");
-                    Log.v(TAG, Utils.printFileToString(allTasksChangesInJSON));
-                } catch (IOException | JSONException e) {
+                    allChangesInXML = syncHelper.getAllChangesInXML();
+                    Log.v(TAG, allChangesInXML.getName() + " was created");
+                    Log.v(TAG, Utils.printFileToString(allChangesInXML));
+                } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
                     Log.e(TAG, "Cannot create json file with all changes");
                     e.printStackTrace();
                     return null;
                 }
 
                 try {
-                    sendAllTaskChanges(allTasksChangesInJSON);
+                    response = sendAllChanges(allChangesInXML);
                 } catch (IOException e) {
-                    Log.e(TAG, "Cannot send json file with all changes");
+                    Log.e(TAG, "Exchange of sync data has failed");
                     e.printStackTrace();
                 }
             }
 
+            if (response != null) {
+                try {
+                    JSONObject syncDate = parseResponse(response);
+                    tasks = (ArrayList<Task>)syncDate.get("tasks");
+                    deletedTasks = (ArrayList<Integer>)syncDate.get("deletedTasks");
+                } catch (ParserConfigurationException | IOException | SAXException |JSONException e) {
+                    Log.e(TAG, "Cannot parse xml-document that gotten from server");
+                    e.printStackTrace();
+                    return null;
+                }
+
+
+                // refreshes tasks in DB
+                updateTasksInDb(tasks);
+
+                deleteTasksFromDb(deletedTasks);
+            }
+
+
             // Prepare xml
-            try {
+            /*try {
                 xmlFile = getFreshTasks();
             } catch (TransformerException | ParserConfigurationException | IOException e) {
                 // Cannot create xml with local fresh tasks
                 e.printStackTrace();
                 return null;
-            }
+            }*/
 
             // send
-            try {
+            /*try {
                 response = sendFreshTasks(xmlFile);
             } catch (IOException e) {
                 // Cannot send data to server for synchronization of tasks
                 e.printStackTrace();
                 return null;
-            }
+            }*/
 
             // parse received xml
-            try {
+            /*try {
                 JSONObject syncDate = parseResponse(response);
                 tasks = (ArrayList<Task>)syncDate.get("tasks");
                 deletedTasks = (ArrayList<Integer>)syncDate.get("deletedTasks");
@@ -198,14 +218,11 @@ public class SyncManager {
             } catch (JSONException e) {
                 e.printStackTrace();
                 return null;
-            }
+            }*/
 
-            // refreshes tasks in DB
-            updateTasksInDb(tasks);
 
-            deleteTasksFromDb(deletedTasks);
 
-            try {
+            /*try {
                 sendSynchronizedChanges();
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -213,7 +230,7 @@ public class SyncManager {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
             // notify about fresh tasks
             notifyAllObservers();
 
@@ -260,7 +277,8 @@ public class SyncManager {
         return xmlFile;
     }
 
-    private String sendAllTaskChanges(File allChangesInJSON) throws IOException {
+    private String sendAllChanges(File allChangesInXML) throws IOException {
+        String response = "";
         HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(serverUrl + "get-tasks");
 
         DataOutputStream request = new DataOutputStream(
@@ -268,15 +286,29 @@ public class SyncManager {
 
         request.writeBytes("--" + boundary + lineEnd);
 
-        // set firstSync param
-        String firstSync= "true";
-        request.writeBytes("Content-Disposition: form-data; name=\"firstSync\"" + lineEnd);
-        request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-        request.writeBytes("Content-Length: " + firstSync.length() + lineEnd);
-        request.writeBytes(lineEnd);
-        request.writeBytes(firstSync);
-        request.writeBytes(lineEnd);
-        request.writeBytes("--" + boundary + lineEnd);
+        /*if (initSync) {
+            // set initSync param
+            String initSync = "true";
+            request.writeBytes("Content-Disposition: form-data; name=\"initSync\"" + lineEnd);
+            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+            request.writeBytes("Content-Length: " + initSync.length() + lineEnd);
+            request.writeBytes(lineEnd);
+            request.writeBytes(initSync);
+            request.writeBytes(lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
+        }*/
+
+        if (initSyncTime != null) {
+            // set initSync param
+            String initSync = "true";
+            request.writeBytes("Content-Disposition: form-data; name=\"initSyncTime\"" + lineEnd);
+            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+            request.writeBytes("Content-Length: " + initSyncTime.length() + lineEnd);
+            request.writeBytes(lineEnd);
+            request.writeBytes(initSyncTime);
+            request.writeBytes(lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
+        }
 
         // set user identity token
         String accessToken = ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getAccessToken();
@@ -290,13 +322,13 @@ public class SyncManager {
 
         // attach file with all changes
         request.writeBytes("Content-Disposition: form-data; " +
-                "name=\"" + "all_changes.json" + "\"" +
-                "; filename=\"" + allChangesInJSON.getName() + "\"" + lineEnd);
-        request.writeBytes("Content-Type: text/json" + SyncManager.lineEnd);
-        request.writeBytes("Content-Length: " + allChangesInJSON.length() + SyncManager.lineEnd);
+                "name=\"" + "all_changes_xml" + "\"" +
+                "; filename=\"" + allChangesInXML.getName() + "\"" + lineEnd);
+        request.writeBytes("Content-Type: text/xml" + SyncManager.lineEnd);
+        request.writeBytes("Content-Length: " + allChangesInXML.length() + SyncManager.lineEnd);
         request.writeBytes(SyncManager.lineEnd);
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(allChangesInJSON));
-        byte[] buffer = new byte[(int) allChangesInJSON.length()];
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(allChangesInXML));
+        byte[] buffer = new byte[(int) allChangesInXML.length()];
         bis.read(buffer);
         request.write(buffer);
         request.writeBytes(lineEnd);
@@ -304,14 +336,18 @@ public class SyncManager {
         bis.close();
 
         // parse server response
-        InputStream stream = ((HttpURLConnection)connection).getInputStream();
-        InputStreamReader isReader = new InputStreamReader(stream);
-        BufferedReader br = new BufferedReader(isReader);
-        String response = "";
-        String line;
-        while ((line = br.readLine()) != null) {
-            System.out.println(line);
-            response+= line;
+        if (((HttpURLConnection)connection).getResponseCode() == 200) {
+            InputStream stream = ((HttpURLConnection) connection).getInputStream();
+            InputStreamReader isReader = new InputStreamReader(stream);
+            BufferedReader br = new BufferedReader(isReader);
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+                response += line;
+            }
+        } else {
+            Log.e(TAG, "XML file was sent but error on server is occured");
+            return null;
         }
 
         return response;
@@ -374,11 +410,22 @@ public class SyncManager {
         InputSource is = new InputSource(new StringReader(xmlStr));
         Document xmlDocument = builder.parse(is);
 
+        Element synchronizedObjectsEl = (Element)xmlDocument.getElementsByTagName("synchronizedObjects").item(0);
+
+        syncHelper.handleResultOfSyncWithServer(synchronizedObjectsEl);
+        initSyncTime = syncHelper.retrieveTimeOfInitialSync(xmlDocument);
+
+
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
         for (int i = 0; i < taskList.getLength(); ++i) {
             Element taskEl = (Element)taskList.item(i);
             int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
+            String timeOfServerChanges = taskEl.getAttribute("time-changes");
+            if (!syncHelper.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges)) {
+                continue;
+            }
+
             String timeChanges = taskEl.getAttribute("time-changes");
             if (!isActualChanges(globalId, timeChanges)) {
                 synchronizedTaskChanges.put(Integer.toString(globalId), "Rejected");
@@ -427,17 +474,17 @@ public class SyncManager {
         return syncDate;
     }
 
-    private Map<String,List<Integer>> updateTasksInDb(List<Task> tasks) {
-        List<Integer> addedTasksLocalIds = new ArrayList<Integer>();
-        List<Integer> updatedTasksGlobalIds = new ArrayList<Integer>();
-        Map<String,List<Integer>> result = new HashMap<String,List<Integer>>();
+    private Map<String,List<Long>> updateTasksInDb(List<Task> tasks) {
+        List<Long> addedTasksLocalIds = new ArrayList<Long>();
+        List<Long> updatedTasksGlobalIds = new ArrayList<Long>();
+        Map<String,List<Long>> result = new HashMap<String,List<Long>>();
 
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
 
         for (int i = 0; i < tasks.size(); ++i) {
             Task task = tasks.get(i);
-            int newLocalTaskId = (int)taskDbHelper.addOrUpdateTask(task);
+            long newLocalTaskId = (long)taskDbHelper.addOrUpdateTask(task);
             if(newLocalTaskId > 0) {
                 addedTasksLocalIds.add(newLocalTaskId);
             } else {

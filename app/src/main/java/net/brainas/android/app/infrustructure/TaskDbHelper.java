@@ -48,7 +48,7 @@ public class TaskDbHelper {
 
     /* TABLE CONDITIONS */
     public static final String TABLE_CONDITIONS = "conditions";
-    public static final String COLUMN_NAME_CONDITIONS_ID = "id";
+    public static final String COLUMN_NAME_CONDITIONS_ID = "_id";
     public static final String COLUMN_NAME_CONDITIONS_TASK = "task_id";
     public static final String COLUMN_NAME_CONDITIONS_GLOBALID = "global_id";
     private static final String CREATE_TABLE_CONDITIONS =
@@ -61,7 +61,7 @@ public class TaskDbHelper {
 
     /* TABLE EVENTS */
     public static final String TABLE_EVENTS = "events";
-    public static final String COLUMN_NAME_EVENTS_ID = "id";
+    public static final String COLUMN_NAME_EVENTS_ID = "_id";
     public static final String COLUMN_NAME_EVENTS_GLOBALID = "global_id";
 
     public static final String COLUMN_NAME_EVENTS_CONDITION = "condition_id";
@@ -157,12 +157,20 @@ public class TaskDbHelper {
             }
         }
 
-        // by id
+        // by local id
         if (params != null && params.containsKey("TASK_ID")) {
             selection = selection + " and " + COLUMN_NAME_TASKS_ID + " LIKE ?";
             selectionArgsList.add(params.get("TASK_ID").toString());
         }
+
+        // by global id
+        if (params != null && params.containsKey("TASK_GLOBAL_ID")) {
+            selection = selection + " and " + COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
+            selectionArgsList.add(params.get("TASK_GLOBAL_ID").toString());
+        }
+
         String[] selectionArgs = selectionArgsList.toArray(new String[selectionArgsList.size()]);
+
 
         //String selectQuery = "";
         //Cursor cursor = db.rawQuery(selectQuery, null);
@@ -215,16 +223,7 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_DESCRIPTION, task.getDescription());
 
         int nRowsEffected = 0;
-        if (task.getGlobalId() != 0) {
-            String selection = COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
-            String[] selectionArgs = {String.valueOf(task.getGlobalId())};
-            nRowsEffected = db.update(
-                    TABLE_TASKS,
-                    values,
-                    selection,
-                    selectionArgs);
-            taskId = getLocalIdByGlobal(task.getGlobalId(), TABLE_TASKS);
-        } else if (task.getId() != 0){
+        if (task.getId() != 0) {
             String selection = COLUMN_NAME_TASKS_ID + " LIKE ?";
             String[] selectionArgs = {String.valueOf(task.getId())};
             nRowsEffected = db.update(
@@ -233,6 +232,15 @@ public class TaskDbHelper {
                     selection,
                     selectionArgs);
             taskId = task.getId();
+        } else if (task.getGlobalId() != 0){
+            String selection = COLUMN_NAME_TASKS_GLOBAL_ID + " LIKE ?";
+            String[] selectionArgs = {String.valueOf(task.getGlobalId())};
+            nRowsEffected = db.update(
+                    TABLE_TASKS,
+                    values,
+                    selection,
+                    selectionArgs);
+            taskId = getLocalIdByGlobal(task.getGlobalId(), TABLE_TASKS);
         }
 
         if (nRowsEffected == 0) {
@@ -272,10 +280,10 @@ public class TaskDbHelper {
         return true;
     }
 
-    public boolean deleteTaskByGlobalId(int taskGlobalId) {
-        int localId = getLocalIdByGlobal(taskGlobalId, TABLE_TASKS);
+    public long deleteTaskByGlobalId(int taskGlobalId) {
+        long localId = getLocalIdByGlobal(taskGlobalId, TABLE_TASKS);
         deleteTaskById(localId);
-        return true;
+        return localId;
     }
 
     private void saveConditions(ArrayList<Condition> conditions, long taskId) {
@@ -381,13 +389,13 @@ public class TaskDbHelper {
         return events;
     }
 
-    int getLocalIdByGlobal(int globalId, String tableName) {
+    private int getLocalIdByGlobal(long globalId, String tableName) {
         int localId = 1;
         String selectQuery = "SELECT * FROM " + tableName + " WHERE global_id = " + globalId;
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
-            localId = Integer.parseInt(cursor.getString(cursor.getColumnIndex("id")));
+            localId = Integer.parseInt(cursor.getString(cursor.getColumnIndex("_id")));
         }
 
         cursor.close();

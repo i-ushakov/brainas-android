@@ -3,6 +3,7 @@ package net.brainas.android.app.domain.helpers;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
+import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -98,13 +99,28 @@ public class TasksManager implements AccountsManager.SingInObserver {
         return tasks;
     }
 
-    public Task getTaskById(long id) {
+    public Task getTaskByLocalId(long id) {
         // We cannot get tasks if we don't know current user account id
         if (accountId == null) {
             return null;
         }
         Map<String,Object> params = new HashMap<>();
         params.put("TASK_ID", id);
+        Task task = null;
+        List<Task> tasks = getTasksFromDB(params, accountId);
+        if (tasks.size() > 0) {
+            task = tasks.get(0);
+        }
+        return task;
+    }
+
+    public Task getTaskByGlobalId(long globalId) {
+        // We cannot get tasks if we don't know current user account id
+        if (accountId == null) {
+            return null;
+        }
+        Map<String,Object> params = new HashMap<>();
+        params.put("TASK_GLOBAL_ID", globalId);
         Task task = null;
         List<Task> tasks = getTasksFromDB(params, accountId);
         if (tasks.size() > 0) {
@@ -147,6 +163,9 @@ public class TasksManager implements AccountsManager.SingInObserver {
             for (Task.TaskChangesObserver observer: observers) {
                 observer.updateAfterTaskWasChanged();
             }
+            if (task.getGlobalId() != 0) {
+                ((BrainasApp) BrainasApp.getAppContext()).getTasksChangesDbHelper().loggingChanges(task, "DELETED");
+            }
             task = null;
             return true;
         } else {
@@ -155,7 +174,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public boolean restoreTaskToWaiting(long takId) {
-        Task task = getTaskById(takId);
+        Task task = getTaskByLocalId(takId);
         if (conditionsValidation(task.getConditions())) {
             task.changeStatus(Task.STATUSES.WAITING);
             return true;
@@ -168,7 +187,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
             return false;
         }
         for (Condition condition : conditions) {
-            if(!condition.isValid()){
+            if(!condition.isValid()) {
                 return false;
             }
         }
@@ -185,8 +204,9 @@ public class TasksManager implements AccountsManager.SingInObserver {
     public void deleteTaskByGlobalId(int taskGlobalId) {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
-        taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
-        //taskDbHelper.close();
+        TaskChangesDbHelper taskChangesDbHelper = app.getTasksChangesDbHelper();
+        long localIdOfDeletedTask = taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
+        taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
     }
 
     public void updateAfterSingIn(UserAccount userAccount) {

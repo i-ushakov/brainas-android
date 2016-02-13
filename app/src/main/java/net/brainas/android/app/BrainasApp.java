@@ -3,6 +3,7 @@ package net.brainas.android.app;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.multidex.MultiDex;
 
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
@@ -47,6 +48,7 @@ public class BrainasApp extends Application {
 
     public void onCreate() {
         super.onCreate();
+        MultiDex.install(this);
         BrainasApp.context = getApplicationContext();
         accountsManager = new AccountsManager();
         AppDbHelper appDbHelper = new AppDbHelper(context);

@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -98,6 +99,12 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
                     invalidateOptionsMenu();
                 }
                 return true;
+            case R.id.action_edit_task :
+                Intent tasksIntent = new Intent(TaskCardActivity.this, EditTaskActivity.class);
+                tasksIntent.putExtra("mode",EditTaskActivity.Mode.EDIT.toString());
+                tasksIntent.putExtra("taskLocalId", task.getId());
+                startActivity(tasksIntent);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -127,11 +134,14 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
 
     private Task getTaskById() {
         TasksManager taskManadger = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        Task task = taskManadger.getTaskById(taskId);
+        Task task = taskManadger.getTaskByLocalId(taskId);
         return task;
     }
 
     private void fillTheCardWithTaskInfo() {
+        if (task == null) {
+            return;
+        }
         // message
         TextView taskMessage = (TextView)findViewById(R.id.task_message);
         taskMessage.setText(task.getMessage());

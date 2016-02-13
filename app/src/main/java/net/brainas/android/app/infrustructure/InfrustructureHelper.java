@@ -7,6 +7,9 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.domain.models.Task;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,6 +20,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by innok on 11/11/2015.
@@ -90,6 +96,19 @@ public class InfrustructureHelper {
                 "Content-Type", "multipart/form-data;boundary=" + SyncManager.boundary);
 
         return connection;
+    }
+
+    public static Element taskToXML(Document doc, Task task, String elementName) throws ParserConfigurationException {
+        if (elementName ==  null) {
+            elementName = "task";
+        }
+        Element taskEl = doc.createElement(elementName);
+        taskEl.setAttribute("id", ((Long)task.getId()).toString());
+        taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
+        Element messageEl = doc.createElement("message");
+        messageEl.setTextContent(task.getMessage());
+        taskEl.appendChild(messageEl);
+        return taskEl;
     }
 
     /*

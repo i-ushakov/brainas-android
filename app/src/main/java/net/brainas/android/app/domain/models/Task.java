@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Task {
     private long id;
     private Integer accountId = null;
-    private int globalId;
+    private long globalId;
     private String message = null;
     private String description = null;
     private boolean haveImage = false;
@@ -93,11 +93,11 @@ public class Task {
         return this.accountId;
     }
 
-    public void setGlobalId(int globalId) { this.globalId = globalId; }
+    public void setGlobalId(long globalId) { this.globalId = globalId; }
 
-    public int getGlobalId() { return this.globalId; }
+    public long getGlobalId() { return this.globalId; }
 
-    public int getExternalId() {
+    public long getExternalId() {
         return globalId;
     }
 
@@ -209,13 +209,21 @@ public class Task {
         save();
     }
 
-    public void save(){
+    public void save() {
+        save(true, true);
+    }
+
+    public void save(boolean needToNotify, boolean needToLoggingChanges){
         TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(this);
         this.setId(taskId);
         TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
-        taskChangesDbHelper.loggingChanges(this);
-        notifyAllObservers();
+        if (needToLoggingChanges) {
+            taskChangesDbHelper.loggingChanges(this);
+        }
+        if (needToNotify) {
+            notifyAllObservers();
+        }
     }
 
     public boolean checkActualityOfConditions() {

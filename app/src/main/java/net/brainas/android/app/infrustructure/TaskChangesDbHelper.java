@@ -3,6 +3,7 @@ package net.brainas.android.app.infrustructure;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Pair;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
@@ -13,6 +14,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by Kit Ushakov on 11/12/2015.
@@ -71,6 +75,10 @@ public class TaskChangesDbHelper {
     }
 
     public void loggingChanges(Task task) {
+        loggingChanges(task, "UPDATED");
+    }
+
+    public void loggingChanges(Task task, String status) {
         String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(task.getId()) };
 
@@ -79,9 +87,9 @@ public class TaskChangesDbHelper {
         values.put(COLUMN_NAME_TASKS_CHANGES_ACCOUNTID, userAccountId);
         values.put(COLUMN_NAME_TASKS_CHANGES_TASKID, task.getId());
         values.put(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID, task.getGlobalId());
-        values.put(COLUMN_NAME_TASKS_CHANGES_STATUS, "UPDATE");
+        values.put(COLUMN_NAME_TASKS_CHANGES_STATUS, status);
         values.put(COLUMN_NAME_TASKS_CHANGES_DATETIME, Utils.getDateTimeGMT());
-        values.put(COLUMN_NAME_TASKS_CHANGES_NEEDSYNC, task.getId());
+        values.put(COLUMN_NAME_TASKS_CHANGES_NEEDSYNC, 1);
 
         int nRowsEffected = db.update(
                 TABLE_TASKS_CHANGES,
@@ -98,11 +106,18 @@ public class TaskChangesDbHelper {
         }
     }
 
-    public JSONArray getAllTasksChanges() throws JSONException {
-        JSONArray allTasksChanges = new JSONArray();
+    public HashMap<Long, Pair<String,String>> getChangedTasks()throws JSONException, ParserConfigurationException {
+        return getChangedTasks(false);
+    }
+
+    public HashMap<Long, Pair<String,String>> getChangedTasks(boolean allTasks) throws JSONException, ParserConfigurationException {
+        HashMap<Long, Pair<String,String>>  changedTasks = new HashMap<Long, Pair<String,String>> ();
 
         int userAccountId = ((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().getCurrenAccountId();
-        String selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ?";
+        String selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ? ";
+        if (!allTasks) {
+            selection = selection +  " AND " + COLUMN_NAME_TASKS_CHANGES_NEEDSYNC + " = 1";
+        }
         String[] selectionArgs = { String.valueOf(userAccountId) };
 
         Cursor cursor = db.query(
@@ -115,22 +130,89 @@ public class TaskChangesDbHelper {
                 null                            // The sort order
         );
 
-        if (cursor.moveToFirst()) {
-            JSONObject change = new JSONObject();
+        while (cursor.moveToNext()) {
             long taskId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_TASKID)));
-            long taskGlobalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID)));
             String taskStatus = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_STATUS));
             String dateTimeOfChange = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_DATETIME));
-            change.put("taskId", taskId);
-            change.put("globalId", taskGlobalId);
-            change.put("taskStatus", taskStatus);
-            change.put("dateTimeOfChange", dateTimeOfChange);
-            allTasksChanges.put(change);
-        } while (cursor.moveToNext());
 
-        return allTasksChanges;
+            Pair<String, String> change = new Pair(taskStatus, dateTimeOfChange);
+            changedTasks.put(taskId, change);
+        };
+
+        return changedTasks;
     }
 
+    public int uncheckFromSync(long taskId) {
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(taskId) };
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_TASKS_CHANGES_NEEDSYNC, 0);
+
+        int nRowsEffected = db.update(
+                TABLE_TASKS_CHANGES,
+                values,
+                selection,
+                selectionArgs);
+
+        return nRowsEffected;
+    }
+
+    public String getTimeOfLastChanges(long localTaskId) {
+        String timeOfLastChanges = null;
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(localTaskId) };
+
+        Cursor cursor = db.query(
+                TABLE_TASKS_CHANGES,
+                projection,
+                selection,
+                selectionArgs,                  // The values for the WHERE clause
+                null,                           // don't group the rows
+                null,                           // don't filter by row groups
+                null                            // The sort order
+        );
+
+        if (cursor.moveToFirst()) {
+            timeOfLastChanges = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_DATETIME));
+        } while (cursor.moveToNext());
+
+        return timeOfLastChanges;
+    }
+
+    public void deleteTaskChangesById(long taskId) {
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(taskId) };
+        db.delete(TABLE_TASKS_CHANGES, selection, selectionArgs);
+    }
+
+    public long getGlobalIdOfDeletedTask(long localTaskId) {
+        long globalId = 0;
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(localTaskId) };
+
+        Cursor cursor = db.query(
+                TABLE_TASKS_CHANGES,
+                projection,
+                selection,
+                selectionArgs,                  // The values for the WHERE clause
+                null,                           // don't group the rows
+                null,                           // don't filter by row groups
+                null                            // The sort order
+        );
+
+        if (cursor.moveToFirst()) {
+            globalId = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID)));
+        } while (cursor.moveToNext());
+
+        return globalId;
+    }
+
+    public void removeFromSync(long taskGlobalId) {
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(taskGlobalId) };
+        db.delete(TABLE_TASKS_CHANGES, selection, selectionArgs);
+    }
 
     /*public int getUserAccountId(String accountName) {
         int accountId = 0;

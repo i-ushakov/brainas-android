@@ -16,6 +16,7 @@ import android.widget.Toast;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -26,6 +27,10 @@ import java.util.Map;
  * Created by innok on 12/7/2015.
  */
 public class EditTaskActivity extends AppCompatActivity {
+
+    public enum Mode {
+        CREATE, EDIT
+    }
 
     private Toolbar toolbar;
     private BrainasApp app;
@@ -40,11 +45,21 @@ public class EditTaskActivity extends AppCompatActivity {
     private EditText editTitleField;
 
     private String validationError = "";
+    private Mode mode;
+    private Task task = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_task);
+
+        if (getIntent().getStringExtra("mode") != null && getIntent().getStringExtra("mode").equals(Mode.EDIT.toString())) {
+            mode = Mode.EDIT;
+            long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
+            task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+        } else {
+            mode = Mode.CREATE;
+        }
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -104,9 +119,11 @@ public class EditTaskActivity extends AppCompatActivity {
                         break;
                 }
             }
+
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
             }
+
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
@@ -127,6 +144,9 @@ public class EditTaskActivity extends AppCompatActivity {
                 TabLayout.Tab tab = tabLayout.getTabAt(0);
                 tab.select();
                 break;
+        }
+        if (mode == Mode.EDIT) {
+            editTitleField.setText(task.getMessage());
         }
     }
 
@@ -161,7 +181,10 @@ public class EditTaskActivity extends AppCompatActivity {
         if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
             int userId = app.getAccountsManager().getCurrenAccountId();
             String message = taskTitleEditable.toString().trim();
-            Task task = new Task(userId , message);
+            if (task == null) {
+                task = new Task(userId, message);
+            }
+            task.setMessage(message);
             task.setStatus(Task.STATUSES.WAITING);
             task.save();
             showTaskErrorsOrWarnings(task);
