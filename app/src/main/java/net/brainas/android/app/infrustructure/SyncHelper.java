@@ -59,7 +59,7 @@ public class SyncHelper {
 
     public SyncHelper() {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        this.taskDbHelper = app.getTaskDbHelper();
         this.tm = app.getTasksManager();
         this.taskChangesDbHelper = app.getTasksChangesDbHelper();
     }
