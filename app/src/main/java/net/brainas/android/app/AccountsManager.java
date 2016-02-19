@@ -2,7 +2,6 @@ package net.brainas.android.app;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -58,7 +57,7 @@ public class AccountsManager implements
         app = ((BrainasApp)BrainasApp.getAppContext());
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken(app.getResources().getString(R.string.client_ID_for_web_application))
+                .requestServerAuthCode(app.getResources().getString(R.string.client_ID_for_web_application))
                 .build();
 
     }
@@ -119,14 +118,14 @@ public class AccountsManager implements
             String accountEmail = acct.getEmail();
             userAccount = new UserAccount(accountEmail);
             userAccount.setPersonName(personName);
-            String idToken = acct.getIdToken();
-            setAccessToken(idToken);
+            String accessCode = acct.getServerAuthCode();//acct.getIdToken();
+            setAccessCode(accessCode);
             app.setUserAccount(userAccount);
             notifyAllObserversAboutSingIn();
             Toast.makeText(activity, "You are signed in as " + personName, Toast.LENGTH_LONG).show();
             return true;
         } else {
-            setAccessToken(null);
+            setAccessCode(null);
             notifyAllObserversAboutSingOut();
             Toast.makeText(activity, "You must sign in to Brain Assistant's app to continue.", Toast.LENGTH_LONG).show();
             return false;
@@ -161,11 +160,11 @@ public class AccountsManager implements
         return this.userAccount;
     }
 
-    public void setAccessToken(String accessToken) {
+    public void setAccessCode(String accessToken) {
         this.accessToken = accessToken;
     }
 
-    public String getAccessToken() {
+    public String getAccessCode() {
         return this.accessToken;
     }
 
@@ -192,7 +191,7 @@ public class AccountsManager implements
                     @Override
                     public void onResult(Status status) {
                         userAccount = null;
-                        setAccessToken(null);
+                        setAccessCode(null);
                         notifyAllObserversAboutSingOut();
                     }
                 });

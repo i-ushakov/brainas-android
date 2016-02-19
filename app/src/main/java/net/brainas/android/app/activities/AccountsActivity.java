@@ -7,7 +7,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,17 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.UI.views.taskcard.ConditionBlockView;
-import net.brainas.android.app.domain.helpers.ActivationManager;
-import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.domain.models.Condition;
-import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.NetworkHelper;
-import net.brainas.android.app.infrustructure.SyncManager;
 import net.brainas.android.app.infrustructure.UserAccount;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by innok on 12/7/2015.
