@@ -13,7 +13,6 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
@@ -93,7 +91,7 @@ public class InfrustructureHelper {
         connection.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
         connection.setRequestProperty("Accept","*/*");
         connection.setRequestProperty(
-                "Content-Type", "multipart/form-data;boundary=" + SyncManager.boundary);
+                "Content-Type", "multipart/form-data;boundary=" + SyncHelper.boundary);
 
         return connection;
     }

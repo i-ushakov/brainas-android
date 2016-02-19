@@ -18,7 +18,7 @@ import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
-import net.brainas.android.app.infrustructure.SyncManager;
+import net.brainas.android.app.infrustructure.Synchronization;
 
 
 public class MainActivity extends AppCompatActivity  {
@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity  {
                 app.setReminderScreenManager(reminderScreenManager);
                 reminderScreenManager.refreshTilesWithActiveTasks();
 
-                SyncManager.getInstance().startSynchronization();
+                Synchronization.getInstance().startSynchronization();
 
                 findViewById(R.id.messages_panel).postInvalidate();
                 MainActivity m = (MainActivity) view.getContext();
