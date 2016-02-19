@@ -11,9 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
@@ -21,7 +19,7 @@ import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.SyncManager;
+import net.brainas.android.app.infrustructure.Synchronization;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TasksActivity extends AppCompatActivity implements
-        SyncManager.TaskSyncObserver,
+        Synchronization.TaskSyncObserver,
         ActivationManager.ActivationObserver,
         Task.TaskChangesObserver {
     private BrainasApp app;
@@ -67,7 +65,7 @@ public class TasksActivity extends AppCompatActivity implements
         userNotSignedInMessage = (TextView) findViewById(R.id.user_not_signed_in_message);
         refreshTaskGrid();
 
-        SyncManager.getInstance().attach(this);
+        Synchronization.getInstance().attach(this);
         app.getActivationManager().attach(this);
     }
 

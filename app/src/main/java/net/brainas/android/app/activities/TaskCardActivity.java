@@ -18,14 +18,14 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.SyncManager;
+import net.brainas.android.app.infrustructure.Synchronization;
 
 import java.util.ArrayList;
 
 /**
  * Created by innok on 12/7/2015.
  */
-public class TaskCardActivity extends AppCompatActivity implements ActivationManager.ActivationObserver, SyncManager.TaskSyncObserver{
+public class TaskCardActivity extends AppCompatActivity implements ActivationManager.ActivationObserver, Synchronization.TaskSyncObserver{
 
     private Toolbar toolbar;
     private Task task;
@@ -58,7 +58,7 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
         tasksManager = ((BrainasApp) BrainasApp.getAppContext()).getTasksManager();
 
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
-        SyncManager.getInstance().attach(this);
+        Synchronization.getInstance().attach(this);
     }
 
     //@Override
@@ -175,7 +175,7 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
     @Override
     protected void onDestroy() {
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
-        SyncManager.getInstance().detach(this);
+        Synchronization.getInstance().detach(this);
         super.onDestroy();
 
     }

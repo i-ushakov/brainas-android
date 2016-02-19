@@ -3,7 +3,7 @@ package net.brainas.android.app.infrustructure;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Pair;
+import android.support.v4.util.Pair;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
