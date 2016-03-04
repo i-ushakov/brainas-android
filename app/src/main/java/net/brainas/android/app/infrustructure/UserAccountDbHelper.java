@@ -2,7 +2,6 @@ package net.brainas.android.app.infrustructure;
 
 import android.content.ContentValues;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -60,7 +59,7 @@ public class UserAccountDbHelper {
     public static void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    public long setUserAccount(UserAccount userAccount) {
+    public long updateOrCreate(UserAccount userAccount) {
         long  newAccountWasAdded = 0;
         String email = userAccount.getAccountName();
         String selection = COLUMN_NAME_USER_ACCOUNTS_EMAIL + " LIKE ?";
@@ -137,7 +136,7 @@ public class UserAccountDbHelper {
             userAccount = new UserAccount(accountName);
             int accountId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_ID)));
             String personName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME));
-            userAccount.setAccountId(accountId);
+            userAccount.setLocalAccountId(accountId);
             userAccount.setPersonName(personName);
 
             return userAccount;

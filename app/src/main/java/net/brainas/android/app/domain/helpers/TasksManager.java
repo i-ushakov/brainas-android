@@ -42,7 +42,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public void addTasksToWaitingList(List<Task> tasks) {
-        if (activeList != null) {
+        if (waitingList != null) {
             synchronized (waitingList) {
                 waitingList.addAll(tasks);
             }
@@ -210,30 +210,30 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public void updateAfterSingIn(UserAccount userAccount) {
-        accountId = userAccount.getAccountId();
+        accountId = userAccount.getLocalAccountId();
     }
 
     public void updateAfterSingOut() {
         accountId = null;
     }
 
-    private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
+    private ArrayList<Task> objectsMapping(ArrayList<Task> dbTasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
-        for (Task task : tasks){
-            long taskId = task.getId();
+        for (Task dbTask : dbTasks){
+            long taskId = dbTask.getId();
             if(tasksHashMap.containsKey(taskId)) {
                 Task refreshedTask = tasksHashMap.get(taskId);
-                refreshedTask = refreshTaskObject(refreshedTask, task);
+                refreshedTask = refreshTaskObject(refreshedTask, dbTask);
                 mappedTasks.add(refreshedTask);
             } else {
-                mappedTasks.add(task);
-                //tasksHashMap.put(taskId, task);
+                mappedTasks.add(dbTask);
+                tasksHashMap.put(taskId, dbTask);
             }
         }
-        tasksHashMap.clear();
-        for(Task mappedTask : mappedTasks) {
-            tasksHashMap.put(mappedTask.getId(), mappedTask);
-        }
+        //tasksHashMap.clear();
+        //for(Task mappedTask : mappedTasks) {
+            //tasksHashMap.put(mappedTask.getId(), mappedTask);
+        //}
         return mappedTasks;
     }
 

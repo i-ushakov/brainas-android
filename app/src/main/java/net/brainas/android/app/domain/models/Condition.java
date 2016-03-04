@@ -8,12 +8,12 @@ import java.util.List;
  */
 public class Condition {
     private int id;
-    private int taskId;
+    private Long taskId;
     private int globalId;
     private ArrayList<Event> events = new ArrayList<>();
     public Condition() {}
 
-    public Condition(Integer id, Integer globalId, Integer taskId) {
+    public Condition(Integer id, Integer globalId, Long taskId) {
         if (id != null) {
             setId(id);
         }
@@ -34,11 +34,11 @@ public class Condition {
         return id;
     }
 
-    public void setTaskId(int taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
-    public int getTaskId(){
+    public Long getTaskId(){
         return taskId;
     }
 

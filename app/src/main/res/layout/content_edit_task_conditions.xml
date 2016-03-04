@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_edit_task_conditions"
+    tools:context=".activities.edittask.ConditionsActivity"
+    android:id="@+id/content_edit_task_conditions"
+    android:orientation="vertical"
+    android:background="#ffffff">
+
+    <!-- Top panel -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:id="@+id/topPanel"
+        android:background="#CEECF5"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="2dp"
+        android:gravity="center_horizontal">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/taskConditionsCont"
+            android:gravity="center">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/taskConditionsPanel"
+                android:gravity="center">
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/addConditionBtnCont"
+                android:weightSum="3"
+                android:gravity="center"
+                android:layout_marginTop="5dp">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:minHeight="40dp"
+                    android:minWidth="0dp"
+                    android:background="#04B404"
+                    android:id="@+id/addConditionBtn"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|center_horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="+ Add"
+                        android:textColor="#ffffff"
+                        android:textSize="25dp"
+                        android:textStyle="bold"
+                        android:id="@+id/addConditionLbl"
+                        android:onClick="addCondition"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <!-- Bootm Panel  -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/bottomPanel"
+        android:background="#ffffff">
+
+        <!-- Back (Btn) -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/colorPrimary"
+            android:id="@+id/detailsOfTaskBtn"
+            android:icon="@mipmap/ic_forward_black_24dp"
+            android:scaleX="-1">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:src="@drawable/ic_forward_white_48dp"
+                android:id="@+id/detailsOfTaskBtnImg"
+                android:gravity="center"
+                android:onClick="back"/>
+        </LinearLayout>
+
+        <!-- OK (Btn) -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:background="#04B404"
+            android:id="@+id/saveTaskBtn"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp">
+            <com.andexert.library.RippleView
+                android:id="@+id/saveTaskBtnInner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="0dp"
+                rv_centered="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="OK"
+                android:id="@+id/saveTaskBtnLabel"
+                android:textColor="#ffffff"
+                android:textSize="22dp"
+                android:gravity="center"
+                android:onClick="saveTask"/>
+            </com.andexert.library.RippleView>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

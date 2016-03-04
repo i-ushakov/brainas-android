@@ -219,7 +219,9 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
-        values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
+        if (task.getStatus() != null) {
+            values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
+        }
         values.put(COLUMN_NAME_TASKS_DESCRIPTION, task.getDescription());
 
         int nRowsEffected = 0;
@@ -350,7 +352,7 @@ public class TaskDbHelper {
             do {
                 int id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_ID)));
                 int globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_GLOBALID)));
-                int taskId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_TASK)));
+                long taskId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_TASK)));
 
                 Condition condition = new Condition(id, globalId, taskId);
                 condition.addEvents(getEvents(condition));

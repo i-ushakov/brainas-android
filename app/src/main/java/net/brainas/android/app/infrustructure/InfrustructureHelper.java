@@ -103,9 +103,15 @@ public class InfrustructureHelper {
         Element taskEl = doc.createElement(elementName);
         taskEl.setAttribute("id", ((Long)task.getId()).toString());
         taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
+        // message
         Element messageEl = doc.createElement("message");
         messageEl.setTextContent(task.getMessage());
         taskEl.appendChild(messageEl);
+
+        // description
+        Element descriptionEl = doc.createElement("description");
+        descriptionEl.setTextContent(task.getDescription());
+        taskEl.appendChild(descriptionEl);
         return taskEl;
     }
 

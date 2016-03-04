@@ -5,9 +5,9 @@
     android:layout_height="match_parent"
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_edit_task"
-    tools:context="net.brainas.android.app.activities.EditTaskActivity"
-    android:id="@+id/content_edit_task"
+    tools:showIn="@layout/activity_edit_task_description"
+    tools:context="net.brainas.android.app.activities.EditTaskDescriptionActivity"
+    android:id="@+id/content_edit_task_descrition"
     android:orientation="vertical"
     android:background="#ffffff">
 
@@ -16,7 +16,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="4"
         android:id="@+id/topPanel"
         android:background="#CEECF5"
         android:paddingTop="@dimen/activity_vertical_margin"
@@ -29,7 +29,7 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/taskTitlePanel">
+            android:id="@+id/taskDescriptionPanel">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -42,10 +42,11 @@
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/editTitleField"
-                android:hint="Enter title of Task here: (100 characters)"
+                android:id="@+id/editDescriptionField"
+                android:hint="Description"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="5dp" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -66,57 +67,6 @@
 
     </LinearLayout>
 
-    <!-- Middle Panel (Category) -->
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:id="@+id/middleCategoryPanel"
-        android:background="#CEECF5"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:layout_marginBottom="2dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Set Category"
-            android:id="@+id/setCategoryLabel"
-            android:textSize="25dp"
-            android:gravity="center"
-            android:layout_gravity="center" />
-
-    </LinearLayout>
-
-    <!-- Middle Panel (Condition) -->
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:id="@+id/middleConditionPanel"
-        android:background="#CEECF5"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:layout_marginBottom="2dp">
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Set Condition"
-            android:id="@+id/setConditionLabel"
-            android:textSize="25dp"
-            android:gravity="center"
-            android:layout_gravity="center" />
-        </LinearLayout>
 
     <!-- Bootm Panel  -->
     <LinearLayout
@@ -151,6 +101,7 @@
         </LinearLayout>
 
         <!-- OK (Btn) -->
+
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="0dp"
@@ -174,11 +125,12 @@
                 android:id="@+id/saveTaskBtnLabel"
                 android:textColor="#ffffff"
                 android:textSize="22dp"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:onClick="saveTask"/>
             </com.andexert.library.RippleView>
         </LinearLayout>
 
-        <!-- Details (Btn) -->
+        <!-- Next Step (Btn) -->
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="0dp"
@@ -186,15 +138,15 @@
             android:layout_weight="1"
             android:background="?attr/colorPrimary"
             android:id="@+id/detailsOfTaskBtn"
-            android:icon="@mipmap/ic_forward_black_24dp"
-            android:onClick="nextToDescriptionActivity">
+            android:icon="@mipmap/ic_forward_black_24dp">
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:src="@drawable/ic_forward_white_48dp"
                 android:id="@+id/detailsOfTaskBtnImg"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:onClick="nextToConditionsActivity"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

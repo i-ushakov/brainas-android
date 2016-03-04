@@ -1,31 +1,27 @@
 package net.brainas.android.app.infrustructure;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import net.brainas.android.app.BrainasApp;
-
 /**
  * Created by innok on 1/18/2016.
  */
 public class UserAccount {
 
 
-    private int accountId;
+    private int localAccountId;
     private String accountName;
     private String personName;
+    private String accessCode = null;
 
 
     public UserAccount(String email) {
         this.accountName = email;
     }
 
-    public void setAccountId (int accountId) {
-        this.accountId = accountId;
+    public void setLocalAccountId(int localAccountId) {
+        this.localAccountId = localAccountId;
     }
 
-    public int getAccountId() {
-        return accountId;
+    public int getLocalAccountId() {
+        return localAccountId;
     }
 
     public String getAccountName() {
@@ -38,5 +34,13 @@ public class UserAccount {
 
     public String getPersonName() {
         return personName;
+    }
+
+    public void setAccessCode(String accessToken) {
+        this.accessCode = accessToken;
+    }
+
+    public String getAccessCode() {
+        return this.accessCode;
     }
 }

@@ -40,7 +40,7 @@ public class AccountsManager implements
     private GoogleSignInOptions gso;
     private HashMap<Integer, GoogleApiClient> GoogleApiClients= new HashMap<Integer, GoogleApiClient>();
     private UserAccount userAccount = null;
-    private String accessToken = null;
+    private String accessCode = null;
     private List<SingInObserver> observers = new ArrayList<>();
 
     public interface SingInObserver {
@@ -62,7 +62,6 @@ public class AccountsManager implements
                 .requestScopes(new Scope(Scopes.PLUS_LOGIN)) // "https://www.googleapis.com/auth/plus.login"
                 .requestServerAuthCode(app.getResources().getString(R.string.client_ID_for_web_application))
                 .build();
-
     }
 
     @Override
@@ -100,6 +99,7 @@ public class AccountsManager implements
         return true;
     }
 
+
     public void switchAccount(AppCompatActivity activity) {
         if (NetworkHelper.isNetworkActive()) {
             showProgressDialog(activity);
@@ -122,14 +122,17 @@ public class AccountsManager implements
             userAccount = new UserAccount(accountEmail);
             userAccount.setPersonName(personName);
             String accessCode = acct.getServerAuthCode();//acct.getIdToken();
-            setAccessCode(accessCode);
+            userAccount.setAccessCode(accessCode);
             app.setUserAccount(userAccount);
             notifyAllObserversAboutSingIn();
             Toast.makeText(activity, "You are signed in as " + personName, Toast.LENGTH_LONG).show();
             return true;
         } else {
-            setAccessCode(null);
-            notifyAllObserversAboutSingOut();
+            if(userAccount != null) {
+                userAccount.setAccessCode(null);
+                app.setUserAccount(null);
+                notifyAllObserversAboutSingOut();
+            }
             Toast.makeText(activity, "You must sign in to Brain Assistant's app to continue.", Toast.LENGTH_LONG).show();
             return false;
         }
@@ -145,14 +148,14 @@ public class AccountsManager implements
 
     public Integer getCurrenAccountId() {
         if (isUserSingIn()) {
-            return userAccount.getAccountId();
+            return userAccount.getLocalAccountId();
         } else {
             return null;
         }
     }
 
     public boolean isUserAuthorized() {
-        if (NetworkHelper.isNetworkActive() && accessToken != null) {
+        if (NetworkHelper.isNetworkActive() && userAccount != null && userAccount.getAccessCode() != null) {
             return true;
         } else {
             return false;
@@ -163,15 +166,7 @@ public class AccountsManager implements
         return this.userAccount;
     }
 
-    public void setAccessCode(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getAccessCode() {
-        return this.accessToken;
-    }
-
-    private void buildApiClient(AppCompatActivity activity) {
+    public void buildApiClient(AppCompatActivity activity) {
         if (GoogleApiClients.get(activity.hashCode()) == null) {
             GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(activity)
                         .enableAutoManage(activity /* FragmentActivity */, this /* OnConnectionFailedListener */)
@@ -193,8 +188,8 @@ public class AccountsManager implements
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
+                        userAccount.setAccessCode(null);
                         userAccount = null;
-                        setAccessCode(null);
                         notifyAllObserversAboutSingOut();
                     }
                 });

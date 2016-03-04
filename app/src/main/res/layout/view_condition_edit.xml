@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="70dp"
+    android:minWidth="0dp"
+    android:background="#FFFFFF"
+    android:gravity="top"
+    android:layout_marginTop="5dp"
+    android:padding="3dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/conditionEventsBlock"
+        android:orientation="vertical">
+
+        <!-- Top panel of condition block -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:id="@+id/conditionTopPanel"
+            android:orientation="horizontal">
+
+            <!-- Icons of events row-->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:id="@+id/conditionTopPanelLeft"
+                android:orientation="horizontal"
+                android:layout_weight="5">
+            </LinearLayout>
+
+            <!-- Delete icon -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:id="@+id/cancelConditionIconCont"
+                android:layout_gravity="right"
+                android:gravity="center|right"
+                android:layout_weight="2">
+
+                <RelativeLayout
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/cancel_icon_red_100"
+                    android:id="@+id/cancelConditionIcon"
+                    android:layout_margin="4dp"></RelativeLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

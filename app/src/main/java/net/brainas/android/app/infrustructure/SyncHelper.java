@@ -56,13 +56,13 @@ public class SyncHelper {
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
 
-
     public SyncHelper() {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         this.taskDbHelper = app.getTaskDbHelper();
         this.tm = app.getTasksManager();
         this.taskChangesDbHelper = app.getTasksChangesDbHelper();
     }
+
 
     /*
      * Getting all changes that still isn't synchronized with the server in format of XML-String
@@ -93,17 +93,24 @@ public class SyncHelper {
         Iterator it = tasksChanges.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pair = (Map.Entry)it.next();
-                long taskId = (long) pair.getKey();
+                long localId = (long) pair.getKey();
                 Pair<String, String> change = (Pair<String, String>) pair.getValue();
 
-                Task task = tm.getTaskByLocalId(taskId);
+                Task task = tm.getTaskByLocalId(localId);
                 Element changedTaskEl;
                 if (task != null) {
                     changedTaskEl = InfrustructureHelper.taskToXML(doc, task, "changedTask");
                 } else {
-                    changedTaskEl = doc.createElement("changedTask");
-                    Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(taskId);
-                    changedTaskEl.setAttribute("globalId", globalId.toString());
+                    Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(localId);
+                    if (globalId != 0 && change.first.equals("DELETED")) {
+                        changedTaskEl = doc.createElement("changedTask");
+                        changedTaskEl.setAttribute("globalId", globalId.toString());
+                        changedTaskEl.setAttribute("id", Long.toString(localId));
+                    } else {
+                        // We don't need send info about the deleted task, that is not known for server
+                        taskChangesDbHelper.uncheckFromSync(localId);
+                        continue;
+                    }
                 }
                 Element changeEl = doc.createElement("change");
                 Element statusEl = doc.createElement("status");
@@ -168,12 +175,11 @@ public class SyncHelper {
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
         } else {
-            String accessCode = ((BrainasApp) BrainasApp.getAppContext()).getAccountsManager().getAccessCode();
             request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
             request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + accessCode + lineEnd);
+            request.writeBytes("Content-Length: " + Synchronization.accessCode + lineEnd);
             request.writeBytes(lineEnd);
-            request.writeBytes(accessCode);
+            request.writeBytes(Synchronization.accessCode);
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
         }
@@ -223,9 +229,14 @@ public class SyncHelper {
                 long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
                 if (localTaskId != 0) {
                     Task task = tm.getTaskByLocalId(localTaskId);
-                    task.setGlobalId(globalTaskId);
-                    task.save(false, false);
-                    taskChangesDbHelper.uncheckFromSync(localTaskId);
+                    // task can be null if user deleted it while synchronisation
+                    if (task != null) {
+                        task.setGlobalId(globalTaskId);
+                        task.save(false, false);
+                        taskChangesDbHelper.uncheckFromSync(localTaskId);
+                    } else {
+                        taskChangesDbHelper.removeFromSync(globalTaskId);
+                    }
                 } else {
                     taskChangesDbHelper.removeFromSync(globalTaskId);
                 }
@@ -246,10 +257,14 @@ public class SyncHelper {
     }
 
     public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
-        Task task = tm.getTaskByLocalId(globalId);
+        Task task = tm.getTaskByGlobalId(globalId);
         if (task != null) {
             String timeOfLocalChanges = taskChangesDbHelper.getTimeOfLastChanges(task.getId());
-            if (Utils.compareTwoDates(timeOfServerChanges, timeOfLocalChanges) > 0) {
+            if (timeOfLocalChanges != null) {
+                if (Utils.compareTwoDates(timeOfServerChanges, timeOfLocalChanges) > 0) {
+                    return true;
+                }
+            } else {
                 return true;
             }
         } else {
@@ -294,9 +309,13 @@ public class SyncHelper {
             }
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
-            int accountId = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount().getAccountId();
-            Task task = new Task(accountId, message);
-            task.setGlobalId(globalId);
+            int accountId = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount().getLocalAccountId();
+            Task task = tm.getTaskByGlobalId(globalId);
+            if (task == null) {
+                task = new Task(accountId, message);
+                task.setGlobalId(globalId);
+                task.save(false, false);
+            }
             task.setDescription(description);
             Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
             if (statusEl != null) {
@@ -306,8 +325,7 @@ public class SyncHelper {
             for (int j = 0; j < conditions.getLength(); ++j) {
                 Element conditionEl = (Element)conditions.item(j);
                 Integer conditionId = Integer.parseInt(conditionEl.getAttribute("id"));
-                Integer taskId = Integer.parseInt(conditionEl.getAttribute("task-id"));
-                Condition condition = new Condition(null,conditionId, null);
+                Condition condition = new Condition(null,conditionId, task.getId());
                 NodeList events = conditionEl.getElementsByTagName("event");
                 for(int k = 0; k < events.getLength(); ++k) {
                     EventGPS event = null;

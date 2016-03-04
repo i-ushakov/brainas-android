@@ -13,6 +13,7 @@ import org.w3c.dom.Element;
  * Created by innok on 11/27/2015.
  */
 public class EventGPS extends Event {
+    static String EVENT_NAME = "Location";
     double lat, lng, radius;
 
     public EventGPS(){
@@ -25,6 +26,10 @@ public class EventGPS extends Event {
 
     public TYPES getType() {
         return TYPES.GPS;
+    }
+
+    public String getEventName() {
+        return EVENT_NAME;
     }
 
     @Override

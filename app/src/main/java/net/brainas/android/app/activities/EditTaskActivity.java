@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -156,6 +157,7 @@ public class EditTaskActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if(validateTask()) {
                     saveTask();
+                    finish();
                 } else {
                     Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
                 }
@@ -188,15 +190,26 @@ public class EditTaskActivity extends AppCompatActivity {
             task.setStatus(Task.STATUSES.WAITING);
             task.save();
             showTaskErrorsOrWarnings(task);
-            finish();
         }
     }
 
-    private void showTaskErrorsOrWarnings(Task task) {
+    protected void showTaskErrorsOrWarnings(Task task) {
         Iterator it = task.getWarnings().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> pair = (Map.Entry)it.next();
             Toast.makeText(EditTaskActivity.this, pair.getValue(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void nextToDescriptionActivity(View view) {
+        if(validateTask()) {
+            saveTask();
+            Intent intent = new Intent(this, EditTaskDescriptionActivity.class);
+            intent.putExtra("taskLocalId", task.getId());
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
         }
     }
 }

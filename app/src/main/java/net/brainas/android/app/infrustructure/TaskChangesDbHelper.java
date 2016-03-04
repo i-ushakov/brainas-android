@@ -263,7 +263,7 @@ public class TaskChangesDbHelper {
             userAccount = new UserAccount(accountName);
             int accountId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_ID)));
             String personName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME));
-            userAccount.setAccountId(accountId);
+            userAccount.setLocalAccountId(accountId);
             userAccount.setPersonName(personName);
 
             return userAccount;

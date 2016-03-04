@@ -81,26 +81,32 @@ public class ReminderScreenManager implements
 ;
 
     private List<TaskTileView> initTiles(List<Task> tasks) {
-        List<TaskTileView> tiles = new ArrayList<TaskTileView>();
-        for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
-            tiles.add(new TaskTileView(tilesPanel.getContext(), task));
-            task.attachObserver(this);
+        if (tasks != null) {
+            List<TaskTileView> tiles = new ArrayList<TaskTileView>();
+            for (int i = 0; i < tasks.size(); i++) {
+                Task task = tasks.get(i);
+                tiles.add(new TaskTileView(tilesPanel.getContext(), task));
+                task.attachObserver(this);
+            }
+            return tiles;
+        } else {
+            return null;
         }
-        return tiles;
     }
 
     private void placeTiles(List<TaskTileView> tiles) {
         this.tilesPanel.removeAllViews();
-        for (int i = 0; i < tiles.size() && i < 5; i++) {
-            TaskTileView tile = tiles.get(i);
-            ReminderTileCell tc = tilesGrid.get(i);
-            int cellSize = tc.getSize();
-            Point position = tc.getPosition();
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(cellSize, cellSize);
-            params.setMargins(position.y, position.x, 0, 0);
-            tile.setLayoutParams(params);
-            this.tilesPanel.addView(tile);
+        if (tiles != null) {
+            for (int i = 0; i < tiles.size() && i < 5; i++) {
+                TaskTileView tile = tiles.get(i);
+                ReminderTileCell tc = tilesGrid.get(i);
+                int cellSize = tc.getSize();
+                Point position = tc.getPosition();
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(cellSize, cellSize);
+                params.setMargins(position.y, position.x, 0, 0);
+                tile.setLayoutParams(params);
+                this.tilesPanel.addView(tile);
+            }
         }
     }
 

@@ -42,6 +42,8 @@ public abstract class Event {
 
     abstract public TYPES getType();
 
+    abstract public String getEventName();
+
     abstract public boolean isTriggered(ActivationManager activationManager);
 
     abstract public int getIconDrawableId();

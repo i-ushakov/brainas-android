@@ -62,6 +62,7 @@ public class Synchronization {
 
     public static String initSyncTime = null;
     public static String accessToken = null;
+    public static String accessCode = null;
 
     private List<TaskSyncObserver> observers = new ArrayList<>();
 
@@ -91,7 +92,8 @@ public class Synchronization {
         return instance;
     }
 
-    public void startSynchronization() {
+    public void startSynchronization(UserAccount userAccount) {
+        accessCode = userAccount.getAccessCode();
         final Handler handler = new Handler();
         TimerTask syncTask = new TimerTask() {
             public void run() {
@@ -108,11 +110,16 @@ public class Synchronization {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 15, 60, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 5, 35, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
-        syncThreadHandle.cancel(true);
+        if (syncThreadHandle != null) {
+            syncThreadHandle.cancel(true);
+        }
+        Synchronization.initSyncTime = null;
+        Synchronization.accessToken = null;
+        Synchronization.accessCode = null;
     }
 
     private void synchronization() {

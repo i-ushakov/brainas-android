@@ -129,7 +129,7 @@ public class TasksActivity extends AppCompatActivity implements
                     tab.select();
                     break;
             }
-            int accountId = app.getAccountsManager().getUserAccount().getAccountId();
+            int accountId = app.getAccountsManager().getUserAccount().getLocalAccountId();
             updateTasksGrid(group, accountId);
         } else {
             showUserNotSignedInMessage();

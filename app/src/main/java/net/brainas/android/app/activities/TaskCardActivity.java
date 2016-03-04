@@ -25,7 +25,8 @@ import java.util.ArrayList;
 /**
  * Created by innok on 12/7/2015.
  */
-public class TaskCardActivity extends AppCompatActivity implements ActivationManager.ActivationObserver, Synchronization.TaskSyncObserver{
+public class TaskCardActivity extends AppCompatActivity
+        implements ActivationManager.ActivationObserver, Synchronization.TaskSyncObserver, Task.TaskChangesObserver {
 
     private Toolbar toolbar;
     private Task task;
@@ -36,6 +37,8 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_card);
+
+        tasksManager = ((BrainasApp) BrainasApp.getAppContext()).getTasksManager();
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -50,15 +53,22 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
 
         Bundle b = getIntent().getExtras();
         this.taskId = b.getLong("taskId");
-        this.task = getTaskById();
+        task = tasksManager.getTaskByLocalId(taskId);
+        this.task.attachObserver(this);
 
         setTaskStatus();
         fillTheCardWithTaskInfo();
 
-        tasksManager = ((BrainasApp) BrainasApp.getAppContext()).getTasksManager();
-
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
         Synchronization.getInstance().attach(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        setTaskStatus();
+        invalidateOptionsMenu();
+        fillTheCardWithTaskInfo();
     }
 
     //@Override
@@ -111,31 +121,30 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
     }
 
     public void updateAfterActivation() {
-        this.task = getTaskById();
         ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
             public void run() {
-                setTaskStatus();
-                invalidateOptionsMenu();
+                updateTaskCard();
             }
         });
     }
 
     public void updateAfterSync() {
-        this.task = getTaskById();
         ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
             public void run() {
-                setTaskStatus();
-                invalidateOptionsMenu();
-                fillTheCardWithTaskInfo();
+                updateTaskCard();
             }
         });
-
     }
 
-    private Task getTaskById() {
-        TasksManager taskManadger = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        Task task = taskManadger.getTaskByLocalId(taskId);
-        return task;
+    @Override
+    public void updateAfterTaskWasChanged() {
+        //updateTaskCard();
+    }
+
+    private void updateTaskCard() {
+        setTaskStatus();
+        invalidateOptionsMenu();
+        fillTheCardWithTaskInfo();
     }
 
     private void fillTheCardWithTaskInfo() {
@@ -158,6 +167,9 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
             LinearLayout conditionBlock = new ConditionBlockView(this, condition);
             conditionsCont.addView(conditionBlock);
         }
+
+        View detailedCardOfTask = findViewById (R.id.detailed_card_of_task);
+        detailedCardOfTask.invalidate();
     }
 
     private void setTaskStatus() {
@@ -179,5 +191,6 @@ public class TaskCardActivity extends AppCompatActivity implements ActivationMan
         super.onDestroy();
 
     }
+
 }
 

@@ -77,7 +77,11 @@ public class AccountsActivity extends AppCompatActivity {
             }
         });
 
-        app.getAccountsManager().initialSingIn(this);
+        if(!app.getAccountsManager().isUserSingIn()) {
+            app.getAccountsManager().initialSingIn(this);
+        } else {
+            app.getAccountsManager().buildApiClient(this);
+        }
     }
 
 

@@ -11,6 +11,7 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
+import net.brainas.android.app.infrustructure.Synchronization;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
@@ -24,7 +25,7 @@ public class BrainasApp extends Application {
 
     private static Context context;
 
-    private UserAccount userAccount;
+    private UserAccount userAccount = null;
 
     // Activities
     private MainActivity mainActivity;
@@ -48,7 +49,6 @@ public class BrainasApp extends Application {
 
     public void onCreate() {
         super.onCreate();
-        MultiDex.install(this);
         BrainasApp.context = getApplicationContext();
         accountsManager = new AccountsManager();
         AppDbHelper appDbHelper = new AppDbHelper(context);
@@ -58,6 +58,12 @@ public class BrainasApp extends Application {
         tasksManager = new TasksManager(taskDbHelper);
         activationManager = new ActivationManager(tasksManager);
         notificationManager = new NotificationManager();
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 
     public static Context getAppContext() {
@@ -103,13 +109,18 @@ public class BrainasApp extends Application {
     }
 
     public void setUserAccount(UserAccount userAccount) {
-        this.userAccount = userAccount;
-        userAccountDbHelper.setUserAccount(userAccount);
-        userAccount.setAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
-        SharedPreferences preferences = getAppPreferences();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("lastUsedAccount", userAccount.getAccountName());
-        editor.commit();
+        if (userAccount != null) {
+            if (this.userAccount == null || this.userAccount.getLocalAccountId() != userAccount.getLocalAccountId()) {
+                this.userAccount = userAccount;
+                userAccountDbHelper.updateOrCreate(userAccount);
+                userAccount.setLocalAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
+                saveLastUsedAccountInPref();
+                Synchronization.getInstance().stopSynchronization();
+                Synchronization.getInstance().startSynchronization(userAccount);
+            }
+        } else {
+            this.userAccount = null;
+        }
     }
 
     public UserAccount getUserAccount() {
@@ -137,4 +148,10 @@ public class BrainasApp extends Application {
         return this.accountsManager;
     }
 
+    private void saveLastUsedAccountInPref() {
+        SharedPreferences preferences = getAppPreferences();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("lastUsedAccount", userAccount.getAccountName());
+        editor.commit();
+    }
 }
