@@ -48,12 +48,12 @@
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.edittask.ConditionsActivity"
+            android:name=".activities.taskedit.ConditionsActivity"
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.edittask.ConditionActivity"
-            android:label="@string/activity_accounts_title"
+            android:name=".activities.taskedit.EventActivity"
+            android:label="@string/activity_event_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <meta-data

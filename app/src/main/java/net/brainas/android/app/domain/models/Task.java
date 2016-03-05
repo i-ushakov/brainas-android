@@ -127,38 +127,33 @@ public class Task {
 
     public void setStatus(String status){
         if (status == null) {
-            setStatus(STATUSES.DISABLED);
+            this.status = STATUSES.WAITING;
             return;
         }
         switch (status) {
             case "ACTIVE" :
-                setStatus(STATUSES.ACTIVE);
+                this.status = STATUSES.ACTIVE;
                 break;
             case "WAITING" :
-                setStatus(STATUSES.WAITING);
+                this.status = STATUSES.WAITING;
                 break;
             case "DONE" :
-                setStatus(STATUSES.DONE);
+                this.status = STATUSES.DONE;
                 break;
             case "CANCELED" :
-                setStatus(STATUSES.CANCELED);
+                this.status = STATUSES.CANCELED;
                 break;
 
             default:
-                setStatus(STATUSES.DISABLED);
+                this.status = STATUSES.DISABLED;
                 break;
         }
+        checkStatus();
     }
 
-
     public void setStatus(STATUSES status){
-        if (status == STATUSES.WAITING) {
-            if (!checkActualityOfConditions()) {
-                this.status = STATUSES.DISABLED;
-                return;
-            }
-        }
         this.status = status;
+        checkStatus();
     }
 
     public STATUSES getStatus() {
@@ -202,10 +197,11 @@ public class Task {
     }
 
     public void changeStatus(STATUSES newStatus) {
-        if (this.status == STATUSES.WAITING && newStatus == STATUSES.ACTIVE) {
+        /*if (this.status == STATUSES.WAITING && newStatus == STATUSES.ACTIVE) {
             notifyAboutTask();
-        }
+        }*/
         setStatus(newStatus);
+        checkStatus();
         save();
     }
 
@@ -217,8 +213,9 @@ public class Task {
         TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(this);
         this.setId(taskId);
-        TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
+
         if (needToLoggingChanges) {
+            TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
             taskChangesDbHelper.loggingChanges(this);
         }
         if (needToNotify) {
@@ -243,6 +240,16 @@ public class Task {
         while (it.hasNext()) {
             TaskChangesObserver observer = it.next();
             observer.updateAfterTaskWasChanged();
+        }
+    }
+
+    private void checkStatus() {
+        if (this.status == null || this.status == STATUSES.WAITING) {
+            if (!checkActualityOfConditions()) {
+                this.status = STATUSES.DISABLED;
+            } else {
+                this.status = STATUSES.WAITING;
+            }
         }
     }
 }

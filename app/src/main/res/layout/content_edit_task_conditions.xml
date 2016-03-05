@@ -6,7 +6,7 @@
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_edit_task_conditions"
-    tools:context=".activities.edittask.ConditionsActivity"
+    tools:context=".activities.taskedit.ConditionsActivity"
     android:id="@+id/content_edit_task_conditions"
     android:orientation="vertical"
     android:background="#ffffff">
@@ -80,61 +80,67 @@
 
 
     <!-- Bootm Panel  -->
-    <LinearLayout
+    <RelativeLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="75dp"
         android:id="@+id/bottomPanel"
-        android:background="#ffffff">
+        android:background="#ffffff"
+        android:layout_alignParentBottom="true">
 
-        <!-- Back (Btn) -->
         <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/colorPrimary"
-            android:id="@+id/detailsOfTaskBtn"
-            android:icon="@mipmap/ic_forward_black_24dp"
-            android:scaleX="-1">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:src="@drawable/ic_forward_white_48dp"
-                android:id="@+id/detailsOfTaskBtnImg"
-                android:gravity="center"
-                android:onClick="back"/>
-        </LinearLayout>
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-        <!-- OK (Btn) -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:background="#04B404"
-            android:id="@+id/saveTaskBtn"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp">
-            <com.andexert.library.RippleView
-                android:id="@+id/saveTaskBtnInner"
-                android:layout_width="match_parent"
+            <!-- Back (Btn) -->
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_margin="0dp"
-                rv_centered="true">
-            <TextView
-                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/colorPrimary"
+                android:id="@+id/detailsOfTaskBtn"
+                android:icon="@mipmap/ic_forward_black_24dp"
+                android:scaleX="-1">
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:src="@drawable/ic_forward_white_48dp"
+                    android:id="@+id/detailsOfTaskBtnImg"
+                    android:gravity="center"
+                    android:onClick="back"/>
+            </LinearLayout>
+
+            <!-- OK (Btn) -->
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="OK"
-                android:id="@+id/saveTaskBtnLabel"
-                android:textColor="#ffffff"
-                android:textSize="22dp"
-                android:gravity="center"
-                android:onClick="saveTask"/>
-            </com.andexert.library.RippleView>
+                android:layout_weight="3"
+                android:background="#04B404"
+                android:id="@+id/saveTaskBtn"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp">
+                <com.andexert.library.RippleView
+                    android:id="@+id/saveTaskBtnInner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="0dp"
+                    rv_centered="true">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="OK"
+                    android:id="@+id/saveTaskBtnLabel"
+                    android:textColor="#ffffff"
+                    android:textSize="22dp"
+                    android:gravity="center"
+                    android:onClick="saveTask"/>
+                </com.andexert.library.RippleView>
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

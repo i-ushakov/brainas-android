@@ -17,7 +17,7 @@ import android.widget.Toast;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.activities.edittask.ConditionsActivity;
+import net.brainas.android.app.activities.taskedit.ConditionsActivity;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.UserAccount;
 

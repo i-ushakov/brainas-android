@@ -126,11 +126,6 @@ public class TaskDbHelper {
     public ArrayList<Task> getTasks(Map<String,Object> params, Integer accountId){
         ArrayList<Task> tasks = new ArrayList<Task>();
 
-        /*
-        String sortOrder =
-                FeedEntry.COLUMN_NAME_UPDATED + " DESC";
-                */
-
         String selection = COLUMN_NAME_TASKS_USER + " LIKE ?";
         List<String> selectionArgsList = new ArrayList<String>();
         selectionArgsList.add(accountId.toString());
@@ -288,6 +283,7 @@ public class TaskDbHelper {
         return localId;
     }
 
+
     private void saveConditions(ArrayList<Condition> conditions, long taskId) {
         long newRowId = 0;
         for (Condition condition : conditions) {
@@ -298,11 +294,14 @@ public class TaskDbHelper {
             values.put(COLUMN_NAME_CONDITIONS_TASK, taskId);
             values.put(COLUMN_NAME_CONDITIONS_GLOBALID, condition.getGlobalId());
 
-            int nRowsEffected = db.update(
-                    TABLE_CONDITIONS,
-                    values,
-                    selection,
-                    selectionArgs);
+            int nRowsEffected = 0;
+            if (condition.getGlobalId() != 0) {
+                nRowsEffected = db.update(
+                        TABLE_CONDITIONS,
+                        values,
+                        selection,
+                        selectionArgs);
+            }
 
             if (nRowsEffected == 0) {
                 newRowId = db.insert(
@@ -328,11 +327,14 @@ public class TaskDbHelper {
             values.put(COLUMN_NAME_EVENTS_TYPE, event.getType().toString());
             values.put(COLUMN_NAME_EVENTS_PARAMS, event.getJSONStringWithParams());
 
-            int nRowsEffected = db.update(
-                    TABLE_EVENTS,
-                    values,
-                    selection,
-                    selectionArgs);
+            int nRowsEffected = 0;
+            if (event.getGlobalId() != 0) {
+                nRowsEffected = db.update(
+                        TABLE_EVENTS,
+                        values,
+                        selection,
+                        selectionArgs);
+            }
 
             if (nRowsEffected == 0) {
                 newRowId = db.insert(

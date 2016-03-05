@@ -1,4 +1,4 @@
-package net.brainas.android.app.activities.edittask;
+package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -55,7 +55,8 @@ public class ConditionsActivity extends EditTaskActivity {
     }
 
     public void addCondition(View view) {
-        Intent intent = new Intent(this, ConditionActivity.class);
+        Intent intent = new Intent(this, EventActivity.class);
+        intent.putExtra("taskLocalId", task.getId());
         startActivity(intent);
     }
 

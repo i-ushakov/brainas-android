@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_condition"
-    tools:context=".activities.edittask.ConditionActivity"
+    tools:showIn="@layout/activity_event"
+    tools:context=".activities.taskedit.EventActivity"
     android:id="@+id/content_condition"
     android:orientation="vertical"
     android:background="#ffffff">
@@ -60,9 +60,9 @@
             <fragment
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
-                android:id="@+id/map1"
+                android:id="@+id/eventMapContainer"
                 android:name="com.google.android.gms.maps.SupportMapFragment"
-                tools:context=".activities.edittask.ConditionActivity"
+                tools:context=".activities.taskedit.EventActivity"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
         </LinearLayout>
@@ -104,11 +104,12 @@
             android:layout_height="match_parent"
             android:layout_weight="3"
             android:background="#04B404"
-            android:id="@+id/saveTaskBtn"
+            android:id="@+id/saveEventBtn"
             android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp">
+            android:layout_marginRight="2dp"
+            android:clickable="true">
             <com.andexert.library.RippleView
-                android:id="@+id/saveTaskBtnInner"
+                android:id="@+id/saveEventBtnInner"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="0dp"
@@ -121,8 +122,8 @@
                 android:id="@+id/saveTaskBtnLabel"
                 android:textColor="#ffffff"
                 android:textSize="22dp"
-                android:gravity="center"
-                android:onClick="saveTask"/>
+                android:duplicateParentState="true"
+                android:gravity="center"/>
             </com.andexert.library.RippleView>
         </LinearLayout>
     </LinearLayout>

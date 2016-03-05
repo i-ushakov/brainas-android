@@ -1,5 +1,7 @@
 package net.brainas.android.app.domain.models;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.IntegerRes;
 
 import net.brainas.android.app.domain.helpers.ActivationManager;
@@ -16,7 +18,15 @@ public abstract class Event {
     private int globalConditionId;
 
     public enum TYPES {
-        GPS
+        GPS;
+        public String getLabel(Context context) {
+            Resources res = context.getResources();
+            int resId = res.getIdentifier(this.name(), "string", context.getPackageName());
+            if (0 != resId) {
+                return (res.getString(resId));
+            }
+            return (name());
+        }
     }
     Event() {}
 

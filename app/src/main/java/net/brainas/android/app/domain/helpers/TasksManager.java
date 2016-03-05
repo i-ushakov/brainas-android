@@ -1,5 +1,7 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.widget.ArrayAdapter;
+
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
@@ -18,6 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class TasksManager implements AccountsManager.SingInObserver {
 
+    private BrainasApp app;
     private TaskDbHelper taskDbHelper;
     private HashMap<Long, Task> tasksHashMap = new HashMap<>();
     private Integer accountId = null;
@@ -34,7 +37,8 @@ public class TasksManager implements AccountsManager.SingInObserver {
 
     public TasksManager(TaskDbHelper taskDbHelper) {
         ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().attach(this);
-        accountId = ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrenAccountId();
+        app = ((BrainasApp)BrainasApp.getAppContext());
+        accountId = app.getAccountsManager().getCurrenAccountId();
 
         this.taskDbHelper = taskDbHelper;
         //fillInWLFromDB();
@@ -100,6 +104,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public Task getTaskByLocalId(long id) {
+        accountId = app.getAccountsManager().getCurrenAccountId();
         // We cannot get tasks if we don't know current user account id
         if (accountId == null) {
             return null;
@@ -215,6 +220,19 @@ public class TasksManager implements AccountsManager.SingInObserver {
 
     public void updateAfterSingOut() {
         accountId = null;
+    }
+
+    public Event retriveEventFromTaskById(Task task, long eventId) {
+        ArrayList<Condition> conditions = task.getConditions();
+        for(Condition condition : conditions) {
+            ArrayList<Event> events = condition.getEvents();
+            for(Event event : events) {
+                if (event.getId().equals(eventId)){
+                    return event;
+                }
+            }
+        }
+        return null;
     }
 
     private ArrayList<Task> objectsMapping(ArrayList<Task> dbTasks) {
