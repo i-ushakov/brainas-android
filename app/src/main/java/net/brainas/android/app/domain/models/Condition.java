@@ -7,7 +7,7 @@ import java.util.List;
  * Created by innok on 11/27/2015.
  */
 public class Condition {
-    private int id;
+    private long id;
     private Long taskId;
     private int globalId;
     private ArrayList<Event> events = new ArrayList<>();
@@ -26,11 +26,11 @@ public class Condition {
         }
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

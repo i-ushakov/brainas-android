@@ -20,7 +20,7 @@ public class EventGPS extends Event {
         super();
     }
 
-    public EventGPS(Integer id, Integer globalId, Integer conditionId){
+    public EventGPS(Long id, Integer globalId, Long conditionId){
         super(id, globalId, conditionId);
     }
 

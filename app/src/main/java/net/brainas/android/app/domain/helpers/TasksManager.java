@@ -227,7 +227,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
         for(Condition condition : conditions) {
             ArrayList<Event> events = condition.getEvents();
             for(Event event : events) {
-                if (event.getId().equals(eventId)){
+                if (event.getId() == eventId){
                     return event;
                 }
             }

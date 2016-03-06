@@ -12,9 +12,9 @@ import org.w3c.dom.Element;
  * Created by innok on 11/27/2015.
  */
 public abstract class Event {
-    private int id;
+    private long id;
     private int globalId;
-    private int conditionId;
+    private long conditionId;
     private int globalConditionId;
 
     public enum TYPES {
@@ -30,7 +30,7 @@ public abstract class Event {
     }
     Event() {}
 
-    Event(Integer id, Integer globalId, Integer conditionId) {
+    Event(Long id, Integer globalId, Long conditionId) {
         if (id != null) {
             this.setId(id);
         }
@@ -60,11 +60,11 @@ public abstract class Event {
 
     abstract public boolean isExecutable();
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getId() {
+    public long getId() {
         return id;
     }
     public void setGlobalId(int globalId) {
@@ -79,7 +79,7 @@ public abstract class Event {
         this.conditionId = conditionId;
     }
 
-    public int getConditionId() {
+    public long getConditionId() {
         return conditionId;
     }
 }

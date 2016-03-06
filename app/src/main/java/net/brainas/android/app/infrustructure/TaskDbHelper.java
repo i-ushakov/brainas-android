@@ -55,7 +55,7 @@ public class TaskDbHelper {
             "CREATE TABLE " + TABLE_CONDITIONS + " (" +
                     COLUMN_NAME_CONDITIONS_ID + " INTEGER PRIMARY KEY," +
                     COLUMN_NAME_CONDITIONS_TASK + " INTEGER," +
-                    COLUMN_NAME_CONDITIONS_GLOBALID + " INTEGER UNIQUE" + " )";
+                    COLUMN_NAME_CONDITIONS_GLOBALID + " INTEGER" + " )";
     private static final String DELETE_TABLE_CONDITIONS =
             "DROP TABLE IF EXISTS " + TABLE_CONDITIONS;
 
@@ -287,20 +287,30 @@ public class TaskDbHelper {
     private void saveConditions(ArrayList<Condition> conditions, long taskId) {
         long newRowId = 0;
         for (Condition condition : conditions) {
-            String selection = COLUMN_NAME_CONDITIONS_GLOBALID + " LIKE ?";
-            String[] selectionArgs = { String.valueOf(condition.getGlobalId()) };
-
             ContentValues values = new ContentValues();
             values.put(COLUMN_NAME_CONDITIONS_TASK, taskId);
             values.put(COLUMN_NAME_CONDITIONS_GLOBALID, condition.getGlobalId());
 
             int nRowsEffected = 0;
-            if (condition.getGlobalId() != 0) {
+            if (condition.getId() != 0) {
+                String selection = COLUMN_NAME_CONDITIONS_ID + " LIKE ?";
+                String[] selectionArgs = { String.valueOf(condition.getId()) };
                 nRowsEffected = db.update(
                         TABLE_CONDITIONS,
                         values,
                         selection,
                         selectionArgs);
+            } else if (condition.getGlobalId() != 0) {
+                String selection = COLUMN_NAME_CONDITIONS_GLOBALID + " LIKE ?";
+                String[] selectionArgs = { String.valueOf(condition.getGlobalId()) };
+                nRowsEffected = db.update(
+                        TABLE_CONDITIONS,
+                        values,
+                        selection,
+                        selectionArgs);
+                if (nRowsEffected > 0) {
+                    condition.setId(getLocalIdByGlobal(condition.getGlobalId(), TABLE_CONDITIONS));
+                }
             }
 
             if (nRowsEffected == 0) {
@@ -308,19 +318,17 @@ public class TaskDbHelper {
                         TABLE_CONDITIONS,
                         null,
                         values);
+                condition.setId(newRowId);
             }
 
-            condition.setId(getLocalIdByGlobal(condition.getGlobalId(), TABLE_CONDITIONS));
+
             saveEvents(condition.getEvents(), condition.getId());
         }
     }
 
-    private void saveEvents(ArrayList<Event> events, int conditionId) {
+    private void saveEvents(ArrayList<Event> events, long conditionId) {
         long newRowId = 0;
         for (Event event : events) {
-            String selection = COLUMN_NAME_EVENTS_GLOBALID + " LIKE ?";
-            String[] selectionArgs = { String.valueOf(event.getGlobalId()) };
-
             ContentValues values = new ContentValues();
             values.put(COLUMN_NAME_EVENTS_GLOBALID, event.getGlobalId());
             values.put(COLUMN_NAME_EVENTS_CONDITION, conditionId);
@@ -328,19 +336,35 @@ public class TaskDbHelper {
             values.put(COLUMN_NAME_EVENTS_PARAMS, event.getJSONStringWithParams());
 
             int nRowsEffected = 0;
-            if (event.getGlobalId() != 0) {
+            if (event.getId() != 0) {
+                String selection = COLUMN_NAME_EVENTS_ID + " LIKE ?";
+                String[] selectionArgs = { String.valueOf(event.getId()) };
+
                 nRowsEffected = db.update(
                         TABLE_EVENTS,
                         values,
                         selection,
                         selectionArgs);
+            } else if (event.getGlobalId() != 0) {
+                String selection = COLUMN_NAME_EVENTS_GLOBALID + " LIKE ?";
+                String[] selectionArgs = { String.valueOf(event.getGlobalId()) };
+                nRowsEffected = db.update(
+                        TABLE_EVENTS,
+                        values,
+                        selection,
+                        selectionArgs);
+                if (nRowsEffected > 0) {
+                    event.setId(getLocalIdByGlobal(event.getGlobalId(), TABLE_CONDITIONS));
+                }
             }
+
 
             if (nRowsEffected == 0) {
                 newRowId = db.insert(
                         TABLE_EVENTS,
                         null,
                         values);
+                event.setId(newRowId);
             }
         }
     }
@@ -373,7 +397,7 @@ public class TaskDbHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                int id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
+                Long id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
                 int globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
                 String type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
                 String params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
@@ -393,7 +417,7 @@ public class TaskDbHelper {
         return events;
     }
 
-    private int getLocalIdByGlobal(long globalId, String tableName) {
+    private long getLocalIdByGlobal(long globalId, String tableName) {
         int localId = 1;
         String selectQuery = "SELECT * FROM " + tableName + " WHERE global_id = " + globalId;
         Cursor cursor = db.rawQuery(selectQuery, null);

@@ -54,6 +54,9 @@ public class TaskCardActivity extends AppCompatActivity
         Bundle b = getIntent().getExtras();
         this.taskId = b.getLong("taskId");
         task = tasksManager.getTaskByLocalId(taskId);
+        if (this.task == null) {
+            finish();
+        }
         this.task.attachObserver(this);
 
         setTaskStatus();
