@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_edit_task_description"
-    tools:context="net.brainas.android.app.activities.EditTaskDescriptionActivity"
+    tools:showIn="@layout/activity_edit_description"
+    tools:context=".activities.taskedit.EditDescriptionActivity"
     android:id="@+id/content_edit_task_descrition"
     android:orientation="vertical"
     android:background="#ffffff">
@@ -53,7 +53,8 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/taskPicturePanel">
+            android:id="@+id/taskLinkedObjectPanel"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -82,31 +83,27 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Cancel (Btn) -->
+            <!-- Back (Btn) -->
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:background="#BDBDBD"
                 android:layout_weight="1"
-                android:id="@+id/cancelEditTaskBtn"
-                android:weightSum="1">
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.3"></LinearLayout>
+                android:background="?attr/colorPrimary"
+                android:id="@+id/backToTitleEditBtn"
+                android:icon="@mipmap/ic_forward_black_24dp"
+                android:scaleX="-1"
+                android:onClick="back">
                 <ImageView
-                    android:layout_weight="0.4"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/cancelEditTaskImg"
-                    android:src="@drawable/cancel_icon_white"
-                    android:gravity="center"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:src="@drawable/ic_forward_white_48dp"
+                    android:id="@+id/backToTitleEditBtnImg"
+                    android:gravity="center" />
             </LinearLayout>
 
             <!-- OK (Btn) -->
-
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="0dp"
@@ -115,13 +112,8 @@
                 android:background="#04B404"
                 android:id="@+id/saveTaskBtn"
                 android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp">
-                <com.andexert.library.RippleView
-                    android:id="@+id/saveTaskBtnInner"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="0dp"
-                    rv_centered="true">
+                android:layout_marginRight="2dp"
+                android:onClick="saveTask">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -130,9 +122,7 @@
                     android:id="@+id/saveTaskBtnLabel"
                     android:textColor="#ffffff"
                     android:textSize="22dp"
-                    android:gravity="center"
-                    android:onClick="saveTask"/>
-                </com.andexert.library.RippleView>
+                    android:gravity="center" />
             </LinearLayout>
 
             <!-- Next Step (Btn) -->
@@ -143,15 +133,15 @@
                 android:layout_weight="1"
                 android:background="?attr/colorPrimary"
                 android:id="@+id/detailsOfTaskBtn"
-                android:icon="@mipmap/ic_forward_black_24dp">
+                android:icon="@mipmap/ic_forward_black_24dp"
+                android:onClick="nextToConditionsActivity">
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:src="@drawable/ic_forward_white_48dp"
                     android:id="@+id/detailsOfTaskBtnImg"
-                    android:gravity="center"
-                    android:onClick="nextToConditionsActivity"/>
+                    android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>

@@ -6,7 +6,7 @@
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_edit_task"
-    tools:context="net.brainas.android.app.activities.EditTaskActivity"
+    tools:context=".activities.taskedit.EditTaskActivity"
     android:id="@+id/content_edit_task"
     android:orientation="vertical"
     android:background="#ffffff">
@@ -149,7 +149,8 @@
                 android:background="#BDBDBD"
                 android:layout_weight="1"
                 android:id="@+id/cancelEditTaskBtn"
-                android:weightSum="1">
+                android:weightSum="1"
+                android:onClick="cancel">
                 <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="0dp"
@@ -174,12 +175,6 @@
                 android:id="@+id/saveTaskBtn"
                 android:layout_marginLeft="2dp"
                 android:layout_marginRight="2dp">
-                <com.andexert.library.RippleView
-                    android:id="@+id/saveTaskBtnInner"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="0dp"
-                    rv_centered="true">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -189,7 +184,6 @@
                     android:textColor="#ffffff"
                     android:textSize="22dp"
                     android:gravity="center"/>
-                </com.andexert.library.RippleView>
             </LinearLayout>
 
             <!-- Details (Btn) -->

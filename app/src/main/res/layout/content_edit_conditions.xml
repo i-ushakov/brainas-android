@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
 
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_edit_task_conditions"
-    tools:context=".activities.taskedit.ConditionsActivity"
+    tools:showIn="@layout/activity_edit_conditions"
+    tools:context=".activities.taskedit.EditConditionsActivity"
     android:id="@+id/content_edit_task_conditions"
     android:orientation="vertical"
     android:background="#ffffff">
@@ -46,21 +46,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/addConditionBtnCont"
-                android:weightSum="3"
                 android:gravity="center"
-                android:layout_marginTop="5dp">
+                android:layout_marginTop="8dp">
 
                 <LinearLayout
                     android:orientation="horizontal"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:minHeight="40dp"
                     android:minWidth="0dp"
                     android:background="#04B404"
                     android:id="@+id/addConditionBtn"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical|center_horizontal">
+                    android:gravity="center_vertical|center_horizontal"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingLeft="20dp"
+                    android:paddingRight="20dp"
+                    android:onClick="addCondition">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -70,8 +73,7 @@
                         android:textColor="#ffffff"
                         android:textSize="25dp"
                         android:textStyle="bold"
-                        android:id="@+id/addConditionLbl"
-                        android:onClick="addCondition"/>
+                        android:id="@+id/addConditionLbl"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -102,15 +104,15 @@
                 android:background="?attr/colorPrimary"
                 android:id="@+id/detailsOfTaskBtn"
                 android:icon="@mipmap/ic_forward_black_24dp"
-                android:scaleX="-1">
+                android:scaleX="-1"
+                android:onClick="back">
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:src="@drawable/ic_forward_white_48dp"
                     android:id="@+id/detailsOfTaskBtnImg"
-                    android:gravity="center"
-                    android:onClick="back"/>
+                    android:gravity="center" />
             </LinearLayout>
 
             <!-- OK (Btn) -->
@@ -122,13 +124,8 @@
                 android:background="#04B404"
                 android:id="@+id/saveTaskBtn"
                 android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp">
-                <com.andexert.library.RippleView
-                    android:id="@+id/saveTaskBtnInner"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="0dp"
-                    rv_centered="true">
+                android:layout_marginRight="2dp"
+                android:onClick="saveTask">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -137,9 +134,7 @@
                     android:id="@+id/saveTaskBtnLabel"
                     android:textColor="#ffffff"
                     android:textSize="22dp"
-                    android:gravity="center"
-                    android:onClick="saveTask"/>
-                </com.andexert.library.RippleView>
+                    android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
