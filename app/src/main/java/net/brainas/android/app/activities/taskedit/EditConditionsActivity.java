@@ -8,9 +8,8 @@ import android.widget.LinearLayout;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.UI.views.taskedit.ConditionEditView;
-import net.brainas.android.app.activities.EditTaskActivity;
-import net.brainas.android.app.activities.EditTaskDescriptionActivity;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
 
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 /**
  * Created by Kit Ushakov on 28/02/2016.
  */
-public class ConditionsActivity extends EditTaskActivity {
+public class EditConditionsActivity extends EditTaskActivity implements Task.TaskChangesObserver {
 
     private Toolbar toolbar;
     private BrainasApp app;
@@ -32,11 +31,12 @@ public class ConditionsActivity extends EditTaskActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_task_conditions);
+        setContentView(R.layout.activity_edit_conditions);
         app = (BrainasApp) (BrainasApp.getAppContext());
 
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+        task.attachObserver(this);
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -50,37 +50,50 @@ public class ConditionsActivity extends EditTaskActivity {
         });
 
         conditionsPanel = (LinearLayout) findViewById(R.id.taskConditionsPanel);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         renderContent();
     }
 
     public void addCondition(View view) {
-        Intent intent = new Intent(this, EventActivity.class);
+        UIHelper.addClickEffectToButton(view, EditConditionsActivity.this);
+        Intent intent = new Intent(this, EditEventActivity.class);
         intent.putExtra("taskLocalId", task.getId());
         startActivity(intent);
     }
 
     public void saveTask(View view) {
-        task.setStatus(Task.STATUSES.WAITING);
-        task.save();
-        showTaskErrorsOrWarnings(task);
-        finish();
+        if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
+            task.save();
+            showTaskErrorsOrWarnings(task);
+            finish();
+        }
     }
 
     public void back(View view) {
-        task.setStatus(Task.STATUSES.WAITING);
-        task.save();
-        Intent intent = new Intent(this, EditTaskDescriptionActivity.class);
-        intent.putExtra("taskLocalId", task.getId());
-        startActivity(intent);
-        finish();
+        if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
+            task.save();
+            Intent intent = new Intent(this, EditDescriptionActivity.class);
+            intent.putExtra("taskLocalId", task.getId());
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void renderContent() {
         ArrayList<Condition> conditions = task.getConditions();
+        conditionsPanel.removeAllViews();
         for (Condition condition : conditions) {
             conditionsPanel.addView(new ConditionEditView(this, condition));
         }
+    }
+
+    @Override
+    public void updateAfterTaskWasChanged() {
+        renderContent();
     }
 }
 

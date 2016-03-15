@@ -1,66 +1,65 @@
 package net.brainas.android.app.activities.taskedit;
 
-import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.activities.EditTaskActivity;
-import net.brainas.android.app.activities.EditTaskDescriptionActivity;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
 
-import org.w3c.dom.Text;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 
 /**
  * Created by Kit Ushakov on 28/02/2016.
  */
-public class EventActivity extends EditTaskActivity
-        implements GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, OnMapReadyCallback {
+public class EditEventActivity extends EditTaskActivity
+        implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
 
-    private static String TAG = "EventActivity";
+    private static String TAG = "EditEventActivity";
+    private BrainasApp app;
+    private boolean editMode = false;
 
     private Toolbar toolbar;
-    private BrainasApp app;
+
     private Task task = null;
     private Event event = null;
-    private boolean editMode = false;
 
     private GoogleMap googleMap;
     private Marker currentMarker;
-    private LatLng markerLocation;
-
-    private LinearLayout saveEventBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_event);
+        setContentView(R.layout.activity_edit_event);
         app = (BrainasApp) (BrainasApp.getAppContext());
 
         Long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
@@ -88,8 +87,6 @@ public class EventActivity extends EditTaskActivity
         });
 
         setTypeSpinner();
-
-        addClickListenerToSaveBtn();
     }
 
     @Override
@@ -98,26 +95,8 @@ public class EventActivity extends EditTaskActivity
         renderContent();
     }
 
-    public void saveEvent() {
-        if (editMode) {
-
-        } else {
-            Condition newCondition = new Condition();
-            newCondition.addEvent(event);
-            task.addCondition(newCondition);
-        }
-
-        task.save();
-        showTaskErrorsOrWarnings(task);
-        finish();
-    }
-
-    public void back(View view) {
-        task.setStatus(Task.STATUSES.WAITING);
-        task.save();
-        Intent intent = new Intent(this, EditTaskDescriptionActivity.class);
-        intent.putExtra("taskLocalId", task.getId());
-        startActivity(intent);
+    public void cancel(View view) {
+        UIHelper.addClickEffectToButton(view, this);
         finish();
     }
 
@@ -131,7 +110,6 @@ public class EventActivity extends EditTaskActivity
     }
 
     private void renderLocationContent() {
-        // Location Autocomplete
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
@@ -139,11 +117,18 @@ public class EventActivity extends EditTaskActivity
             @Override
             public void onPlaceSelected(Place place) {
                 LatLng location = place.getLatLng();
-                CameraUpdate center =
-                        CameraUpdateFactory.newLatLng(location);
-                CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
-                googleMap.moveCamera(center);
-                googleMap.animateCamera(zoom);
+                LatLngBounds latLngBounds = place.getViewport();
+                changeLocation(location);
+
+                //CameraUpdate center =
+                        //CameraUpdateFactory.newLatLng(location);
+               // CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
+                //googleMap.moveCamera(center);
+                //googleMap.animateCamera(zoom);
+
+                googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,2));
+
                 Log.i(TAG, "Place: " + place.getName());
             }
 
@@ -162,40 +147,68 @@ public class EventActivity extends EditTaskActivity
     }
 
     @Override
-    public boolean onMarkerClick(Marker marker) {
-        /*LatLng latLng = new LatLng(11,11);
-        locationMarker = googleMap.addMarker(new MarkerOptions()
-                .position(latLng)
-                .title("My Spot")
-                .snippet("This is my spot!")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));*/
-        return false;
-    }
-
-    @Override
-    public void onMapClick(LatLng point) {
-       // TODO
+    public void onMapClick(LatLng location) {
+        changeLocation(location);
     }
 
     @Override
     public void onMapLongClick(LatLng location) {
-        markerLocation = location;
-        if (currentMarker != null ) {
-            currentMarker.remove();
-        }
-
-        currentMarker = googleMap.addMarker(new MarkerOptions()
-                .position(markerLocation)
-                .title("Hello world")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+        changeLocation(location);
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
         this.googleMap = map;
-        this.googleMap.setOnMarkerClickListener(EventActivity.this);
-        this.googleMap.setOnMapClickListener(EventActivity.this);
-        this.googleMap.setOnMapLongClickListener(EventActivity.this);
+        //this.googleMap.setOnMapClickListener(EditEventActivity.this);
+        this.googleMap.setOnMapLongClickListener(EditEventActivity.this);
+    }
+
+    public void saveEventHandler(View view) {
+        if (UIHelper.safetyBtnClick(view, EditEventActivity.this)) {
+            if (validateEvent()) {
+                ((View) findViewById(R.id.saveEventBtn)).setOnClickListener(null);
+                saveEvent();
+            } else {
+                Toast.makeText(EditEventActivity.this, "You have to set location on the map!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void changeLocation(LatLng location) {
+        setMarker(location);
+        String addressStr = getAddressByLocation(location);
+        event.setParams(location.latitude, location.longitude, null, addressStr);
+    }
+
+    private void setMarker(LatLng location) {
+        if (currentMarker != null ) {
+            currentMarker.remove();
+        }
+
+        currentMarker = googleMap.addMarker(new MarkerOptions()
+                .position(location)
+                .title("")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+    }
+
+    private String getAddressByLocation(LatLng location) {
+        String addressStr = null;
+        Geocoder geocoder = new Geocoder(EditEventActivity.this, Locale.getDefault());
+
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(
+                    location.latitude,
+                    location.longitude, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (addresses != null && addresses.size() > 0) {
+            Address address = addresses.get(0);
+            addressStr = address.getAddressLine(0) + ", " + address.getAddressLine(1);
+        }
+        return addressStr;
     }
 
     private void setTypeSpinner() {
@@ -213,23 +226,27 @@ public class EventActivity extends EditTaskActivity
         }
     }
 
-    private void addClickListenerToSaveBtn() {
-        final LinearLayout saveEventBtn = (LinearLayout) findViewById(R.id.saveEventBtn);
-        final ViewGroup saveEventBtnInner = (ViewGroup) findViewById(R.id.saveEventBtnInner);
-        final TextView saveTaskBtnLabel = (TextView) findViewById(R.id.saveTaskBtnLabel);
+    private void saveEvent() {
+        if (!editMode) {
+            Condition newCondition = new Condition();
+            newCondition.addEvent(event);
+            task.addCondition(newCondition);
+        }
+        task.save();
+        showTaskErrorsOrWarnings(task);
+        finish();
+    }
 
-        View.OnClickListener onClickListener = new View.OnClickListener() {
-            public void onClick(View v) {
-                saveEventBtn.setOnClickListener(null);
-                saveEventBtnInner.setOnClickListener(null);
-                saveTaskBtnLabel.setOnClickListener(null);
-                saveEvent();
-            }
-        };
-
-        saveEventBtn.setOnClickListener(onClickListener);
-        saveEventBtnInner.setOnClickListener(onClickListener);
-        saveTaskBtnLabel.setOnClickListener(onClickListener);
+    private boolean validateEvent() {
+        switch (event.getType().getLabel(this)) {
+            case "GPS":
+                if (((EventGPS) event).getLat() != null &&
+                        ((EventGPS) event).getLng() != null) {
+                    return true;
+                }
+                break;
+        }
+        return false;
     }
 }
 

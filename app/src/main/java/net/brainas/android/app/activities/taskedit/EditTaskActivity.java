@@ -1,7 +1,8 @@
-package net.brainas.android.app.activities;
+package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -11,13 +12,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.helpers.TasksManager;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -42,19 +44,21 @@ public class EditTaskActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewGroup taskTitlePanel;
     private ViewGroup taskPicturePanel;
-    private RelativeLayout saveTaskBtn;
+    private LinearLayout saveTaskBtn;
     private EditText editTitleField;
 
     private String validationError = "";
     private Mode mode;
     private Task task = null;
 
+    private long lastClickTimeForward = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_task);
 
-        if (getIntent().getStringExtra("mode") != null && getIntent().getStringExtra("mode").equals(Mode.EDIT.toString())) {
+        if (getIntent().hasExtra("taskLocalId")) {
             mode = Mode.EDIT;
             long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
             task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
@@ -80,7 +84,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
         taskTitlePanel = (ViewGroup) findViewById(R.id.taskTitlePanel);
         taskPicturePanel = (ViewGroup) findViewById(R.id.taskPicturePanel);
-        saveTaskBtn = (RelativeLayout) findViewById(R.id.saveTaskBtnInner);
+        saveTaskBtn = (LinearLayout) findViewById(R.id.saveTaskBtn);
         setSaveBtnOnClickListener();
         editTitleField = (EditText) findViewById(R.id.editTitleField);
 
@@ -154,9 +158,9 @@ public class EditTaskActivity extends AppCompatActivity {
     private void setSaveBtnOnClickListener() {
         saveTaskBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 if(validateTask()) {
-                    saveTask();
+                    saveTask(view);
                     finish();
                 } else {
                     Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
@@ -178,18 +182,26 @@ public class EditTaskActivity extends AppCompatActivity {
         return false;
     }
 
-    private void saveTask() {
-        Editable taskTitleEditable = editTitleField.getText();
-        if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
-            int userId = app.getAccountsManager().getCurrenAccountId();
-            String message = taskTitleEditable.toString().trim();
-            if (task == null) {
-                task = new Task(userId, message);
+    private void saveTask(View view) {
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            Editable taskTitleEditable = editTitleField.getText();
+            if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
+                int userId = app.getAccountsManager().getCurrenAccountId();
+                String message = taskTitleEditable.toString().trim();
+                if (task == null) {
+                    task = new Task(userId, message);
+                }
+                task.setMessage(message);
+                task.setStatus(Task.STATUSES.WAITING);
+                task.save();
+                showTaskErrorsOrWarnings(task);
             }
-            task.setMessage(message);
-            task.setStatus(Task.STATUSES.WAITING);
-            task.save();
-            showTaskErrorsOrWarnings(task);
+        }
+    }
+
+    public void cancel(View view) {
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            finish();
         }
     }
 
@@ -202,14 +214,16 @@ public class EditTaskActivity extends AppCompatActivity {
     }
 
     public void nextToDescriptionActivity(View view) {
-        if(validateTask()) {
-            saveTask();
-            Intent intent = new Intent(this, EditTaskDescriptionActivity.class);
-            intent.putExtra("taskLocalId", task.getId());
-            startActivity(intent);
-            finish();
-        } else {
-            Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            if (validateTask()) {
+                saveTask(view);
+                Intent intent = new Intent(this, EditDescriptionActivity.class);
+                intent.putExtra("taskLocalId", task.getId());
+                startActivity(intent);
+                finish();
+            } else {
+                Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

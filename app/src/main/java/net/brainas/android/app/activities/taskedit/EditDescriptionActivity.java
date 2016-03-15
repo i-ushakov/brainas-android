@@ -1,4 +1,4 @@
-package net.brainas.android.app.activities;
+package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,13 +11,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.activities.taskedit.ConditionsActivity;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Created by innok on 12/7/2015.
  */
-public class EditTaskDescriptionActivity extends AppCompatActivity {
+public class EditDescriptionActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
     private BrainasApp app;
@@ -38,7 +39,7 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewGroup descriptionPanel;
     private ViewGroup linkedObjectsPanel;
-    private RelativeLayout saveTaskBtn;
+    private LinearLayout saveTaskBtn;
     private EditText editDescriptionField;
 
     private String validationError = "";
@@ -47,7 +48,7 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_task_description);
+        setContentView(R.layout.activity_edit_description);
 
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
@@ -69,8 +70,9 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
         setTabLayoutListeners(tabLayout);
 
         descriptionPanel = (ViewGroup) findViewById(R.id.taskDescriptionPanel);
+        linkedObjectsPanel = (ViewGroup) findViewById(R.id.taskLinkedObjectPanel);
         editDescriptionField = (EditText) findViewById(R.id.editDescriptionField);
-        saveTaskBtn = (RelativeLayout) findViewById(R.id.saveTaskBtnInner);
+        saveTaskBtn = (LinearLayout) findViewById(R.id.saveTaskBtn);
         //setSaveBtnOnClickListener();
 
         refreshPanel();
@@ -116,11 +118,11 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
         switch (tabLayout.getSelectedTabPosition()) {
             case 0:
                 descriptionPanel.setVisibility(View.VISIBLE);
-                //linkedObjectsPanel.setVisibility(View.GONE);
+                linkedObjectsPanel.setVisibility(View.GONE);
                 break;
             case 1:
                 descriptionPanel.setVisibility(View.GONE);
-                //linkedObjectsPanel.setVisibility(View.VISIBLE);
+                linkedObjectsPanel.setVisibility(View.VISIBLE);
                 break;
             default:
                 TabLayout.Tab tab = tabLayout.getTabAt(0);
@@ -131,12 +133,13 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
     }
 
     public void saveTask(View view) {
-        Editable taskTitleEditable = editDescriptionField.getText();
-        if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
-            int userId = app.getAccountsManager().getCurrenAccountId();
-            String description = taskTitleEditable.toString().trim();
-            task.setDescription(description);
-            task.setStatus(Task.STATUSES.WAITING);
+        if (UIHelper.safetyBtnClick(view, EditDescriptionActivity.this)) {
+            Editable taskTitleEditable = editDescriptionField.getText();
+            if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
+                int userId = app.getAccountsManager().getCurrenAccountId();
+                String description = taskTitleEditable.toString().trim();
+                task.setDescription(description);
+            }
             task.save();
             showTaskErrorsOrWarnings(task);
             finish();
@@ -144,24 +147,36 @@ public class EditTaskDescriptionActivity extends AppCompatActivity {
     }
 
     public void nextToConditionsActivity(View view) {
-        Editable taskTitleEditable = editDescriptionField.getText();
-        if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
-            String description = taskTitleEditable.toString().trim();
-            task.setDescription(description);
+        if (UIHelper.safetyBtnClick(view, EditDescriptionActivity.this)) {
+            Editable taskTitleEditable = editDescriptionField.getText();
+            if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
+                String description = taskTitleEditable.toString().trim();
+                task.setDescription(description);
+            }
+
             task.save();
+            Intent intent = new Intent(this, EditConditionsActivity.class);
+            intent.putExtra("taskLocalId", task.getId());
+            startActivity(intent);
             finish();
         }
-
-        Intent intent = new Intent(this, ConditionsActivity.class);
-        intent.putExtra("taskLocalId", task.getId());
-        startActivity(intent);
     }
 
     private void showTaskErrorsOrWarnings(Task task) {
         Iterator it = task.getWarnings().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> pair = (Map.Entry)it.next();
-            Toast.makeText(EditTaskDescriptionActivity.this, pair.getValue(), Toast.LENGTH_LONG).show();
+            Toast.makeText(EditDescriptionActivity.this, pair.getValue(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void back(View view) {
+        if (UIHelper.safetyBtnClick(view, EditDescriptionActivity.this)) {
+            task.save();
+            Intent intent = new Intent(this, EditTaskActivity.class);
+            intent.putExtra("taskLocalId", task.getId());
+            startActivity(intent);
+            finish();
         }
     }
 }
