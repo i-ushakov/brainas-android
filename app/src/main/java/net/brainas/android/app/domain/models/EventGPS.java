@@ -14,7 +14,10 @@ import org.w3c.dom.Element;
  */
 public class EventGPS extends Event {
     static String EVENT_NAME = "Location";
-    double lat, lng, radius;
+    Double lat = null;
+    Double lng = null;
+    Double radius = null;
+    String address = null;
 
     public EventGPS(){
         super();
@@ -43,9 +46,11 @@ public class EventGPS extends Event {
     public String getJSONStringWithParams() {
         JSONObject params= new JSONObject();
         try {
-            params.put("lat",lat);
-            params.put("lng",lng);
-            params.put("radius",radius);
+            params.put("lat", lat);
+            params.put("lng", lng);
+            params.put("radius", radius);
+            params.put("address", address);
+            params.put("address", address);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -59,9 +64,22 @@ public class EventGPS extends Event {
             lat  = params.getDouble("lat");
             lng  = params.getDouble("lng");
             radius  = params.getDouble("radius");
+            address = params.getString("address");
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void setParams(double lat, double lng, Double radius , String address) {
+        this.lat = lat;
+        this.lng = lng;
+        if (radius != null) {
+            this.radius = radius;
+        } else {
+            this.radius = 100d;
+        }
+        this.address = address;
     }
 
     @Override
@@ -83,13 +101,19 @@ public class EventGPS extends Event {
         return R.drawable.gps_icon;
     }
 
-    public double getLat() {
+    public Double getLat() {
         return this.lat;
     }
 
-    public double getLng() {
+    public Double getLng() {
         return this.lng;
     }
+
+    public Double getRadius() {
+        return this.radius;
+    }
+
+    public String getAddress() {return  this.address;}
 
     public boolean isExecutable() {
         return true;

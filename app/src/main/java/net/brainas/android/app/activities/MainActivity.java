@@ -18,7 +18,7 @@ import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
-import net.brainas.android.app.infrustructure.Synchronization;
+import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 
 
 public class MainActivity extends AppCompatActivity  {

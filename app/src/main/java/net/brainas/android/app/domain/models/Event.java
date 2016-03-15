@@ -48,6 +48,8 @@ public abstract class Event {
 
     abstract public void fillInParamsFromJSONString(String params);
 
+    abstract public void setParams(double lat, double lng, Double radius , String address);
+
     abstract public String getJSONStringWithParams();
 
     abstract public TYPES getType();

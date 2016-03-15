@@ -14,6 +14,7 @@ import android.widget.TextView;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.taskcard.ConditionBlockView;
+import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;

@@ -2,6 +2,7 @@ package net.brainas.android.app.domain.helpers;
 
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
+import net.brainas.android.app.domain.models.EventGPS;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,23 +12,21 @@ import org.json.JSONObject;
  */
 public class TaskHelper {
     public static String getEventInfo(Event event) {
-        String info = "GPS: {lng: 1.123400, lat: 2.123456, rad: 100}";
-        String eventType = event.getEventName();
-        String eventParams = event.getJSONStringWithParams();
-        String lng = "";
-        String lat = "";
-        String radius = "";
-        try {
-            JSONObject eventParamsJSON = new JSONObject(eventParams);
-            lng = eventParamsJSON.getString("lng");
-            lat = eventParamsJSON.getString("lat");
-            radius = eventParamsJSON.getString("radius");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return "Cannot get event's info";
+        String info = "";
+        Event.TYPES eventType = event.getType();
+
+        switch (eventType.name()) {
+            case "GPS" :
+                String address = ((EventGPS) event).getAddress();
+                if (address != null && !address.equals("")) {
+                    info = "Location: " + ((EventGPS) event).getAddress();
+                } else {
+                    info = "Location: " + "{lng:" + String.format("%.5f", ((EventGPS) event).getLng()) +
+                            ", lat:" + String.format("%.5f", ((EventGPS) event).getLat()) + ", rad:" + ((EventGPS) event).getRadius() + "}";
+                }
+                break;
         }
-        info = eventType + ": " + "{lng:" + String.format("%.5f", Float.parseFloat(lng)) +
-                ", lat:" + String.format("%.5f", Float.parseFloat(lat)) + ", rad:" + radius + "}";
+
         return info;
     }
 }

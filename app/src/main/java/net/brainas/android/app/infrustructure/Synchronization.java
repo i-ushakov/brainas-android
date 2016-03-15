@@ -110,7 +110,7 @@ public class Synchronization {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 5, 35, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 5, 60, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
