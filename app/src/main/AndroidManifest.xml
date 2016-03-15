@@ -40,19 +40,19 @@
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.EditTaskActivity"
+            android:name=".activities.taskedit.EditTaskActivity"
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.EditTaskDescriptionActivity"
+            android:name=".activities.taskedit.EditDescriptionActivity"
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.taskedit.ConditionsActivity"
+            android:name=".activities.taskedit.EditConditionsActivity"
             android:label="@string/activity_accounts_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".activities.taskedit.EventActivity"
+            android:name=".activities.taskedit.EditEventActivity"
             android:label="@string/activity_event_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
