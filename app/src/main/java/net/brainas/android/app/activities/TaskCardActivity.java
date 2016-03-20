@@ -21,7 +21,7 @@ import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.Synchronization;
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by innok on 12/7/2015.
@@ -57,6 +57,7 @@ public class TaskCardActivity extends AppCompatActivity
         task = tasksManager.getTaskByLocalId(taskId);
         if (this.task == null) {
             finish();
+            return;
         }
         this.task.attachObserver(this);
 
@@ -77,6 +78,9 @@ public class TaskCardActivity extends AppCompatActivity
 
     //@Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if(task == null) {
+            return true;
+        }
         Task.STATUSES status = task.getStatus();
 
         if (status == Task.STATUSES.ACTIVE) {
@@ -166,7 +170,7 @@ public class TaskCardActivity extends AppCompatActivity
         // conditions
         ViewGroup conditionsCont = (ViewGroup)findViewById(R.id.task_card_conditions);
         conditionsCont.removeAllViews();
-        ArrayList<Condition> conditions = task.getConditions();
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         for(Condition condition : conditions) {
             LinearLayout conditionBlock = new ConditionBlockView(this, condition);
             conditionsCont.addView(conditionBlock);
@@ -192,6 +196,7 @@ public class TaskCardActivity extends AppCompatActivity
     protected void onDestroy() {
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
         Synchronization.getInstance().detach(this);
+        this.task.detachObserver(this);
         super.onDestroy();
 
     }

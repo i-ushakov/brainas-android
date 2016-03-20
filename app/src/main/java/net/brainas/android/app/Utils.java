@@ -2,6 +2,7 @@ package net.brainas.android.app;
 
 import android.os.Build;
 import android.view.View;
+import android.view.ViewParent;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -86,5 +87,16 @@ public class Utils {
         }
 
         return date1.compareTo(date2);
+    }
+
+    public static ViewParent findParentRecursively(View view, int targetId) {
+        if (view.getId() == targetId) {
+            return (ViewParent)view;
+        }
+        View parent = (View) view.getParent();
+        if (parent == null) {
+            return null;
+        }
+        return findParentRecursively(parent, targetId);
     }
 }

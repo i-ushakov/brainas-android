@@ -1,7 +1,5 @@
 package net.brainas.android.app.domain.helpers;
 
-import android.widget.ArrayAdapter;
-
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
@@ -187,7 +185,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
         return false;
     }
 
-    public boolean conditionsValidation(ArrayList<Condition> conditions) {
+    public boolean conditionsValidation(CopyOnWriteArrayList<Condition> conditions) {
         if (conditions.size() == 0) {
             return false;
         }
@@ -223,7 +221,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public Event retriveEventFromTaskById(Task task, long eventId) {
-        ArrayList<Condition> conditions = task.getConditions();
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         for(Condition condition : conditions) {
             ArrayList<Event> events = condition.getEvents();
             for(Event event : events) {

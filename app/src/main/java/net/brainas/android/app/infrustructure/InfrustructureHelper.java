@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppException;
+import net.brainas.android.app.domain.models.Condition;
+import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.Task;
 
 import org.w3c.dom.Document;
@@ -19,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -112,6 +115,33 @@ public class InfrustructureHelper {
         Element descriptionEl = doc.createElement("description");
         descriptionEl.setTextContent(task.getDescription());
         taskEl.appendChild(descriptionEl);
+
+        // conditions
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        Element conditionsEl = doc.createElement("conditions");
+        for(Condition condition : conditions) {
+            Element conditionEl = doc.createElement("condition");
+            conditionEl.setAttribute("localId", Long.toString(condition.getId()));
+            conditionEl.setAttribute("globalId", Long.toString(condition.getGlobalId()));
+            ArrayList<Event> events = condition.getEvents();
+            Element eventsEl = doc.createElement("events");
+            for(Event event : events) {
+                Element eventEl = doc.createElement("event");
+                eventEl.setAttribute("localId", Long.toString(event.getId()));
+                eventEl.setAttribute("globalId", Long.toString(event.getGlobalId()));
+                Element eventTypeEl = doc.createElement("type");
+                eventTypeEl.setTextContent(event.getType().toString());
+                eventEl.appendChild(eventTypeEl);
+                Element eventParamsEl = doc.createElement("params");
+                eventParamsEl.setTextContent(event.getJSONStringWithParams());
+                eventEl.appendChild(eventParamsEl);
+                eventsEl.appendChild(eventEl);
+            }
+            conditionEl.appendChild(eventsEl);
+            conditionsEl.appendChild(conditionEl);
+        }
+        taskEl.appendChild(conditionsEl);
+
         return taskEl;
     }
 

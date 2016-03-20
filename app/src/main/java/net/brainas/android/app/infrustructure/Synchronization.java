@@ -110,7 +110,7 @@ public class Synchronization {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 5, 60, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 5, 35, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -204,7 +204,7 @@ public class Synchronization {
             Log.v(TAG, "Access token was gotten :" + Synchronization.accessToken);
         }
 
-        tasks = syncHelper.retriveNewAndUpdatetTasks(xmlDocument);
+        tasks = syncHelper.retriveCreatedAndUpdatetTasks(xmlDocument);
         syncDate.put("tasks", tasks);
 
         deletedTasks = syncHelper.retriveDeletedTasks(xmlDocument, "deletedTask");

@@ -24,7 +24,7 @@ public class Task {
     private String description = null;
     private boolean haveImage = false;
     private STATUSES status = null;
-    private ArrayList<Condition> conditions = new ArrayList<>();
+    private CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<TaskChangesObserver> observers = new CopyOnWriteArrayList<TaskChangesObserver>();
     private Object lock = new Object();
     private HashMap<String, String> warnings = new HashMap();
@@ -148,7 +148,6 @@ public class Task {
                 this.status = STATUSES.DISABLED;
                 break;
         }
-        checkStatus();
     }
 
     public void setStatus(STATUSES status){
@@ -168,12 +167,24 @@ public class Task {
         conditions.add(condition);
     }
 
-    public void setConditions(ArrayList<Condition> conditions) {
+    public void setConditions(CopyOnWriteArrayList<Condition> conditions) {
         this.conditions.clear();
         this.conditions.addAll(conditions);
     }
 
-    public ArrayList<Condition> getConditions() {
+    public void removeCondition(Condition conditionForRemove) {
+        long conditionId = conditionForRemove.getId();
+        Condition condition = null;
+        Iterator<Condition> i = conditions.iterator();
+        while (i.hasNext()) {
+            condition = i.next();
+            if (condition.getId() == conditionId) {
+                this.conditions.remove(condition);
+            }
+        }
+    }
+
+    public CopyOnWriteArrayList<Condition> getConditions() {
         return conditions;
     }
 
@@ -201,7 +212,6 @@ public class Task {
             notifyAboutTask();
         }*/
         setStatus(newStatus);
-        checkStatus();
         save();
     }
 
@@ -210,6 +220,7 @@ public class Task {
     }
 
     public void save(boolean needToNotify, boolean needToLoggingChanges){
+        checkStatus();
         TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(this);
         this.setId(taskId);

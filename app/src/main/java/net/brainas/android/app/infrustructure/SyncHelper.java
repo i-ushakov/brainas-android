@@ -221,10 +221,11 @@ public class SyncHelper {
 
     public void handleResultOfSyncWithServer(Document xmlDocument) {
         Element synchronizedObjectsEl = (Element)xmlDocument.getElementsByTagName("synchronizedObjects").item(0);
-        NodeList synchronizedTask = synchronizedObjectsEl.getElementsByTagName("synchronizedTask");
-        if (synchronizedTask != null) {
-            for (int i = 0; i < synchronizedTask.getLength(); ++i) {
-                Element synchronizedTaskEl = (Element) synchronizedTask.item(i);
+        // Synchronized Tasks
+        NodeList synchronizedTasks = synchronizedObjectsEl.getElementsByTagName("synchronizedTask");
+        if (synchronizedTasks != null) {
+            for (int i = 0; i < synchronizedTasks.getLength(); ++i) {
+                Element synchronizedTaskEl = (Element) synchronizedTasks.item(i);
                 long localTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("localId").item(0).getTextContent());
                 long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
                 if (localTaskId != 0) {
@@ -239,6 +240,32 @@ public class SyncHelper {
                     }
                 } else {
                     taskChangesDbHelper.removeFromSync(globalTaskId);
+                }
+            }
+        }
+
+        // Synchronized Conditions
+        NodeList synchronizedConditions = synchronizedObjectsEl.getElementsByTagName("synchronizedCondition");
+        if (synchronizedConditions != null) {
+            for (int i = 0; i < synchronizedConditions.getLength(); ++i) {
+                Element synchronizedConditionEl = (Element) synchronizedConditions.item(i);
+                long localConditionId = Long.valueOf(synchronizedConditionEl.getElementsByTagName("localId").item(0).getTextContent());
+                long globalConditionId = Long.valueOf(synchronizedConditionEl.getElementsByTagName("globalId").item(0).getTextContent());
+                if (localConditionId != 0 && globalConditionId != 0) {
+                    taskDbHelper.setConditionGlobalId(localConditionId, globalConditionId);
+                }
+            }
+        }
+
+        // Synchronized Events
+        NodeList synchronizedEvents = synchronizedObjectsEl.getElementsByTagName("synchronizedEvent");
+        if (synchronizedEvents != null) {
+            for (int i = 0; i < synchronizedEvents.getLength(); ++i) {
+                Element synchronizedEventEl = (Element) synchronizedEvents.item(i);
+                long localConditionId = Long.valueOf(synchronizedEventEl.getElementsByTagName("localId").item(0).getTextContent());
+                long globalConditionId = Long.valueOf(synchronizedEventEl.getElementsByTagName("globalId").item(0).getTextContent());
+                if (localConditionId != 0 && globalConditionId != 0) {
+                    taskDbHelper.setEventGlobalId(localConditionId, globalConditionId);
                 }
             }
         }
@@ -291,7 +318,7 @@ public class SyncHelper {
         }
     }
 
-    public ArrayList<Task> retriveNewAndUpdatetTasks(Document xmlDocument) {
+    public ArrayList<Task> retriveCreatedAndUpdatetTasks(Document xmlDocument) {
         ArrayList<Task> tasks = new ArrayList<>();
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 

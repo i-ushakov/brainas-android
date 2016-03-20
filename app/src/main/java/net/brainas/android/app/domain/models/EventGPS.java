@@ -98,7 +98,7 @@ public class EventGPS extends Event {
     }
 
     public int getIconDrawableId() {
-        return R.drawable.gps_icon;
+        return R.drawable.gps_icon_100;
     }
 
     public Double getLat() {

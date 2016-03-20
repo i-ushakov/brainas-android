@@ -13,6 +13,7 @@ import net.brainas.android.app.domain.models.Task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Kit Ushakov on 11/12/2015.
@@ -195,7 +196,7 @@ public class TaskDbHelper {
 
                 String status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
                 task.setStatus(status);
-                task.setConditions(getConditions(task));
+                task.setConditions(getConditionsByTask(task));
                 String description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
                 tasks.add(task);
@@ -248,6 +249,7 @@ public class TaskDbHelper {
             taskId = newRowId;
         }
 
+        cleanDeletedConditions(task);
         saveConditions(task.getConditions(), task.getId());
 
         return taskId;
@@ -283,8 +285,46 @@ public class TaskDbHelper {
         return localId;
     }
 
+    /*public Condition getConditionByLocalId(Long id) {
+        String selectQuery = "SELECT * FROM " + TABLE_CONDITIONS + " WHERE " + COLUMN_NAME_CONDITIONS_ID + " = " + id;
+        Cursor cursor = db.rawQuery(selectQuery, null);
 
-    private void saveConditions(ArrayList<Condition> conditions, long taskId) {
+        if (cursor.moveToFirst()) {
+            do {
+                int globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_GLOBALID)));
+                long taskId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_TASK)));
+
+                Condition condition = new Condition(id, globalId, taskId);
+                condition.addEvents(getEvents(condition));
+                conditions.add(condition);
+            }
+    }*/
+
+    public void setConditionGlobalId(Long localId, Long globalId) {
+        String selection = COLUMN_NAME_CONDITIONS_ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(localId) };
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_CONDITIONS_GLOBALID, globalId);
+        int nRowsEffected = db.update(
+                TABLE_CONDITIONS,
+                values,
+                selection,
+                selectionArgs);
+    }
+
+    public void setEventGlobalId(Long localId, Long globalId) {
+        String selection = COLUMN_NAME_EVENTS_ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(localId) };
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_EVENTS_GLOBALID, globalId);
+        int nRowsEffected = db.update(
+                TABLE_EVENTS,
+                values,
+                selection,
+                selectionArgs);
+    }
+
+    private void saveConditions(CopyOnWriteArrayList<Condition> conditions, long taskId) {
         long newRowId = 0;
         for (Condition condition : conditions) {
             ContentValues values = new ContentValues();
@@ -324,6 +364,37 @@ public class TaskDbHelper {
 
             saveEvents(condition.getEvents(), condition.getId());
         }
+    }
+
+    private void cleanDeletedConditions(Task task) {
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        CopyOnWriteArrayList<Condition> conditionsFromDB = getConditionsByTask(task);
+        ArrayList<Long> conditionsIds = new ArrayList<>();
+        for (Condition condition : conditions) {
+            conditionsIds.add(condition.getId());
+        }
+
+        for (Condition conditionFromDB : conditionsFromDB) {
+            if(!conditionsIds.contains(conditionFromDB.getId())) {
+                removeCondition(conditionFromDB.getId());
+            }
+        }
+    }
+
+    private void removeCondition(Long conditionId) {
+        // delete events of conditions
+        String selectionForEvents = COLUMN_NAME_EVENTS_CONDITION + " LIKE ?";
+        String[] selectionArgsForEvent = { String.valueOf(conditionId) };
+        db.delete(TABLE_EVENTS, selectionForEvents, selectionArgsForEvent);
+
+        // delete condition
+        String selectionForConditions = COLUMN_NAME_CONDITIONS_ID + " LIKE ?";
+        String[]  selectionArgsForConditions = { String.valueOf(conditionId) };
+        db.delete(TABLE_CONDITIONS, selectionForConditions, selectionArgsForConditions);
+    }
+
+    private void cleanOldEvents(Condition condition) {
+        // TODO
     }
 
     private void saveEvents(ArrayList<Event> events, long conditionId) {
@@ -369,8 +440,8 @@ public class TaskDbHelper {
         }
     }
 
-    private ArrayList<Condition> getConditions(Task task) {
-        ArrayList<Condition> conditions = new ArrayList<Condition>();
+    private CopyOnWriteArrayList<Condition> getConditionsByTask(Task task) {
+        CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<Condition>();
         String selectQuery = "SELECT * FROM " + TABLE_CONDITIONS + " WHERE " + COLUMN_NAME_CONDITIONS_TASK + " = " + task.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);
 

@@ -12,6 +12,8 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import net.brainas.android.app.R;
+import net.brainas.android.app.UI.UIHelper;
+import net.brainas.android.app.activities.taskedit.EditConditionsActivity;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 
@@ -21,10 +23,11 @@ import java.util.ArrayList;
  * Created by Kit Ushakov on 2/28/2016.
  */
 public class ConditionEditView extends LinearLayout {
+    private EditConditionsActivity editConditionsActivity;
     private Condition condition;
 
-    public ConditionEditView(Context context, Condition condition) {
-        this(context, null, condition);
+    public ConditionEditView(EditConditionsActivity editConditionsActivity, Condition condition) {
+        this(editConditionsActivity, null, condition);
     }
 
     public ConditionEditView(Context context, AttributeSet attrs, Condition condition) {
@@ -46,6 +49,10 @@ public class ConditionEditView extends LinearLayout {
             LinearLayout eventView = new EventRowEdit(context, event);
             conditionEventsBlock.addView(eventView);
         }
+    }
+
+    public Condition getCondition(){
+        return condition;
     }
 
     public void editCondition(View view) {

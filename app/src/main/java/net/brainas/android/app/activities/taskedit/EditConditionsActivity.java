@@ -4,16 +4,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.ViewParent;
 import android.widget.LinearLayout;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.UI.views.taskedit.ConditionEditView;
+import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**
@@ -58,6 +60,12 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
         renderContent();
     }
 
+    @Override
+    protected void onDestroy() {
+        this.task.detachObserver(this);
+        super.onDestroy();
+    }
+
     public void addCondition(View view) {
         UIHelper.addClickEffectToButton(view, EditConditionsActivity.this);
         Intent intent = new Intent(this, EditEventActivity.class);
@@ -83,8 +91,19 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
         }
     }
 
+    public void removeCondition(View view) {
+        if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
+            ViewParent parentView = Utils.findParentRecursively(view, R.id.viewConditionEdit);
+            ConditionEditView conditionEditView = (ConditionEditView)parentView.getParent();
+            Condition condition = conditionEditView.getCondition();
+            task.removeCondition(condition);
+            task.save();
+        }
+    }
+
+
     private void renderContent() {
-        ArrayList<Condition> conditions = task.getConditions();
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         conditionsPanel.removeAllViews();
         for (Condition condition : conditions) {
             conditionsPanel.addView(new ConditionEditView(this, condition));
