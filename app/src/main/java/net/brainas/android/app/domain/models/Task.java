@@ -255,7 +255,7 @@ public class Task {
     }
 
     private void checkStatus() {
-        if (this.status == null || this.status == STATUSES.WAITING) {
+        if (this.status == null || this.status == STATUSES.WAITING || this.status == STATUSES.DISABLED) {
             if (!checkActualityOfConditions()) {
                 this.status = STATUSES.DISABLED;
             } else {

@@ -453,6 +453,7 @@ public class TaskDbHelper {
 
                 Condition condition = new Condition(id, globalId, taskId);
                 condition.addEvents(getEvents(condition));
+                condition.setParent(task);
                 conditions.add(condition);
             } while (cursor.moveToNext());
         }
@@ -476,7 +477,8 @@ public class TaskDbHelper {
                 Event event = null;
                 switch (type) {
                     case "GPS" :
-                        event = new EventGPS(id, globalId, condition.getId());
+                        event = new EventGPS(id, globalId, condition);
+                        event.setParent(condition);
                     break;
                 }
                 event.fillInParamsFromJSONString(params);

@@ -39,8 +39,6 @@ public class TasksManager implements AccountsManager.SingInObserver {
         accountId = app.getAccountsManager().getCurrenAccountId();
 
         this.taskDbHelper = taskDbHelper;
-        //fillInWLFromDB();
-        //fiilInALFromDB();
     }
 
     public void addTasksToWaitingList(List<Task> tasks) {
@@ -197,7 +195,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
         return true;
     }
 
-    public void deleteTaskById(int taskId) {
+    public void deleteTaskByLocalId(int taskId) {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         taskDbHelper.deleteTaskById(taskId);
@@ -233,17 +231,25 @@ public class TasksManager implements AccountsManager.SingInObserver {
         return null;
     }
 
-    private ArrayList<Task> objectsMapping(ArrayList<Task> dbTasks) {
+    public void addToMappedTasks(Task task) {
+        ArrayList<Task> oneTaskArray = new ArrayList<Task>();
+        oneTaskArray.add(task);
+        objectsMapping(oneTaskArray);
+    }
+
+    private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
-        for (Task dbTask : dbTasks){
-            long taskId = dbTask.getId();
+        long taskId;
+        Task mappedTask;
+        for (Task task : tasks){
+            taskId = task.getId();
             if(tasksHashMap.containsKey(taskId)) {
-                Task refreshedTask = tasksHashMap.get(taskId);
-                refreshedTask = refreshTaskObject(refreshedTask, dbTask);
-                mappedTasks.add(refreshedTask);
+                mappedTask = tasksHashMap.get(taskId);
+                mappedTask = refreshTaskObject(mappedTask, task);
+                mappedTasks.add(mappedTask);
             } else {
-                mappedTasks.add(dbTask);
-                tasksHashMap.put(taskId, dbTask);
+                mappedTasks.add(task);
+                tasksHashMap.put(taskId, task);
             }
         }
         //tasksHashMap.clear();
@@ -254,9 +260,11 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     private Task refreshTaskObject(Task heapTask, Task dbTask) {
-        heapTask.setMessage(dbTask.getMessage());
-        heapTask.setDescription(dbTask.getDescription());
-        heapTask.setConditions(dbTask.getConditions());
+        if (!heapTask.equals(dbTask)) {
+            heapTask.setMessage(dbTask.getMessage());
+            heapTask.setDescription(dbTask.getDescription());
+            heapTask.setConditions(dbTask.getConditions());
+        }
         return heapTask;
     }
 }

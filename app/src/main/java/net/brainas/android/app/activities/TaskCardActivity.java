@@ -33,6 +33,7 @@ public class TaskCardActivity extends AppCompatActivity
     private Task task;
     private long taskId;
     private TasksManager tasksManager;
+    private ViewGroup conditionsCont;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +169,7 @@ public class TaskCardActivity extends AppCompatActivity
         taskDescription.setText(task.getDescription());
 
         // conditions
-        ViewGroup conditionsCont = (ViewGroup)findViewById(R.id.task_card_conditions);
+        conditionsCont = (ViewGroup)findViewById(R.id.task_card_conditions);
         conditionsCont.removeAllViews();
         CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         for(Condition condition : conditions) {
@@ -194,11 +195,11 @@ public class TaskCardActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        conditionsCont.removeAllViews();
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
         Synchronization.getInstance().detach(this);
         this.task.detachObserver(this);
         super.onDestroy();
-
     }
 
 }

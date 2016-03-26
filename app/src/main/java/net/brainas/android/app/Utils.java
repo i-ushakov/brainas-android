@@ -1,11 +1,18 @@
 package net.brainas.android.app;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewParent;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+
+import net.brainas.android.app.domain.models.Condition;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,5 +105,24 @@ public class Utils {
             return null;
         }
         return findParentRecursively(parent, targetId);
+    }
+
+    public static int dpsToPxs(Integer dps, Context context) {
+        Integer pxs;
+        Resources r = context.getResources();
+        pxs = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dps, r.getDisplayMetrics());
+        return pxs;
+    }
+
+    public static ImageView createImageView(int src, int dps, Context context) {
+        ImageView eventTypeImage;
+        eventTypeImage = new ImageView(context);
+        eventTypeImage.setImageResource(src);
+        eventTypeImage.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        eventTypeImage.getLayoutParams().width = Utils.dpsToPxs(100, context);
+        eventTypeImage.getLayoutParams().height = Utils.dpsToPxs(100, context);
+        return eventTypeImage;
     }
 }
