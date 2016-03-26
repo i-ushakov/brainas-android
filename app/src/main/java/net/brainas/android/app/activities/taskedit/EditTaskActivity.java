@@ -1,28 +1,31 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
+import net.brainas.android.app.domain.helpers.TaskHelper;
+import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.UserAccount;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -35,70 +38,59 @@ public class EditTaskActivity extends AppCompatActivity {
         CREATE, EDIT
     }
 
+    protected BrainasApp app;
+    protected TasksManager tasksManager;
+    protected TaskHelper taskHelper;
+
+    String[] tabs = {"TEXT", "PICTURE"};
+
     private Toolbar toolbar;
-    private BrainasApp app;
-    private AccountsManager accountsManager;
-    private UserAccount userAccount;
-
-
     private TabLayout tabLayout;
     private ViewGroup taskTitlePanel;
     private ViewGroup taskPicturePanel;
-    private LinearLayout saveTaskBtn;
     private EditText editTitleField;
+    private ViewGroup categoryPanel;
+    private ViewGroup conditionPanel;
+    private LinearLayout saveTaskBtn;
 
-    private String validationError = "";
+
+    private String validationErrorMessage = "";
     private Mode mode;
     private Task task = null;
-
-    private long lastClickTimeForward = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_task);
 
+        app = (BrainasApp) (BrainasApp.getAppContext());
+        tasksManager = app.getTasksManager();
+        taskHelper = app.getTaskHelper();
+
         if (getIntent().hasExtra("taskLocalId")) {
             mode = Mode.EDIT;
             long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
-            task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+            task = tasksManager.getTaskByLocalId(taskLocalId);
         } else {
             mode = Mode.CREATE;
         }
-
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-
-        tabLayout = (TabLayout) findViewById(R.id.sectionsTabs);
-        tabLayout.addTab(tabLayout.newTab().setText("TEXT"), 0, true);
-        tabLayout.addTab(tabLayout.newTab().setText("PICTURE"), 1);
-        setTabLayoutListeners(tabLayout);
+        setToolBar();
+        setTabLayout(new ArrayList<>(Arrays.asList(tabs)));
 
         taskTitlePanel = (ViewGroup) findViewById(R.id.taskTitlePanel);
         taskPicturePanel = (ViewGroup) findViewById(R.id.taskPicturePanel);
+        editTitleField = (EditText) findViewById(R.id.editTitleField);
+        setEditTitleFieldListeners();
+        categoryPanel = (ViewGroup) findViewById(R.id.middleCategoryPanel);
+        conditionPanel = (ViewGroup) findViewById(R.id.middleConditionPanel);
         saveTaskBtn = (LinearLayout) findViewById(R.id.saveTaskBtn);
         setSaveBtnOnClickListener();
-        editTitleField = (EditText) findViewById(R.id.editTitleField);
+    }
 
-        refreshPanel();
-
-        app = (BrainasApp) (BrainasApp.getAppContext());
-        //accountActivityTitle = (TextView) findViewById(R.id.account_activity_title);
-
-
-        /*singInButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-            }
-        });*/
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshContent();
     }
 
 
@@ -111,31 +103,30 @@ public class EditTaskActivity extends AppCompatActivity {
         return true;
     }
 
-    private void setTabLayoutListeners(TabLayout tabLayout) {
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+    protected void setToolBar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                switch (tab.getPosition()) {
-                    case 0:
-                        refreshPanel();
-                        break;
-                    case 1:
-                        refreshPanel();
-                        break;
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
+            public void onClick(View v) {
+                onBackPressed();
             }
         });
     }
 
-    private void refreshPanel() {
+    protected void setTabLayout(ArrayList<String> tabs) {
+        tabLayout = (TabLayout) findViewById(R.id.sectionsTabs);
+        int i = 0;
+        for (String tab : tabs) {
+            tabLayout.addTab(tabLayout.newTab().setText(tab), i, i++ == 0 ? true : false);
+        }
+        setTabLayoutListeners(tabLayout);
+    }
+
+    private void refreshContent() {
+        validate();
         switch (tabLayout.getSelectedTabPosition()) {
             case 0:
                 taskTitlePanel.setVisibility(View.VISIBLE);
@@ -153,28 +144,111 @@ public class EditTaskActivity extends AppCompatActivity {
         if (mode == Mode.EDIT) {
             editTitleField.setText(task.getMessage());
         }
+        if (task != null && task.getConditions().size() > 0) {
+            conditionPanel.removeAllViews();
+            LinearLayout imagesOfEventTypes = taskHelper.getImagesBlockForConditions(task.getConditions(), this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.CENTER_HORIZONTAL;
+            conditionPanel.addView(imagesOfEventTypes, lp);
+        }
+    }
+
+    private void setTabLayoutListeners(TabLayout tabLayout) {
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0:
+                        refreshContent();
+                        break;
+                    case 1:
+                        refreshContent();
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
     }
 
     private void setSaveBtnOnClickListener() {
         saveTaskBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(validateTask()) {
-                    saveTask(view);
-                    finish();
-                } else {
-                    Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
+                if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+                    if (validate()) {
+                        save();
+                        finish();
+                    } else {
+                        Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationErrorMessage, Toast.LENGTH_LONG).show();
+                    }
                 }
             }
         });
     }
 
-    private boolean validateTask() {
+    private void setConditionPanelOnClickListener() {
+        conditionPanel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+                    if (validate()) {
+                        save();
+                        Intent intent;
+                        if (task.getConditions().size() > 0) {
+                            intent = new Intent(EditTaskActivity.this, EditConditionsActivity.class);
+                        } else {
+                            intent = new Intent(EditTaskActivity.this, EditEventActivity.class);
+                        }
+                        intent.putExtra("taskLocalId", task.getId());
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationErrorMessage, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
+    }
+
+    private void setEditTitleFieldListeners() {
+        editTitleField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                validate();
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+            }
+        });
+    }
+
+    private boolean validate() {
         Editable taskTitleEditable = editTitleField.getText();
         if ((taskTitleEditable == null || taskTitleEditable.toString().trim().matches("")) && !isPictureSet()) {
-            this.validationError = "You must input title of task or add picture";
+            this.validationErrorMessage = "You must input title of task or add picture";
+            conditionPanel.setOnClickListener(null);
+            conditionPanel.setAlpha(0.5f);
+            categoryPanel.setAlpha(0.5f);
             return false;
         }
+        setConditionPanelOnClickListener();
+        conditionPanel.setAlpha(1);
+        categoryPanel.setAlpha(1);
         return true;
     }
 
@@ -182,20 +256,19 @@ public class EditTaskActivity extends AppCompatActivity {
         return false;
     }
 
-    private void saveTask(View view) {
-        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
-            Editable taskTitleEditable = editTitleField.getText();
-            if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
-                int userId = app.getAccountsManager().getCurrenAccountId();
-                String message = taskTitleEditable.toString().trim();
-                if (task == null) {
-                    task = new Task(userId, message);
-                }
-                task.setMessage(message);
+    private void save() {
+        Editable taskTitleEditable = editTitleField.getText();
+        if (validate()) {
+            int userId = app.getAccountsManager().getCurrenAccountId();
+            String message = taskTitleEditable.toString().trim();
+            if (task == null) {
+                task = new Task(userId, message);
                 task.setStatus(Task.STATUSES.WAITING);
-                task.save();
-                showTaskErrorsOrWarnings(task);
             }
+            task.setMessage(message);
+            task.save();
+            tasksManager.addToMappedTasks(task);
+            showTaskErrorsOrWarnings(task);
         }
     }
 
@@ -215,14 +288,14 @@ public class EditTaskActivity extends AppCompatActivity {
 
     public void nextToDescriptionActivity(View view) {
         if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
-            if (validateTask()) {
-                saveTask(view);
+            if (validate()) {
+                save();
                 Intent intent = new Intent(this, EditDescriptionActivity.class);
                 intent.putExtra("taskLocalId", task.getId());
                 startActivity(intent);
                 finish();
             } else {
-                Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationError, Toast.LENGTH_LONG).show();
+                Toast.makeText(EditTaskActivity.this, EditTaskActivity.this.validationErrorMessage, Toast.LENGTH_LONG).show();
             }
         }
     }

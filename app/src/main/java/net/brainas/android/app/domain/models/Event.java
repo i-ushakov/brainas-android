@@ -12,6 +12,8 @@ import org.w3c.dom.Element;
  * Created by innok on 11/27/2015.
  */
 public abstract class Event {
+    Condition parent = null;
+
     private long id;
     private int globalId;
     private long conditionId;
@@ -30,7 +32,7 @@ public abstract class Event {
     }
     Event() {}
 
-    Event(Long id, Integer globalId, Long conditionId) {
+    Event(Long id, Integer globalId, Condition condition) {
         if (id != null) {
             this.setId(id);
         }
@@ -39,8 +41,8 @@ public abstract class Event {
             this.setGlobalId(globalId);
         }
 
-        if (conditionId != null) {
-            this.conditionId = conditionId;
+        if (condition != null) {
+            this.conditionId = condition.getId();
         }
     }
 
@@ -83,5 +85,13 @@ public abstract class Event {
 
     public long getConditionId() {
         return conditionId;
+    }
+
+    public void setParent(Condition condition) {
+        this.parent = condition;
+    }
+
+    public void save() {
+        this.parent.save();
     }
 }

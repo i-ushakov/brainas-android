@@ -6,6 +6,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.models.Event;
@@ -27,7 +28,7 @@ public class EventRowEdit extends LinearLayout {
         inflate(getContext(), R.layout.view_event_row_edit, this);
 
         TextView typeAndParamsView = (TextView)findViewById(R.id.eventTypeAndParams);
-        typeAndParamsView.setText(TaskHelper.getEventInfo(event));
+        typeAndParamsView.setText(((BrainasApp)(BrainasApp.getAppContext())).getTaskHelper().getEventInfo(event));
 
         //TextView eventTParamsView = (TextView)findViewById(R.id.eventParams);
         //eventTParamsView.setText(event.getJSONStringWithParams());

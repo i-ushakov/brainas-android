@@ -1,7 +1,7 @@
 package net.brainas.android.app.activities.taskedit;
 
-import android.location.Address;
-import android.location.Geocoder;
+import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -14,6 +14,7 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,15 +28,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
+import net.brainas.android.app.domain.helpers.GoogleApiHelper;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
-
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
+import net.brainas.android.app.infrustructure.GPSProvider;
 
 
 /**
@@ -69,7 +67,6 @@ public class EditEventActivity extends EditTaskActivity
         if (task != null && eventId != 0) {
             editMode = true;
             event = app.getTasksManager().retriveEventFromTaskById(task,eventId);
-
         } else {
             editMode = false;
             event = new EventGPS();
@@ -110,6 +107,7 @@ public class EditEventActivity extends EditTaskActivity
     }
 
     private void renderLocationContent() {
+
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
@@ -161,6 +159,7 @@ public class EditEventActivity extends EditTaskActivity
         this.googleMap = map;
         //this.googleMap.setOnMapClickListener(EditEventActivity.this);
         this.googleMap.setOnMapLongClickListener(EditEventActivity.this);
+        getCurrentUserLocationAsync();
     }
 
     public void saveEventHandler(View view) {
@@ -176,8 +175,10 @@ public class EditEventActivity extends EditTaskActivity
 
     private void changeLocation(LatLng location) {
         setMarker(location);
-        String addressStr = getAddressByLocation(location);
-        event.setParams(location.latitude, location.longitude, null, addressStr);
+        event.setParams(location.latitude, location.longitude, null, null);
+        GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
+        googleApiHelper.setAddressByLocation((EventGPS)event, false);
+
     }
 
     private void setMarker(LatLng location) {
@@ -189,26 +190,6 @@ public class EditEventActivity extends EditTaskActivity
                 .position(location)
                 .title("")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-    }
-
-    private String getAddressByLocation(LatLng location) {
-        String addressStr = null;
-        Geocoder geocoder = new Geocoder(EditEventActivity.this, Locale.getDefault());
-
-        List<Address> addresses = null;
-        try {
-            addresses = geocoder.getFromLocation(
-                    location.latitude,
-                    location.longitude, 1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (addresses != null && addresses.size() > 0) {
-            Address address = addresses.get(0);
-            addressStr = address.getAddressLine(0) + ", " + address.getAddressLine(1);
-        }
-        return addressStr;
     }
 
     private void setTypeSpinner() {
@@ -230,6 +211,7 @@ public class EditEventActivity extends EditTaskActivity
         if (!editMode) {
             Condition newCondition = new Condition();
             newCondition.addEvent(event);
+            event.setParent(newCondition);
             task.addCondition(newCondition);
         }
         task.save();
@@ -247,6 +229,30 @@ public class EditEventActivity extends EditTaskActivity
                 break;
         }
         return false;
+    }
+
+    private void getCurrentUserLocationAsync() {
+         new AsyncTask<Void, Void, LatLng>() {
+            @Override
+            protected LatLng doInBackground(Void... params) {
+                LatLng latLng = null;
+                GPSProvider gpsProvider = ((BrainasApp)BrainasApp.getAppContext()).getGpsProvider();
+                Location location = gpsProvider.getLocation();
+                if (location != null) {
+                    latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                }
+                return latLng;
+            }
+
+            protected void onPostExecute(LatLng latLng) {
+                if (latLng != null) {
+                    CameraUpdate center = CameraUpdateFactory.newLatLngZoom(latLng, 13);
+                    //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
+                    googleMap.moveCamera(center);
+                    //googleMap.animateCamera(zoom);
+                }
+            }
+        }.execute();
     }
 }
 

@@ -23,8 +23,8 @@ public class EventGPS extends Event {
         super();
     }
 
-    public EventGPS(Long id, Integer globalId, Long conditionId){
-        super(id, globalId, conditionId);
+    public EventGPS(Long id, Integer globalId, Condition condition){
+        super(id, globalId, condition);
     }
 
     public TYPES getType() {
@@ -43,6 +43,21 @@ public class EventGPS extends Event {
     }
 
     @Override
+    public void fillInParamsFromJSONString(String paramsJSONStr) {
+        try {
+            JSONObject params= new JSONObject(paramsJSONStr);
+            lat  = params.getDouble("lat");
+            lng  = params.getDouble("lng");
+            radius  = params.getDouble("radius");
+            if (params.has("address")) {
+                address = params.getString("address");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public String getJSONStringWithParams() {
         JSONObject params= new JSONObject();
         try {
@@ -58,19 +73,6 @@ public class EventGPS extends Event {
     }
 
     @Override
-    public void fillInParamsFromJSONString(String paramsJSONStr) {
-        try {
-            JSONObject params= new JSONObject(paramsJSONStr);
-            lat  = params.getDouble("lat");
-            lng  = params.getDouble("lng");
-            radius  = params.getDouble("radius");
-            address = params.getString("address");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public void setParams(double lat, double lng, Double radius , String address) {
         this.lat = lat;
         this.lng = lng;
@@ -79,6 +81,10 @@ public class EventGPS extends Event {
         } else {
             this.radius = 100d;
         }
+        this.address = address;
+    }
+
+    public void setAddress(String address) {
         this.address = address;
     }
 
@@ -96,6 +102,7 @@ public class EventGPS extends Event {
         }
         return false;
     }
+
 
     public int getIconDrawableId() {
         return R.drawable.gps_icon_100;
