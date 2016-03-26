@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * Created by innok on 12/7/2015.
  */
-public class EditDescriptionActivity extends AppCompatActivity {
+public class EditDescriptionActivity extends AppCompatActivity implements Task.TaskChangesObserver {
 
     private Toolbar toolbar;
     private BrainasApp app;
@@ -52,6 +52,7 @@ public class EditDescriptionActivity extends AppCompatActivity {
 
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+        task.attachObserver(this);
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -178,6 +179,17 @@ public class EditDescriptionActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
+    }
+
+    @Override
+    public void updateAfterTaskWasChanged() {
+        refreshPanel();
+    }
+
+    @Override
+    protected void onDestroy() {
+        this.task.detachObserver(this);
+        super.onDestroy();
     }
 }
 

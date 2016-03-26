@@ -7,10 +7,14 @@ import java.util.List;
  * Created by innok on 11/27/2015.
  */
 public class Condition {
+    private Task parent;
+
     private long id;
     private Long taskId;
     private int globalId;
     private ArrayList<Event> events = new ArrayList<>();
+
+
     public Condition() {}
 
     public Condition(Integer id, Integer globalId, Long taskId) {
@@ -72,5 +76,13 @@ public class Condition {
             }
         }
         return true;
+    }
+
+    public void setParent(Task task) {
+        this.parent = task;
+    }
+
+    public void save() {
+        this.parent.save();
     }
 }

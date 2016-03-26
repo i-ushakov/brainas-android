@@ -8,9 +8,12 @@ import android.support.multidex.MultiDex;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.domain.helpers.GoogleApiHelper;
 import net.brainas.android.app.domain.helpers.NotificationManager;
+import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
+import net.brainas.android.app.infrustructure.GPSProvider;
 import net.brainas.android.app.infrustructure.Synchronization;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
@@ -34,6 +37,7 @@ public class BrainasApp extends Application {
     private TasksManager tasksManager;
     private ActivationManager activationManager;
     private NotificationManager notificationManager;
+    private TaskHelper taskHelper;
 
     // UI Layer Managers
     private ReminderScreenManager reminderScreenManager;
@@ -43,6 +47,8 @@ public class BrainasApp extends Application {
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
     private UserAccountDbHelper userAccountDbHelper;
+    private GPSProvider gpsProvider;
+    private GoogleApiHelper googleApiHelper;
 
     // Application Layer Managers
     private AccountsManager accountsManager;
@@ -55,7 +61,10 @@ public class BrainasApp extends Application {
         taskDbHelper = new TaskDbHelper(appDbHelper);
         taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
+        gpsProvider = new GPSProvider();
+        googleApiHelper = new GoogleApiHelper(context);
         tasksManager = new TasksManager(taskDbHelper);
+        taskHelper = new TaskHelper();
         activationManager = new ActivationManager(tasksManager);
         notificationManager = new NotificationManager();
     }
@@ -82,6 +91,8 @@ public class BrainasApp extends Application {
         return this.tasksManager;
     }
 
+    public TaskHelper getTaskHelper() {return this.taskHelper;}
+
     public void setReminderScreenManager(ReminderScreenManager reminderScreenManager) {
         this.reminderScreenManager = reminderScreenManager;
     }
@@ -106,6 +117,14 @@ public class BrainasApp extends Application {
 
     public ActivationManager getActivationManager() {
         return activationManager;
+    }
+
+    public GoogleApiHelper getGoogleApiHelper() {
+        return googleApiHelper;
+    }
+
+    public GPSProvider getGpsProvider() {
+        return this.gpsProvider;
     }
 
     public void setUserAccount(UserAccount userAccount) {

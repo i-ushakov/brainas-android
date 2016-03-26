@@ -43,7 +43,7 @@ public class ActivationManager {
 
     public ActivationManager(TasksManager tasksManager) {
         this.tasksManager = tasksManager;
-        gpsProvider = new GPSProvider();
+        gpsProvider = ((BrainasApp)BrainasApp.getAppContext()).getGpsProvider();
         initCheckConditionsInWL();
     }
 
