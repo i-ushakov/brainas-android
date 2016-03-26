@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-
+        setActivePanel(ActivePanel.MESSAGES);
         initLayout();
     }
 

@@ -110,7 +110,7 @@ public class Synchronization {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 5, 35, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 5, 100, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stopSynchronization() {
@@ -166,7 +166,6 @@ public class Synchronization {
             if (response != null) {
                 try {
                     JSONObject syncDate = parseResponse(response);
-                    updatedTasksFromServer = (ArrayList<Task>)syncDate.get("tasks");
                     deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
                 } catch (ParserConfigurationException | IOException | SAXException |JSONException e) {
                     Log.e(TAG, "Cannot parse xml-document that gotten from server");
@@ -175,7 +174,6 @@ public class Synchronization {
                 }
 
                 // refreshe and delete tasks in DB
-                syncHelper.updateTasksInDb(updatedTasksFromServer);
                 syncHelper.deleteTasksFromDb(deletedTasksFromServer);
             }
 
@@ -204,8 +202,7 @@ public class Synchronization {
             Log.v(TAG, "Access token was gotten :" + Synchronization.accessToken);
         }
 
-        tasks = syncHelper.retriveCreatedAndUpdatetTasks(xmlDocument);
-        syncDate.put("tasks", tasks);
+        syncHelper.handlingOfTasksFromServer(xmlDocument);
 
         deletedTasks = syncHelper.retriveDeletedTasks(xmlDocument, "deletedTask");
         syncDate.put("deletedTasks", deletedTasks);

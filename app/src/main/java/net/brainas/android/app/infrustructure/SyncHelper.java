@@ -208,7 +208,7 @@ public class SyncHelper {
             String line;
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
-                response += line;
+                response += line + System.getProperty("line.separator");
             }
         } else {
             Log.e(TAG, "XML file was sent but error on server is occured");
@@ -318,8 +318,7 @@ public class SyncHelper {
         }
     }
 
-    public ArrayList<Task> retriveCreatedAndUpdatetTasks(Document xmlDocument) {
-        ArrayList<Task> tasks = new ArrayList<>();
+    public void handlingOfTasksFromServer(Document xmlDocument) {
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
         for (int i = 0; i < taskList.getLength(); ++i) {
@@ -342,6 +341,8 @@ public class SyncHelper {
                 task = new Task(accountId, message);
                 task.setGlobalId(globalId);
                 task.save(false, false);
+            } else {
+                task.setMessage(message);
             }
             task.setDescription(description);
             Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
@@ -368,10 +369,9 @@ public class SyncHelper {
                     condition.addEvent(event);
                 }
                 task.addCondition(condition);
+                task.save();
             }
-            tasks.add(task);
         }
-        return tasks;
     }
 
     public ArrayList<Integer> retriveDeletedTasks(Document xmlDocument, String type) throws JSONException {
@@ -390,25 +390,6 @@ public class SyncHelper {
 
     public boolean isActualChanges(long taskId, String datetime) {
         return true;
-    }
-
-    public Map<String,List<Long>> updateTasksInDb(List<Task> tasks) {
-        List<Long> addedTasksLocalIds = new ArrayList<>();
-        List<Long> updatedTasksGlobalIds = new ArrayList<>();
-        Map<String,List<Long>> result = new HashMap<>();
-
-        for (int i = 0; i < tasks.size(); ++i) {
-            Task task = tasks.get(i);
-            long newLocalTaskId = (long)taskDbHelper.addOrUpdateTask(task);
-            if(newLocalTaskId > 0) {
-                addedTasksLocalIds.add(newLocalTaskId);
-            } else {
-                updatedTasksGlobalIds.add(task.getGlobalId());
-            }
-        }
-        result.put("added", addedTasksLocalIds);
-        result.put("updated", updatedTasksGlobalIds);
-        return result;
     }
 
     public void deleteTasksFromDb(ArrayList<Integer> deletedTasks) {
