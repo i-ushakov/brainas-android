@@ -45,6 +45,7 @@ public class EditEventActivity extends EditTaskActivity
     private static String TAG = "EditEventActivity";
     private BrainasApp app;
     private boolean editMode = false;
+    private boolean initLoad = true;
 
     private Toolbar toolbar;
 
@@ -124,8 +125,10 @@ public class EditEventActivity extends EditTaskActivity
                 //googleMap.moveCamera(center);
                 //googleMap.animateCamera(zoom);
 
-                googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,2));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 13));
+                if (latLngBounds != null) {
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 2));
+                }
 
                 Log.i(TAG, "Place: " + place.getName());
             }
@@ -157,9 +160,12 @@ public class EditEventActivity extends EditTaskActivity
     @Override
     public void onMapReady(GoogleMap map) {
         this.googleMap = map;
-        //this.googleMap.setOnMapClickListener(EditEventActivity.this);
+        this.googleMap.setOnMapClickListener(EditEventActivity.this);
         this.googleMap.setOnMapLongClickListener(EditEventActivity.this);
-        getCurrentUserLocationAsync();
+        if (initLoad) {
+            getCurrentUserLocationAsync();
+            initLoad = false;
+        }
     }
 
     public void saveEventHandler(View view) {
