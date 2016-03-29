@@ -1,16 +1,19 @@
 package net.brainas.android.app.domain.helpers;
 
-import android.location.Location;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
+import android.util.Log;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.UI.logic.ReminderScreenManager;
-import net.brainas.android.app.activities.TasksActivity;
-import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.GPSProvider;
+import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.services.ActivationService;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,16 +21,13 @@ import java.util.TimerTask;
 /**
  * Created by innok on 12/1/2015.
  */
-public class ActivationManager {
-    static final int CHECK_CONDITIONS_START_TIME = 20000;
-    static final int CHECK_CONDITIONS_INTERVAL = 20000;
-    private Timer timer;
-    private TimerTask task;
-    private final Handler handler = new Handler();
-    private Object lock = new Object();
-    private TasksManager tasksManager;
-    private GPSProvider gpsProvider;
+public class ActivationManager implements AccountsManager.SingInObserver {
+    static final String TAG = "ActivationManager";
+    public static final int CHECK_CONDITIONS_START_TIME = 20000;
+    public static final int CHECK_CONDITIONS_INTERVAL = 20000;
     private List<ActivationObserver> observers = new ArrayList<>();
+
+    BrainasApp app;
 
     public interface ActivationObserver {
         void updateAfterActivation();
@@ -41,79 +41,49 @@ public class ActivationManager {
         observers.remove(observer);
     }
 
-    public ActivationManager(TasksManager tasksManager) {
-        this.tasksManager = tasksManager;
-        gpsProvider = ((BrainasApp)BrainasApp.getAppContext()).getGpsProvider();
-        initCheckConditionsInWL();
+    public ActivationManager() {
+        app = ((BrainasApp)BrainasApp.getAppContext());
     }
 
-    public void initCheckConditionsInWL() {
-        timer = new Timer();
-
-        task = new TimerTask() {
-            public void run() {
-                handler.post(new Runnable() {
-                    public void run() {
-                        checkConditionsInWL();
-                    }
-                });
-            }
-        };
-        timer.schedule(task, CHECK_CONDITIONS_START_TIME, CHECK_CONDITIONS_INTERVAL);
+    @Override
+    public void updateAfterSingIn(UserAccount userAccount) {
+        Integer accountId = userAccount.getLocalAccountId();
+        startActivationService(accountId);
     }
 
-    public Location getGPSLocation() {
-        //if (gpsProvider.canGetGPSLocation()){
-            return gpsProvider.getLocation();
-        //}
-        //return null;
+    @Override
+    public void updateAfterSingOut() {}
+
+    public void startActivationService(Integer accountId) {
+        Intent activationService = new Intent(app.getBaseContext(), ActivationService.class);
+        activationService.putExtra("accountId", accountId);
+        app.getBaseContext().startService(activationService);
+        app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_ACTIVATION));
     }
 
-    public boolean canGPSLocation() {
-        return gpsProvider.canGetGPSLocation();
-    }
-
-
-
-    private void checkConditionsInWL() {
-        if (!((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().isUserSingIn()) {
-            return;
-        }
-        List<Task> activatedTasks = new ArrayList<>();
-        ArrayList<Task> waitingList = tasksManager.getWaitingList();
-        if (waitingList != null) {
-            synchronized (lock) {
-                Iterator<Task> iterator = waitingList.iterator();
-                while (iterator.hasNext()) {
-                    Task task = iterator.next();
-                    if (task.isConditionsSatisfied(this)) {
-                        task.changeStatus(Task.STATUSES.ACTIVE);
-                        activatedTasks.add(task);
-                    }
-                }
-            }
-        }
-        if (activatedTasks.size() > 0) {
-            addTaskToActiveList(activatedTasks);
-        }
-    }
-
-    private void addTaskToActiveList(List<Task> tasks) {
+    /*private void addTaskToActiveList(List<Task> tasks) {
         BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
         NotificationManager notificationManager = app.getNotificationManager();
-        ReminderScreenManager reminderScreenManager = app.getReminderScreenManager();
         synchronized (lock) {
             for (int i = 0; i < tasks.size(); i++) {
                 Task task = tasks.get(i);
-                notificationManager.notifyAboutTask(task); //TODO mov to notifyAllObservers
-                notifyAllObservers();
+                notificationManager.notifyAboutTask(task); //TODO move to notifyAllObservers
+                notifyAllObservers(); // TODO broadcast (Reminderscreen, TasksActivity, TaskCards)
             }
         }
-    }
+    }*/
 
     private void notifyAllObservers() {
         for (ActivationObserver observer : observers) {
             observer.updateAfterActivation();
         }
     }
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            notifyAllObservers();
+            Log.i(TAG, "Got notification about activation");
+        }
+    };
 }

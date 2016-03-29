@@ -56,6 +56,12 @@
             android:label="@string/activity_event_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
+        <service
+            android:name=".services.ActivationService"
+            android:icon="@drawable/ic_setting_dark"
+            android:process=":brainas_activation_process"
+            android:label="@string/service_activation_name"></service>
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

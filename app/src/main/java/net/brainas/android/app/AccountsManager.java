@@ -146,7 +146,7 @@ public class AccountsManager implements
         }
     }
 
-    public Integer getCurrenAccountId() {
+    public Integer getCurrentAccountId() {
         if (isUserSingIn()) {
             return userAccount.getLocalAccountId();
         } else {
