@@ -99,12 +99,12 @@ public class TaskCardActivity extends AppCompatActivity
 
         switch (item.getItemId()) {
             case R.id.action_done_task:
-                task.changeStatus(Task.STATUSES.DONE);
+                tasksManager.changeStatus(task,Task.STATUSES.DONE);
                 setTaskStatus(Task.STATUSES.DONE);
                 invalidateOptionsMenu();
                 return true;
             case R.id.action_cancel_task:
-                task.changeStatus(Task.STATUSES.CANCELED);
+                tasksManager.changeStatus(task,Task.STATUSES.CANCELED);
                 setTaskStatus(Task.STATUSES.CANCELED);
                 invalidateOptionsMenu();
                 return true;

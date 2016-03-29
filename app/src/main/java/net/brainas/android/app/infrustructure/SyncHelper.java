@@ -29,7 +29,6 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,14 +51,13 @@ public class SyncHelper {
     static String boundary =  "*****";
     static String xmlOutDirPath = "/app_sync/xml/out";
 
-    private TasksManager tm;
+    private BrainasApp app;
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
 
     public SyncHelper() {
-        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        app = (BrainasApp)BrainasApp.getAppContext();
         this.taskDbHelper = app.getTaskDbHelper();
-        this.tm = app.getTasksManager();
         this.taskChangesDbHelper = app.getTasksChangesDbHelper();
     }
 
@@ -96,7 +94,7 @@ public class SyncHelper {
                 long localId = (long) pair.getKey();
                 Pair<String, String> change = (Pair<String, String>) pair.getValue();
 
-                Task task = tm.getTaskByLocalId(localId);
+                Task task = app.getTasksManager().getTaskByLocalId(localId);
                 Element changedTaskEl;
                 if (task != null) {
                     changedTaskEl = InfrustructureHelper.taskToXML(doc, task, "changedTask");
@@ -229,11 +227,11 @@ public class SyncHelper {
                 long localTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("localId").item(0).getTextContent());
                 long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
                 if (localTaskId != 0) {
-                    Task task = tm.getTaskByLocalId(localTaskId);
+                    Task task = app.getTasksManager().getTaskByLocalId(localTaskId);
                     // task can be null if user deleted it while synchronisation
                     if (task != null) {
                         task.setGlobalId(globalTaskId);
-                        task.save(false, false);
+                        app.getTasksManager().saveTask(task, false, false);
                         taskChangesDbHelper.uncheckFromSync(localTaskId);
                     } else {
                         taskChangesDbHelper.removeFromSync(globalTaskId);
@@ -284,7 +282,7 @@ public class SyncHelper {
     }
 
     public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
-        Task task = tm.getTaskByGlobalId(globalId);
+        Task task = app.getTasksManager().getTaskByGlobalId(globalId);
         if (task != null) {
             String timeOfLocalChanges = taskChangesDbHelper.getTimeOfLastChanges(task.getId());
             if (timeOfLocalChanges != null) {
@@ -330,17 +328,15 @@ public class SyncHelper {
             }
 
             String timeChanges = taskEl.getAttribute("time-changes");
-            if (!isActualChanges(globalId, timeChanges)) {
-                continue;
-            }
+
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
             int accountId = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount().getLocalAccountId();
-            Task task = tm.getTaskByGlobalId(globalId);
+            Task task = app.getTasksManager().getTaskByGlobalId(globalId);
             if (task == null) {
                 task = new Task(accountId, message);
                 task.setGlobalId(globalId);
-                task.save(false, false);
+                app.getTasksManager().saveTask(task, false, false);
             } else {
                 task.setMessage(message);
             }
@@ -369,7 +365,7 @@ public class SyncHelper {
                     condition.addEvent(event);
                 }
                 task.addCondition(condition);
-                task.save();
+                app.getTasksManager().saveTask(task);
             }
         }
     }
@@ -381,15 +377,11 @@ public class SyncHelper {
             Element deletedTaskEl = (Element)deletedTasksList.item(i);
             int globalId = Integer.parseInt(deletedTaskEl.getAttribute("global-id"));
             String timeChanges = deletedTaskEl.getAttribute("time-changes");
-            if(isActualChanges(globalId, timeChanges)){
+            if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
                 deletedTasks.add(globalId);
             }
         }
         return deletedTasks;
-    }
-
-    public boolean isActualChanges(long taskId, String datetime) {
-        return true;
     }
 
     public void deleteTasksFromDb(ArrayList<Integer> deletedTasks) {

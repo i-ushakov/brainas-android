@@ -1,5 +1,7 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.content.Context;
+
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
@@ -16,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
-public class TasksManager implements AccountsManager.SingInObserver {
+public class TasksManager {
 
     private BrainasApp app;
     private TaskDbHelper taskDbHelper;
@@ -33,11 +35,8 @@ public class TasksManager implements AccountsManager.SingInObserver {
     private ArrayList<Task> waitingList = new ArrayList<>();
     private ArrayList<Task> activeList = new ArrayList<>();
 
-    public TasksManager(TaskDbHelper taskDbHelper) {
-        ((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().attach(this);
-        app = ((BrainasApp)BrainasApp.getAppContext());
-        accountId = app.getAccountsManager().getCurrenAccountId();
-
+    public TasksManager(TaskDbHelper taskDbHelper, Integer accountId) {
+        this.accountId = accountId;
         this.taskDbHelper = taskDbHelper;
     }
 
@@ -83,6 +82,14 @@ public class TasksManager implements AccountsManager.SingInObserver {
         return activeList;
     }
 
+    public ArrayList<Task> getAllTasksFromHeap() {
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (long key: tasksHashMap.keySet()) {
+            tasks.add(tasksHashMap.get(key));
+        }
+        return tasks;
+    }
+
     public ArrayList<Task> getTasksFromDB(Map<String, Object> params, int accountId) {
         BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         TaskDbHelper taskDbHelper = app.getTaskDbHelper();
@@ -100,7 +107,6 @@ public class TasksManager implements AccountsManager.SingInObserver {
     }
 
     public Task getTaskByLocalId(long id) {
-        accountId = app.getAccountsManager().getCurrenAccountId();
         // We cannot get tasks if we don't know current user account id
         if (accountId == null) {
             return null;
@@ -165,7 +171,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
                 observer.updateAfterTaskWasChanged();
             }
             if (task.getGlobalId() != 0) {
-                ((BrainasApp) BrainasApp.getAppContext()).getTasksChangesDbHelper().loggingChanges(task, "DELETED");
+                ((BrainasApp) BrainasApp.getAppContext()).getTasksChangesDbHelper().loggingChanges(task, accountId, "DELETED");
             }
             task = null;
             return true;
@@ -177,7 +183,7 @@ public class TasksManager implements AccountsManager.SingInObserver {
     public boolean restoreTaskToWaiting(long takId) {
         Task task = getTaskByLocalId(takId);
         if (conditionsValidation(task.getConditions())) {
-            task.changeStatus(Task.STATUSES.WAITING);
+            this.changeStatus(task, Task.STATUSES.WAITING);
             return true;
         }
         return false;
@@ -210,14 +216,6 @@ public class TasksManager implements AccountsManager.SingInObserver {
         taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
     }
 
-    public void updateAfterSingIn(UserAccount userAccount) {
-        accountId = userAccount.getLocalAccountId();
-    }
-
-    public void updateAfterSingOut() {
-        accountId = null;
-    }
-
     public Event retriveEventFromTaskById(Task task, long eventId) {
         CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         for(Condition condition : conditions) {
@@ -235,6 +233,38 @@ public class TasksManager implements AccountsManager.SingInObserver {
         ArrayList<Task> oneTaskArray = new ArrayList<Task>();
         oneTaskArray.add(task);
         objectsMapping(oneTaskArray);
+    }
+
+    public void changeStatus(Task task, Task.STATUSES newStatus) {
+        task.setStatus(newStatus);
+        saveTask(task);
+    }
+
+    public void saveTask(Task task) {
+        saveTask(task, true, true);
+    }
+
+    public void saveTask(Task task, boolean needToNotify, boolean needToLoggingChanges){
+        task.checkStatus();
+        TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
+        long taskId = taskDbHelper.addOrUpdateTask(task);
+        task.setId(taskId);
+
+        if (needToLoggingChanges) {
+            TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
+            taskChangesDbHelper.loggingChanges(task, this.accountId);
+        }
+        if (needToNotify) {
+            task.notifyAllObservers();
+        }
+    }
+
+    public void saveCondition(Condition condition) {
+        this.saveTask(condition.getParent());
+    }
+
+    public void saveEvent(Event event) {
+        this.saveCondition(event.getParent());
     }
 
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {

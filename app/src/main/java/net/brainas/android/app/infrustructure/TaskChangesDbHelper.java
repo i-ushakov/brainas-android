@@ -9,11 +9,8 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Task;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -74,17 +71,16 @@ public class TaskChangesDbHelper {
     public static void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    public void loggingChanges(Task task) {
-        loggingChanges(task, "UPDATED");
+    public void loggingChanges(Task task, Integer accountId) {
+        loggingChanges(task, accountId, "UPDATED");
     }
 
-    public void loggingChanges(Task task, String status) {
+    public void loggingChanges(Task task, Integer accountId, String status) {
         String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(task.getId()) };
 
         ContentValues values = new ContentValues();
-        int userAccountId = ((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().getCurrenAccountId();
-        values.put(COLUMN_NAME_TASKS_CHANGES_ACCOUNTID, userAccountId);
+        values.put(COLUMN_NAME_TASKS_CHANGES_ACCOUNTID, accountId);
         values.put(COLUMN_NAME_TASKS_CHANGES_TASKID, task.getId());
         values.put(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID, task.getGlobalId());
         values.put(COLUMN_NAME_TASKS_CHANGES_STATUS, status);
@@ -113,7 +109,7 @@ public class TaskChangesDbHelper {
     public HashMap<Long, Pair<String,String>> getChangedTasks(boolean allTasks) throws JSONException, ParserConfigurationException {
         HashMap<Long, Pair<String,String>>  changedTasks = new HashMap<Long, Pair<String,String>> ();
 
-        int userAccountId = ((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().getCurrenAccountId();
+        int userAccountId = ((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().getCurrentAccountId();
         String selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ? ";
         if (!allTasks) {
             selection = selection +  " AND " + COLUMN_NAME_TASKS_CHANGES_NEEDSYNC + " = 1";

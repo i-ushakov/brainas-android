@@ -63,10 +63,15 @@ public class TasksActivity extends AppCompatActivity implements
 
         tasksGrid = (GridView) findViewById(R.id.tasks_grid);
         userNotSignedInMessage = (TextView) findViewById(R.id.user_not_signed_in_message);
-        refreshTaskGrid();
 
         Synchronization.getInstance().attach(this);
         app.getActivationManager().attach(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshTaskGrid();
     }
 
     private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group, int accountId) {
@@ -105,7 +110,7 @@ public class TasksActivity extends AppCompatActivity implements
     public void updateAfterTaskWasChanged() {
         ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
             public void run() {
-                refreshTaskGrid();
+                //refreshTaskGrid();
             }
         });
     }
@@ -144,11 +149,10 @@ public class TasksActivity extends AppCompatActivity implements
             this.context = context;
             Map<String,Object> params = new HashMap<>();
             params.put("GROUP_OF_TASKS", group);
-            TasksManager taskManager = ((BrainasApp)(BrainasApp.getAppContext())).getTasksManager();
-            tasks = taskManager.getTasksFromDB(params, accountId);
-            for (Task task : tasks) {
+            tasks = app.getTasksManager().getTasksFromDB(params, accountId);
+            /*for (Task task : tasks) {
                 task.attachObserver(TasksActivity.this);
-            }
+            }*/
         }
 
         public int getCount() {
@@ -206,5 +210,16 @@ public class TasksActivity extends AppCompatActivity implements
         userNotSignedInMessage.setVisibility(View.VISIBLE);
         tasksGrid.setAdapter(null);
         tasksGrid.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Synchronization.getInstance().detach(this);
+        app.getActivationManager().detach(this);
+        ArrayList<Task> tasks = app.getTasksManager().getAllTasksFromHeap();
+        for (Task task : tasks) {
+            task.detachObserver(TasksActivity.this);
+        }
+        super.onDestroy();
     }
 }

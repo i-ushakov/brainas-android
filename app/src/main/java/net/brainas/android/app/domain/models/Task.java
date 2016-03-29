@@ -7,6 +7,7 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+import net.brainas.android.app.services.ActivationService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,12 +189,12 @@ public class Task {
         return conditions;
     }
 
-    public boolean isConditionsSatisfied(ActivationManager activationManager) {
+    public boolean isConditionsSatisfied(ActivationService activationService) {
         for(Condition condition : conditions) {
             ArrayList<Event> events = condition.getEvents();
             boolean haveToBeActivated = false;
             for(Event evnet : events) {
-                if (evnet.isTriggered(activationManager)) {
+                if (evnet.isTriggered(activationService)) {
                     haveToBeActivated = true;
                 } else {
                     haveToBeActivated = false;
@@ -207,33 +208,6 @@ public class Task {
         return false;
     }
 
-    public void changeStatus(STATUSES newStatus) {
-        /*if (this.status == STATUSES.WAITING && newStatus == STATUSES.ACTIVE) {
-            notifyAboutTask();
-        }*/
-        setStatus(newStatus);
-        save();
-    }
-
-    public void save() {
-        save(true, true);
-    }
-
-    public void save(boolean needToNotify, boolean needToLoggingChanges){
-        checkStatus();
-        TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
-        long taskId = taskDbHelper.addOrUpdateTask(this);
-        this.setId(taskId);
-
-        if (needToLoggingChanges) {
-            TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
-            taskChangesDbHelper.loggingChanges(this);
-        }
-        if (needToNotify) {
-            notifyAllObservers();
-        }
-    }
-
     public boolean checkActualityOfConditions() {
         if (this.conditions.size() == 0) {
             warnings.put("no_conditions", "The task was set in disabled status, because it dosn't have conditions");
@@ -242,19 +216,7 @@ public class Task {
         return true;
     }
 
-    private void notifyAboutTask() {
-        // TODO notivication of User  (NotificationManager.class /TaskManager.class)
-    }
-
-    private void notifyAllObservers() {
-        Iterator<TaskChangesObserver> it = observers.listIterator();
-        while (it.hasNext()) {
-            TaskChangesObserver observer = it.next();
-            observer.updateAfterTaskWasChanged();
-        }
-    }
-
-    private void checkStatus() {
+    public void checkStatus() {
         if (this.status == null || this.status == STATUSES.WAITING || this.status == STATUSES.DISABLED) {
             if (!checkActualityOfConditions()) {
                 this.status = STATUSES.DISABLED;
@@ -262,5 +224,17 @@ public class Task {
                 this.status = STATUSES.WAITING;
             }
         }
+    }
+
+    public void notifyAllObservers() {
+        Iterator<TaskChangesObserver> it = observers.listIterator();
+        while (it.hasNext()) {
+            TaskChangesObserver observer = it.next();
+            observer.updateAfterTaskWasChanged();
+        }
+    }
+
+    private void notifyAboutTask() {
+        // TODO notivication of User  (NotificationManager.class /TaskManager.class)
     }
 }

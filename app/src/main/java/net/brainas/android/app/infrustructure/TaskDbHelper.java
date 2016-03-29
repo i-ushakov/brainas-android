@@ -181,23 +181,25 @@ public class TaskDbHelper {
         );
 
         Task task;
+        int id;
+        String message, status, description, globalIdStr;
         if (cursor.moveToFirst()) {
             do {
-                int id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_ID) ));
-                String message = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_MESSAGE) );
+                id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_ID) ));
+                message = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_MESSAGE));
 
                 task = new Task(id, accountId, message);
 
-                String globalIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_GLOBAL_ID));
+                globalIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_GLOBAL_ID));
                 if (globalIdStr != null) {
                     int globalId = Integer.parseInt(globalIdStr);
                     task.setGlobalId(globalId);
                 }
 
-                String status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
+                status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
                 task.setStatus(status);
                 task.setConditions(getConditionsByTask(task));
-                String description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
+                description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
                 tasks.add(task);
             } while (cursor.moveToNext());
@@ -467,14 +469,18 @@ public class TaskDbHelper {
         String selectQuery = "SELECT * FROM " + TABLE_EVENTS + " WHERE " + COLUMN_NAME_EVENTS_CONDITION + " = " + condition.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
+        Long id;
+        int globalId;
+        String type, params;
+        Event event = null;
         if (cursor.moveToFirst()) {
             do {
-                Long id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
-                int globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
-                String type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
-                String params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
+                id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
+                globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
+                type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
+                params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
 
-                Event event = null;
+                event = null;
                 switch (type) {
                     case "GPS" :
                         event = new EventGPS(id, globalId, condition);
