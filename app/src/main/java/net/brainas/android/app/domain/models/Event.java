@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.support.annotation.IntegerRes;
 
 import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.services.ActivationService;
 
 import org.w3c.dom.Element;
 
@@ -58,7 +59,7 @@ public abstract class Event {
 
     abstract public String getEventName();
 
-    abstract public boolean isTriggered(ActivationManager activationManager);
+    abstract public boolean isTriggered(ActivationService activationService);
 
     abstract public int getIconDrawableId();
 
@@ -91,7 +92,8 @@ public abstract class Event {
         this.parent = condition;
     }
 
-    public void save() {
-        this.parent.save();
+    public Condition getParent() {
+        return this.parent;
     }
+
 }

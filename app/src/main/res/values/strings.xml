@@ -22,4 +22,7 @@
     <!-- EditEventActivity -->
     <string name="activity_event_title">Event</string>
 
+    <!-- Activation Service-->
+    <string name="service_activation_name">Brainas activation service</string>
+
 </resources>

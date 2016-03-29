@@ -1,10 +1,12 @@
 package net.brainas.android.app.infrustructure;
 
+import android.app.Service;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 
@@ -12,8 +14,11 @@ import net.brainas.android.app.BrainasApp;
  * Created by Kit Ushakov on 12/2/2015.
  */
 public class GPSProvider implements LocationListener {
+    private static final String TAG = "GPSProvider";
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0;
     private static final long MIN_TIME_BW_UPDATES = 1000 * 1;
+
+    private Context context;
 
     private boolean canGetGPSLocation = false;
     private Location location = null;
@@ -25,9 +30,9 @@ public class GPSProvider implements LocationListener {
 
     protected LocationManager locationManager;
 
-    public GPSProvider() {
-        BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
-        locationManager = (LocationManager) app.getSystemService(Context.LOCATION_SERVICE);
+    public GPSProvider(Context context) {
+        this.context = context;
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         initGPS();
     }
 
@@ -77,6 +82,14 @@ public class GPSProvider implements LocationListener {
             }
         } else {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }
+        if (location == null && !isGPSEnabled && !isNetworkEnabled) {
+            if (context instanceof BrainasApp) {
+                // TODO Notification from app (Dialog)
+            } else if (context instanceof Service) {
+                // TODO Notification from service (top of screen)
+            }
+            Log.w(TAG, "Location services not available");
         }
         return location;
     }

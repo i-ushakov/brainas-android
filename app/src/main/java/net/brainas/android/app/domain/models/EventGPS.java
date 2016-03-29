@@ -4,6 +4,7 @@ import android.location.Location;
 
 import net.brainas.android.app.R;
 import net.brainas.android.app.domain.helpers.ActivationManager;
+import net.brainas.android.app.services.ActivationService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,8 +90,8 @@ public class EventGPS extends Event {
     }
 
     @Override
-    public boolean isTriggered(ActivationManager activationManager) {
-        Location location = activationManager.getGPSLocation();
+    public boolean isTriggered(ActivationService activationService) {
+        Location location = activationService.getGPSLocation();
         if (location != null) {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();

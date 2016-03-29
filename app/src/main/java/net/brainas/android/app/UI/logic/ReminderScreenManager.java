@@ -24,6 +24,8 @@ public class ReminderScreenManager implements
     private int panelWidth;
     private ViewGroup tilesPanel;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
+
+    private BrainasApp app;
     private TasksManager tasksManager;
 
     public ReminderScreenManager(ViewGroup tilesPanel) {
@@ -32,12 +34,13 @@ public class ReminderScreenManager implements
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         Synchronization.getInstance().attach(this);
-        ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
+        app = (BrainasApp)BrainasApp.getAppContext();
+        app.getActivationManager().attach(this);
     }
 
     public void refreshTilesWithActiveTasks() {
-        if (((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().isUserSingIn()) {
-            List<Task> activeTasks = tasksManager.getActiveList();
+        if (app.getAccountsManager().isUserSingIn()) {
+            List<Task> activeTasks = app.getTasksManager().getActiveList();
             List<TaskTileView> tiles = this.initTiles(activeTasks);
             this.placeTiles(tiles);
         }

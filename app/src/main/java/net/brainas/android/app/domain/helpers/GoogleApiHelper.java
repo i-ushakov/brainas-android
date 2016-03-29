@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventGPS;
 
@@ -20,6 +21,7 @@ import java.util.Locale;
  */
 public class GoogleApiHelper {
     Context context;
+    TasksManager tasksManager;
     EventGPS gpsEvent;
     boolean needSavingTheEvent;
 
@@ -28,6 +30,7 @@ public class GoogleApiHelper {
     }
 
     public void setAddressByLocation(EventGPS gpsEvent, boolean needSavingTheEvent) {
+        tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         this.gpsEvent = gpsEvent;
         this.needSavingTheEvent = needSavingTheEvent;
         new GettingAddressByLocation().execute(gpsEvent);
@@ -49,7 +52,7 @@ public class GoogleApiHelper {
         protected void onPostExecute(String address) {
             gpsEvent.setAddress(address);
             if (needSavingTheEvent) {
-                gpsEvent.save();
+                tasksManager.saveEvent(gpsEvent);
             }
         }
     }
