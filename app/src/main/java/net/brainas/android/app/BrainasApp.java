@@ -23,7 +23,7 @@ import net.brainas.android.app.infrustructure.UserAccountDbHelper;
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
-public class BrainasApp extends Application {
+public class BrainasApp extends Application implements AccountsManager.SingInObserver {
     public static final String BRAINAS_APP_PREFS = "BrainasAppPrefs";
 
     private static Context context;
@@ -57,16 +57,26 @@ public class BrainasApp extends Application {
         super.onCreate();
         BrainasApp.context = getApplicationContext();
         accountsManager = new AccountsManager();
-        AppDbHelper appDbHelper = new AppDbHelper(context);
+        accountsManager.attach(this);
+        appDbHelper = new AppDbHelper(context);
         taskDbHelper = new TaskDbHelper(appDbHelper);
         taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
-        gpsProvider = new GPSProvider();
+        gpsProvider = new GPSProvider(this);
         googleApiHelper = new GoogleApiHelper(context);
-        tasksManager = new TasksManager(taskDbHelper);
+        tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
         taskHelper = new TaskHelper();
-        activationManager = new ActivationManager(tasksManager);
+        activationManager = new ActivationManager();
+        accountsManager.attach(activationManager);
         notificationManager = new NotificationManager();
+    }
+
+    public void updateAfterSingIn(UserAccount userAccount) {
+        tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
+    }
+
+    public void updateAfterSingOut() {
+        tasksManager = new TasksManager(taskDbHelper, null);
     }
 
     @Override

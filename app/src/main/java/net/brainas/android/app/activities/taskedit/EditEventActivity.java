@@ -220,7 +220,7 @@ public class EditEventActivity extends EditTaskActivity
             event.setParent(newCondition);
             task.addCondition(newCondition);
         }
-        task.save();
+        tasksManager.saveTask(task);
         showTaskErrorsOrWarnings(task);
         finish();
     }

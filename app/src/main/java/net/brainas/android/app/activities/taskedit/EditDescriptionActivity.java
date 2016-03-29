@@ -12,13 +12,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
+import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -32,6 +32,7 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
 
     private Toolbar toolbar;
     private BrainasApp app;
+    private TasksManager tasksManager;
     private AccountsManager accountsManager;
     private UserAccount userAccount;
 
@@ -50,8 +51,10 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_description);
 
+        BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
+        tasksManager = app.getTasksManager();
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
-        task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+        task = tasksManager.getTaskByLocalId(taskLocalId);
         task.attachObserver(this);
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -137,11 +140,11 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
         if (UIHelper.safetyBtnClick(view, EditDescriptionActivity.this)) {
             Editable taskTitleEditable = editDescriptionField.getText();
             if ((taskTitleEditable != null && !taskTitleEditable.toString().trim().matches(""))) {
-                int userId = app.getAccountsManager().getCurrenAccountId();
+                int userId = app.getAccountsManager().getCurrentAccountId();
                 String description = taskTitleEditable.toString().trim();
                 task.setDescription(description);
             }
-            task.save();
+            tasksManager.saveTask(task);
             showTaskErrorsOrWarnings(task);
             finish();
         }
@@ -155,7 +158,7 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
                 task.setDescription(description);
             }
 
-            task.save();
+            tasksManager.saveTask(task);
             Intent intent = new Intent(this, EditConditionsActivity.class);
             intent.putExtra("taskLocalId", task.getId());
             startActivity(intent);
@@ -173,7 +176,7 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
 
     public void back(View view) {
         if (UIHelper.safetyBtnClick(view, EditDescriptionActivity.this)) {
-            task.save();
+            tasksManager.saveTask(task);
             Intent intent = new Intent(this, EditTaskActivity.class);
             intent.putExtra("taskLocalId", task.getId());
             startActivity(intent);

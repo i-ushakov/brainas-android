@@ -75,7 +75,7 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
 
     public void saveTask(View view) {
         if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
-            task.save();
+            tasksManager.saveTask(task);
             showTaskErrorsOrWarnings(task);
             finish();
         }
@@ -83,7 +83,7 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
 
     public void back(View view) {
         if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
-            task.save();
+            tasksManager.saveTask(task);
             Intent intent = new Intent(this, EditDescriptionActivity.class);
             intent.putExtra("taskLocalId", task.getId());
             startActivity(intent);
@@ -97,7 +97,7 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
             ConditionEditView conditionEditView = (ConditionEditView)parentView.getParent();
             Condition condition = conditionEditView.getCondition();
             task.removeCondition(condition);
-            task.save();
+            tasksManager.saveTask(task);
         }
     }
 

@@ -82,7 +82,7 @@ public class Condition {
         this.parent = task;
     }
 
-    public void save() {
-        this.parent.save();
+    public Task getParent() {
+        return this.parent;
     }
 }

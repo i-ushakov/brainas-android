@@ -1,7 +1,6 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -259,14 +258,14 @@ public class EditTaskActivity extends AppCompatActivity {
     private void save() {
         Editable taskTitleEditable = editTitleField.getText();
         if (validate()) {
-            int userId = app.getAccountsManager().getCurrenAccountId();
+            int userId = app.getAccountsManager().getCurrentAccountId();
             String message = taskTitleEditable.toString().trim();
             if (task == null) {
                 task = new Task(userId, message);
                 task.setStatus(Task.STATUSES.WAITING);
             }
             task.setMessage(message);
-            task.save();
+            tasksManager.saveTask(task);
             tasksManager.addToMappedTasks(task);
             showTaskErrorsOrWarnings(task);
         }
