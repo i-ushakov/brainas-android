@@ -72,9 +72,16 @@ public class TaskCardActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        BrainasApp.activityResumed();
         setTaskStatus();
         invalidateOptionsMenu();
         fillTheCardWithTaskInfo();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        BrainasApp.activityPaused();
     }
 
     //@Override

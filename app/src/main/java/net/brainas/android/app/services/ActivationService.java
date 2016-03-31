@@ -8,6 +8,8 @@ import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
 
+import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
@@ -17,7 +19,6 @@ import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,6 +34,7 @@ public class ActivationService extends Service {
     private TaskDbHelper taskDbHelper;
     private TasksManager tasksManager;
     private GPSProvider gpsProvider;
+    private NotificationController notificationManager;
     private Timer timer;
     private TimerTask task;
 
@@ -46,6 +48,7 @@ public class ActivationService extends Service {
         taskDbHelper = new TaskDbHelper(appDbHelper);
         tasksManager = new TasksManager(taskDbHelper, accountId);
         gpsProvider = new GPSProvider(this);
+        notificationManager = new NotificationController();
         Log.i(TAG, "Service was started for user with account id = " + accountId);
         initCheckConditionsInWL();
         return Service.START_NOT_STICKY;
@@ -101,6 +104,9 @@ public class ActivationService extends Service {
         Log.i(TAG, "Checked condition in Waiting List and " + activatedTasksIds.size() + " tasks was activated");
 
         if (activatedTasksIds.size() > 0) {
+            if (!BrainasApp.isActivityVisible()) {
+                notificationManager.createActiveNotification(this, activatedTasksIds.size());
+            }
             notifyAboutActivation(activatedTasksIds);
         }
     }

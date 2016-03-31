@@ -1,10 +1,12 @@
 package net.brainas.android.app;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.multidex.MultiDex;
 
+import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
 import net.brainas.android.app.domain.helpers.ActivationManager;
@@ -29,6 +31,8 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     private static Context context;
 
     private UserAccount userAccount = null;
+
+    private static boolean activityVisible;
 
     // Activities
     private MainActivity mainActivity;
@@ -175,6 +179,19 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
 
     public AccountsManager getAccountsManager() {
         return this.accountsManager;
+    }
+
+    public static boolean isActivityVisible() {
+        return activityVisible;
+    }
+
+    public static void activityResumed() {
+        activityVisible = true;
+        NotificationController.removeActivationNotifications(BrainasApp.getAppContext());
+    }
+
+    public static void activityPaused() {
+        activityVisible = false;
     }
 
     private void saveLastUsedAccountInPref() {

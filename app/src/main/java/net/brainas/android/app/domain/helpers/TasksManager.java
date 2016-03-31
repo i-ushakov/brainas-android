@@ -294,6 +294,7 @@ public class TasksManager {
             heapTask.setMessage(dbTask.getMessage());
             heapTask.setDescription(dbTask.getDescription());
             heapTask.setConditions(dbTask.getConditions());
+            heapTask.setStatus(dbTask.getStatus());
         }
         return heapTask;
     }

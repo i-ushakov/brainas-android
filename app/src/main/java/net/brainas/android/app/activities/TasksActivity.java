@@ -71,7 +71,14 @@ public class TasksActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        BrainasApp.activityResumed();
         refreshTaskGrid();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        BrainasApp.activityPaused();
     }
 
     private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group, int accountId) {

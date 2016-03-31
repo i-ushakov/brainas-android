@@ -84,6 +84,17 @@ public class AccountsActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        BrainasApp.activityResumed();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        BrainasApp.activityPaused();
+    }
 
     public boolean onCreateOptionsMenu(Menu menu) {
         return true;

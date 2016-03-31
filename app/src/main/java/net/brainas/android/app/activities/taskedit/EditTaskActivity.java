@@ -89,9 +89,15 @@ public class EditTaskActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        BrainasApp.activityResumed();
         refreshContent();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        BrainasApp.activityPaused();
+    }
 
     public boolean onCreateOptionsMenu(Menu menu) {
         return true;

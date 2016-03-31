@@ -66,9 +66,16 @@ public class MainActivity extends AppCompatActivity  {
 
     @Override
     public void onResume() {
-        super.onResume();  // Always call the superclass method first
+        super.onResume();
+        BrainasApp.activityResumed();
         setActivePanel(ActivePanel.MESSAGES);
         initLayout();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        BrainasApp.activityPaused();
     }
 
     @Override
