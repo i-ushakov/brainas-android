@@ -1,7 +1,10 @@
 package net.brainas.android.app.services;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.os.Handler;
 import android.os.IBinder;
@@ -14,8 +17,12 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.AppDbHelper;
-import net.brainas.android.app.infrustructure.GPSProvider;
+import net.brainas.android.app.infrustructure.LocationProvider;
+import net.brainas.android.app.infrustructure.ServicesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,11 +36,17 @@ public class ActivationService extends Service {
     public static final String BROADCAST_ACTION_ACTIVATION = "net.brainas.android.app.services.activation";
 
     private static String TAG = "ActivationService";
+    public static final String SERVICE_NAME = "activation";
+
+    private boolean isBrainasAppVisible = false;
+
+    private Integer accountId;
 
     private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
     private TasksManager tasksManager;
-    private GPSProvider gpsProvider;
+    private ServicesDbHelper servicesDbHelper;
+    private LocationProvider locationProvider;
     private NotificationController notificationManager;
     private Timer timer;
     private TimerTask task;
@@ -43,15 +56,33 @@ public class ActivationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Integer accountId = intent.getExtras().getInt("accountId");
         appDbHelper = new AppDbHelper(this);
         taskDbHelper = new TaskDbHelper(appDbHelper);
-        tasksManager = new TasksManager(taskDbHelper, accountId);
-        gpsProvider = new GPSProvider(this);
+        servicesDbHelper = new ServicesDbHelper(appDbHelper);
+        locationProvider = new LocationProvider(this);
         notificationManager = new NotificationController();
-        Log.i(TAG, "Service was started for user with account id = " + accountId);
+        this.registerReceiver(broadcastReceiver, new IntentFilter(BrainasApp.BROADCAST_ACTION_APP_VISABILITY_WAS_CHANGED));
+        if (intent != null) {
+            accountId = intent.getExtras().getInt("accountId");
+            JSONObject serviceParamsJSON = new JSONObject();
+            try {
+                serviceParamsJSON.put("accountId", accountId);
+                servicesDbHelper.saveServiceParams(SERVICE_NAME, serviceParamsJSON.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                JSONObject serviceParamsJSON = new JSONObject(servicesDbHelper.getServiceParams(SERVICE_NAME));
+                accountId = serviceParamsJSON.getInt("accountId");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        tasksManager = new TasksManager(taskDbHelper, accountId);
+        Log.i(TAG, "ActivationService was started for user with account id = " + accountId);
         initCheckConditionsInWL();
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
@@ -62,15 +93,10 @@ public class ActivationService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.i(TAG, "Service was destroyed");
+        accountId = null;
+        Log.i(TAG, "ActivationService was destroyed");
     }
 
-    private void notifyAboutActivation(ArrayList<Long> activatedTasksIds) {
-        Intent  intent = new Intent(BROADCAST_ACTION_ACTIVATION);
-        intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));
-        Log.i(TAG, "Notify About Activation");
-        sendBroadcast(intent);
-    }
 
     public void initCheckConditionsInWL() {
         timer = new Timer();
@@ -104,7 +130,7 @@ public class ActivationService extends Service {
         Log.i(TAG, "Checked condition in Waiting List and " + activatedTasksIds.size() + " tasks was activated");
 
         if (activatedTasksIds.size() > 0) {
-            if (!BrainasApp.isActivityVisible()) {
+            if (!isBrainasAppVisible) {
                 notificationManager.createActiveNotification(this, activatedTasksIds.size());
             }
             notifyAboutActivation(activatedTasksIds);
@@ -112,7 +138,23 @@ public class ActivationService extends Service {
     }
 
     public Location getGPSLocation() {
-        return gpsProvider.getLocation();
+        return locationProvider.getLocation();
     }
+
+    private void notifyAboutActivation(ArrayList<Long> activatedTasksIds) {
+        Intent  intent = new Intent(BROADCAST_ACTION_ACTIVATION);
+        intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));
+        Log.i(TAG, "Notify About Activation");
+        sendBroadcast(intent);
+    }
+
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            isBrainasAppVisible = intent.getBooleanExtra("appVisible", false);
+            Log.i(TAG, "Got notification about that main App visible is" + isBrainasAppVisible);
+        }
+    };
 }
 

@@ -3,11 +3,13 @@
     package="net.brainas.android.app">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+
 
     <application
         android:name=".BrainasApp"
@@ -60,6 +62,12 @@
             android:name=".services.ActivationService"
             android:icon="@drawable/ic_setting_dark"
             android:process=":brainas_activation_process"
+            android:label="@string/service_activation_name"></service>
+
+        <service
+            android:name=".services.SynchronizationService"
+            android:icon="@drawable/ic_setting_dark"
+            android:process=":brainas_synchronizationn_process"
             android:label="@string/service_activation_name"></service>
 
         <meta-data

@@ -4,19 +4,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
 import android.util.Log;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.infrustructure.GPSProvider;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.services.ActivationService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by innok on 12/1/2015.
@@ -52,7 +48,9 @@ public class ActivationManager implements AccountsManager.SingInObserver {
     }
 
     @Override
-    public void updateAfterSingOut() {}
+    public void updateAfterSingOut() {
+        stopActivationService();
+    }
 
     public void startActivationService(Integer accountId) {
         Intent activationService = new Intent(app.getBaseContext(), ActivationService.class);
@@ -61,17 +59,10 @@ public class ActivationManager implements AccountsManager.SingInObserver {
         app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_ACTIVATION));
     }
 
-    /*private void addTaskToActiveList(List<Task> tasks) {
-        BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
-        NotificationManager notificationManager = app.getNotificationManager();
-        synchronized (lock) {
-            for (int i = 0; i < tasks.size(); i++) {
-                Task task = tasks.get(i);
-                notificationManager.notifyAboutTask(task); //TODO move to notifyAllObservers
-                notifyAllObservers(); // TODO broadcast (Reminderscreen, TasksActivity, TaskCards)
-            }
-        }
-    }*/
+    public void stopActivationService() {
+        Intent activationService = new Intent(app.getBaseContext(), ActivationService.class);
+        app.getBaseContext().stopService(activationService);
+    }
 
     private void notifyAllObservers() {
         for (ActivationObserver observer : observers) {
