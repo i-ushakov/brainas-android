@@ -9,7 +9,7 @@ import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.Synchronization;
+import net.brainas.android.app.infrustructure.SynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
  * Created by Kit Ushakov on 11/8/2015.
  */
 public class ReminderScreenManager implements
-        Synchronization.TaskSyncObserver,
+        SynchronizationManager.TaskSyncObserver,
         ActivationManager.ActivationObserver,
         Task.TaskChangesObserver {
     private int panelWidth;
@@ -33,9 +33,9 @@ public class ReminderScreenManager implements
         this.panelWidth = tilesPanel.getWidth();
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        Synchronization.getInstance().attach(this);
         app = (BrainasApp)BrainasApp.getAppContext();
         app.getActivationManager().attach(this);
+        app.getSynchronizationManager().attach(this);
     }
 
     public void refreshTilesWithActiveTasks() {

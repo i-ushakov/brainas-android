@@ -2,14 +2,17 @@ package net.brainas.android.app.UI;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
+import android.content.IntentFilter;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.activities.MainActivity;
 
@@ -18,9 +21,12 @@ import net.brainas.android.app.activities.MainActivity;
  * Created by Kit Ushakov on 3/30/2016.
  */
 public class NotificationController {
-    private static int activeNotificationId = 001;
+    private static final int activeNotificationId = 001;
+    private static final String TAG = "NotificationController";
     private int activationCountTotal = 0;
+
     public  NotificationController() {}
+
     public void createActiveNotification(Context context, int activationCount) {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
         notificationBuilder.setSmallIcon(R.drawable.ba_logo_64_mono);
