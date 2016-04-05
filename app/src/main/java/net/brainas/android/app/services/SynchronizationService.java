@@ -1,17 +1,26 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.services;
 
+import android.app.Service;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.AppDbHelper;
+import net.brainas.android.app.infrustructure.InfrustructureHelper;
+import net.brainas.android.app.infrustructure.ServicesDbHelper;
+import net.brainas.android.app.infrustructure.SyncHelper;
+import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
+import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,91 +44,106 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 /**
- * Created by Kit Ushakov on 11/15/2015.
- *
- *This class is responsible for synchronization of data
- * on mobile device and web server. It's periodically doing synchronization
- * in background, sends all changes to server and accepts changes from server side.
+ * Created by innok on 3/31/2016.
  */
+public class SynchronizationService extends Service {
+    public static final String BROADCAST_ACTION_SYNCHRONIZATION = "net.brainas.android.app.services.synchronization";
 
-public class Synchronization {
-    private static Synchronization instance = null;
+    private static String TAG = "SynchronizationService";
+    public static final String SERVICE_NAME = "synchronization";
 
-    //static String serverUrl = "http://192.168.1.104/backend/web/connection/";
-    static String serverUrl = "http://brainas.net/backend/web/connection/";
-
-    static String TAG = "SYNC";
+    public static String initSyncTime = null;
+    public static String accessToken = null;
+    public static String accessCode = null;
+    public static Integer accountId;
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> syncThreadHandle = null;
     private AllTasksSync asyncTask;
 
-    public BrainasApp app;
-    public SyncHelper syncHelper;
-    public TasksManager tasksManager;
-    public TaskChangesDbHelper tasksChangesDbHelper;
+    private SyncHelper syncHelper;
+    private AppDbHelper appDbHelper;
+    private TaskDbHelper taskDbHelper;
+    private TaskChangesDbHelper tasksChangesDbHelper;
+    private ServicesDbHelper servicesDbHelper;
+    private TasksManager tasksManager;
 
-    public static String initSyncTime = null;
-    public static String accessToken = null;
-    public static String accessCode = null;
-
-    private List<TaskSyncObserver> observers = new ArrayList<>();
-
-    public interface TaskSyncObserver {
-        void updateAfterSync();
-    }
-
-    public void attach(TaskSyncObserver observer){
-        observers.add(observer);
-    }
-
-    public void detach(TaskSyncObserver observer){
-        observers.remove(observer);
-    }
-
-    private Synchronization() {
-        app = ((BrainasApp)((BrainasApp.getAppContext())));
-        tasksChangesDbHelper = app.getTasksChangesDbHelper();
-        tasksManager = app.getTasksManager();
-        syncHelper = new SyncHelper();
-    }
-
-    public static synchronized Synchronization getInstance() {
-        if(instance == null) {
-            instance = new Synchronization();
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        appDbHelper = new AppDbHelper(this);
+        taskDbHelper = new TaskDbHelper(appDbHelper);
+        tasksChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
+        servicesDbHelper = new ServicesDbHelper(appDbHelper);
+        if (intent != null) {
+            accountId = intent.getExtras().getInt("accountId");
+            accessCode = intent.getExtras().getString("accessCode");
+            JSONObject serviceParamsJSON = new JSONObject();
+            try {
+                serviceParamsJSON.put("accountId", accountId);
+                serviceParamsJSON.put("accessCode", accessCode);
+                servicesDbHelper.saveServiceParams(SERVICE_NAME, serviceParamsJSON.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                JSONObject serviceParamsJSON = new JSONObject(servicesDbHelper.getServiceParams(SERVICE_NAME));
+                accountId = serviceParamsJSON.getInt("accountId");
+                accessCode = serviceParamsJSON.getString("accessCode");
+                accessToken = serviceParamsJSON.getString("accessToken");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
-        return instance;
+
+        tasksManager = new TasksManager(taskDbHelper, accountId);
+        syncHelper = new SyncHelper(tasksManager, tasksChangesDbHelper, taskDbHelper);
+        startSynchronization();
+        Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +
+                " with access code = " + accessCode +
+                " and accessToken =" + accessToken);
+        return Service.START_STICKY;
     }
 
-    public void startSynchronization(UserAccount userAccount) {
-        accessCode = userAccount.getAccessCode();
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    private void startSynchronization() {
         final Handler handler = new Handler();
         TimerTask syncTask = new TimerTask() {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        if (((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().isUserAuthorized()) {
-                            Log.v("SYNC", "Sync was start!");
-                            synchronization();
-                            Log.v("SYNC", "Sync was done!");
-                        }
+                        Log.i(TAG, "Sync was start!");
+                        synchronization();
+                        Log.i(TAG, "Sync was done!");
                     }
                 });
             }
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 5, 100, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask, 5, 50, java.util.concurrent.TimeUnit.SECONDS);
     }
+
+    @Override
+    public void onDestroy() {
+        stopSynchronization();
+        Log.i(TAG, "Syncronization service was destroyed");
+    }
+
+
 
     public void stopSynchronization() {
         if (syncThreadHandle != null) {
             syncThreadHandle.cancel(true);
         }
-        Synchronization.initSyncTime = null;
-        Synchronization.accessToken = null;
-        Synchronization.accessCode = null;
+        initSyncTime = null;
+        accessToken = null;
+        accessCode = null;
     }
 
     private void synchronization() {
@@ -142,7 +166,7 @@ public class Synchronization {
 
             // Retrieve all changes from database and prepare for sending in the form of XML-file
             try {
-                allChangesInXML = syncHelper.getAllChangesInXML();
+                allChangesInXML = syncHelper.getAllChangesInXML(accountId);
                 allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
                 Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
                 Log.v(TAG, allChangesInXMLFile.getName() + " was created");
@@ -164,6 +188,7 @@ public class Synchronization {
 
             // parse response from server
             if (response != null) {
+                Log.i(TAG, response);
                 try {
                     JSONObject syncDate = parseResponse(response);
                     deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
@@ -178,7 +203,7 @@ public class Synchronization {
             }
 
             // notify about updates
-            notifyAllObservers();
+            notifyAboutSyncronization();
 
             return null;
         }
@@ -198,11 +223,12 @@ public class Synchronization {
         initSyncTime = syncHelper.retrieveTimeOfInitialSync(xmlDocument);
         String accessToken = syncHelper.retrieveAccessToken(xmlDocument);
         if (accessToken != null) {
-            Synchronization.accessToken = accessToken;
-            Log.v(TAG, "Access token was gotten :" + Synchronization.accessToken);
+            SynchronizationService.accessToken = accessToken;
+            servicesDbHelper.addServiceParam(SERVICE_NAME, "accessToken", accessToken);
+            Log.v(TAG, "Access token was gotten :" + accessToken);
         }
 
-        syncHelper.handlingOfTasksFromServer(xmlDocument);
+        syncHelper.handlingOfTasksFromServer(xmlDocument, accountId);
 
         deletedTasks = syncHelper.retriveDeletedTasks(xmlDocument, "deletedTask");
         syncDate.put("deletedTasks", deletedTasks);
@@ -210,9 +236,10 @@ public class Synchronization {
         return syncDate;
     }
 
-    private void notifyAllObservers() {
-        for (TaskSyncObserver observer : observers) {
-            observer.updateAfterSync();
-        }
+    private void notifyAboutSyncronization() {
+        Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION);
+        //intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));
+        Log.i(TAG, "Notify About Syncronization");
+        sendBroadcast(intent);
     }
 }

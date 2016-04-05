@@ -19,7 +19,7 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.Synchronization;
+import net.brainas.android.app.infrustructure.SynchronizationManager;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Created by innok on 12/7/2015.
  */
 public class TaskCardActivity extends AppCompatActivity
-        implements ActivationManager.ActivationObserver, Synchronization.TaskSyncObserver, Task.TaskChangesObserver {
+        implements ActivationManager.ActivationObserver, SynchronizationManager.TaskSyncObserver, Task.TaskChangesObserver {
 
     private Toolbar toolbar;
     private Task task;
@@ -66,7 +66,7 @@ public class TaskCardActivity extends AppCompatActivity
         fillTheCardWithTaskInfo();
 
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().attach(this);
-        Synchronization.getInstance().attach(this);
+        ((BrainasApp)BrainasApp.getAppContext()).getSynchronizationManager().attach(this);
     }
 
     @Override
@@ -202,9 +202,11 @@ public class TaskCardActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        conditionsCont.removeAllViews();
+        if (conditionsCont != null) {
+            conditionsCont.removeAllViews();
+        }
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
-        Synchronization.getInstance().detach(this);
+        ((BrainasApp)BrainasApp.getAppContext()).getSynchronizationManager().detach(this);
         this.task.detachObserver(this);
         super.onDestroy();
     }

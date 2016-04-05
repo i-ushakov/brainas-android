@@ -10,6 +10,7 @@ import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
 import org.w3c.dom.Document;
@@ -51,14 +52,14 @@ public class SyncHelper {
     static String boundary =  "*****";
     static String xmlOutDirPath = "/app_sync/xml/out";
 
-    private BrainasApp app;
-    private TaskDbHelper taskDbHelper;
+    private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
+    private TaskDbHelper taskDbHelper;
 
-    public SyncHelper() {
-        app = (BrainasApp)BrainasApp.getAppContext();
-        this.taskDbHelper = app.getTaskDbHelper();
-        this.taskChangesDbHelper = app.getTasksChangesDbHelper();
+    public SyncHelper (TasksManager tasksManager, TaskChangesDbHelper taskChangesDbHelper, TaskDbHelper taskDbHelper) {
+        this.tasksManager = tasksManager;
+        this.taskChangesDbHelper = taskChangesDbHelper;
+        this.taskDbHelper = taskDbHelper;
     }
 
 
@@ -75,12 +76,12 @@ public class SyncHelper {
      *     </changedTask>
      * </changedTasks>
      */
-    public String getAllChangesInXML()
+    public String getAllChangesInXML(int accountId)
             throws IOException, JSONException, ParserConfigurationException, TransformerException {
 
         String allChangesInXML;
 
-        HashMap<Long, android.support.v4.util.Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangedTasks();
+        HashMap<Long, android.support.v4.util.Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangedTasks(accountId);
 
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element root = doc.createElement("changes");
@@ -94,7 +95,7 @@ public class SyncHelper {
                 long localId = (long) pair.getKey();
                 Pair<String, String> change = (Pair<String, String>) pair.getValue();
 
-                Task task = app.getTasksManager().getTaskByLocalId(localId);
+                Task task = tasksManager.getTaskByLocalId(localId);
                 Element changedTaskEl;
                 if (task != null) {
                     changedTaskEl = InfrustructureHelper.taskToXML(doc, task, "changedTask");
@@ -132,7 +133,7 @@ public class SyncHelper {
 
     public static String sendAllChanges(File allChangesInXML) throws IOException {
         String response = "";
-        HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(Synchronization.serverUrl + "get-tasks");
+        HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "get-tasks");
 
         DataOutputStream request = new DataOutputStream(
                 connection.getOutputStream());
@@ -151,33 +152,33 @@ public class SyncHelper {
             request.writeBytes("--" + boundary + lineEnd);
         }*/
 
-        if (Synchronization.initSyncTime != null) {
+        if (SynchronizationService.initSyncTime != null) {
             // set initSync param
             String initSync = "true";
             request.writeBytes("Content-Disposition: form-data; name=\"initSyncTime\"" + lineEnd);
             request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + Synchronization.initSyncTime.length() + lineEnd);
+            request.writeBytes("Content-Length: " + SynchronizationService.initSyncTime.length() + lineEnd);
             request.writeBytes(lineEnd);
-            request.writeBytes(Synchronization.initSyncTime);
+            request.writeBytes(SynchronizationService.initSyncTime);
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
         }
 
         // set user identity token
-        if (Synchronization.accessToken != null) {
+        if (SynchronizationService.accessToken != null) {
             request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
             request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + Synchronization.accessToken.length() + lineEnd);
+            request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
             request.writeBytes(lineEnd);
-            request.writeBytes(Synchronization.accessToken);
+            request.writeBytes(SynchronizationService.accessToken);
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
         } else {
             request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
             request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + Synchronization.accessCode + lineEnd);
+            request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
             request.writeBytes(lineEnd);
-            request.writeBytes(Synchronization.accessCode);
+            request.writeBytes(SynchronizationService.accessCode);
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
         }
@@ -227,11 +228,11 @@ public class SyncHelper {
                 long localTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("localId").item(0).getTextContent());
                 long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
                 if (localTaskId != 0) {
-                    Task task = app.getTasksManager().getTaskByLocalId(localTaskId);
+                    Task task = tasksManager.getTaskByLocalId(localTaskId);
                     // task can be null if user deleted it while synchronisation
                     if (task != null) {
                         task.setGlobalId(globalTaskId);
-                        app.getTasksManager().saveTask(task, false, false);
+                        tasksManager.saveTask(task, false, false);
                         taskChangesDbHelper.uncheckFromSync(localTaskId);
                     } else {
                         taskChangesDbHelper.removeFromSync(globalTaskId);
@@ -282,7 +283,7 @@ public class SyncHelper {
     }
 
     public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
-        Task task = app.getTasksManager().getTaskByGlobalId(globalId);
+        Task task = tasksManager.getTaskByGlobalId(globalId);
         if (task != null) {
             String timeOfLocalChanges = taskChangesDbHelper.getTimeOfLastChanges(task.getId());
             if (timeOfLocalChanges != null) {
@@ -316,7 +317,7 @@ public class SyncHelper {
         }
     }
 
-    public void handlingOfTasksFromServer(Document xmlDocument) {
+    public void handlingOfTasksFromServer(Document xmlDocument, int accountId) {
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
         for (int i = 0; i < taskList.getLength(); ++i) {
@@ -327,16 +328,13 @@ public class SyncHelper {
                 continue;
             }
 
-            String timeChanges = taskEl.getAttribute("time-changes");
-
             String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
-            int accountId = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount().getLocalAccountId();
-            Task task = app.getTasksManager().getTaskByGlobalId(globalId);
+            Task task = tasksManager.getTaskByGlobalId(globalId);
             if (task == null) {
                 task = new Task(accountId, message);
                 task.setGlobalId(globalId);
-                app.getTasksManager().saveTask(task, false, false);
+                tasksManager.saveTask(task, false, false);
             } else {
                 task.setMessage(message);
             }
@@ -365,7 +363,7 @@ public class SyncHelper {
                     condition.addEvent(event);
                 }
                 task.addCondition(condition);
-                app.getTasksManager().saveTask(task);
+                tasksManager.saveTask(task);
             }
         }
     }

@@ -102,19 +102,18 @@ public class TaskChangesDbHelper {
         }
     }
 
-    public HashMap<Long, Pair<String,String>> getChangedTasks()throws JSONException, ParserConfigurationException {
-        return getChangedTasks(false);
+    public HashMap<Long, Pair<String,String>> getChangedTasks(int accountId)throws JSONException, ParserConfigurationException {
+        return getChangedTasks(false, accountId);
     }
 
-    public HashMap<Long, Pair<String,String>> getChangedTasks(boolean allTasks) throws JSONException, ParserConfigurationException {
+    public HashMap<Long, Pair<String,String>> getChangedTasks(boolean allTasks, int accountId) throws JSONException, ParserConfigurationException {
         HashMap<Long, Pair<String,String>>  changedTasks = new HashMap<Long, Pair<String,String>> ();
 
-        int userAccountId = ((BrainasApp)(BrainasApp.getAppContext())).getAccountsManager().getCurrentAccountId();
         String selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ? ";
         if (!allTasks) {
             selection = selection +  " AND " + COLUMN_NAME_TASKS_CHANGES_NEEDSYNC + " = 1";
         }
-        String[] selectionArgs = { String.valueOf(userAccountId) };
+        String[] selectionArgs = { String.valueOf(accountId) };
 
         Cursor cursor = db.query(
                 TABLE_TASKS_CHANGES,

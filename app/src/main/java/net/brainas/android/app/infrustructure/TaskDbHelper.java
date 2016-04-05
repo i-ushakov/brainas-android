@@ -198,7 +198,7 @@ public class TaskDbHelper {
 
                 status = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_STATUS));
                 task.setStatus(status);
-                task.setConditions(getConditionsByTask(task));
+                task.setConditions(getConditions(task));
                 description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
                 tasks.add(task);
@@ -370,7 +370,7 @@ public class TaskDbHelper {
 
     private void cleanDeletedConditions(Task task) {
         CopyOnWriteArrayList<Condition> conditions = task.getConditions();
-        CopyOnWriteArrayList<Condition> conditionsFromDB = getConditionsByTask(task);
+        CopyOnWriteArrayList<Condition> conditionsFromDB = getConditions(task);
         ArrayList<Long> conditionsIds = new ArrayList<>();
         for (Condition condition : conditions) {
             conditionsIds.add(condition.getId());
@@ -442,7 +442,7 @@ public class TaskDbHelper {
         }
     }
 
-    private CopyOnWriteArrayList<Condition> getConditionsByTask(Task task) {
+    private CopyOnWriteArrayList<Condition> getConditions(Task task) {
         CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<Condition>();
         String selectQuery = "SELECT * FROM " + TABLE_CONDITIONS + " WHERE " + COLUMN_NAME_CONDITIONS_TASK + " = " + task.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);

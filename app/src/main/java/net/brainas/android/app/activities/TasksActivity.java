@@ -19,7 +19,7 @@ import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.Synchronization;
+import net.brainas.android.app.infrustructure.SynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TasksActivity extends AppCompatActivity implements
-        Synchronization.TaskSyncObserver,
+        SynchronizationManager.TaskSyncObserver,
         ActivationManager.ActivationObserver,
         Task.TaskChangesObserver {
     private BrainasApp app;
@@ -64,7 +64,7 @@ public class TasksActivity extends AppCompatActivity implements
         tasksGrid = (GridView) findViewById(R.id.tasks_grid);
         userNotSignedInMessage = (TextView) findViewById(R.id.user_not_signed_in_message);
 
-        Synchronization.getInstance().attach(this);
+        app.getSynchronizationManager().attach(this);
         app.getActivationManager().attach(this);
     }
 
@@ -221,7 +221,7 @@ public class TasksActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        Synchronization.getInstance().detach(this);
+        app.getSynchronizationManager().detach(this);
         app.getActivationManager().detach(this);
         ArrayList<Task> tasks = app.getTasksManager().getAllTasksFromHeap();
         for (Task task : tasks) {

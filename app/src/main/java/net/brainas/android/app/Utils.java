@@ -3,6 +3,7 @@ package net.brainas.android.app;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
+import android.os.Environment;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewParent;
@@ -14,8 +15,11 @@ import com.google.common.io.Files;
 
 import net.brainas.android.app.domain.models.Condition;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -124,5 +128,36 @@ public class Utils {
         eventTypeImage.getLayoutParams().width = Utils.dpsToPxs(100, context);
         eventTypeImage.getLayoutParams().height = Utils.dpsToPxs(100, context);
         return eventTypeImage;
+    }
+
+    public static void appendLog(String TAG, String text)
+    {
+        File logFile = new File("sdcard/log1.txt");
+
+        if (!logFile.exists())
+        {
+            try
+            {
+                logFile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        try
+        {
+            //BufferedWriter for performance, true to set append to file flag
+            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
+            buf.append(DateFormat.getDateTimeInstance().format(new Date()) + " -- " + TAG + ": " + text);
+            buf.newLine();
+            buf.close();
+        }
+        catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }
