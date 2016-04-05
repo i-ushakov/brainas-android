@@ -1,10 +1,11 @@
 package net.brainas.android.app;
 
-import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.multidex.MultiDex;
+import android.util.Log;
 
 import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
@@ -15,8 +16,8 @@ import net.brainas.android.app.domain.helpers.NotificationManager;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
-import net.brainas.android.app.infrustructure.GPSProvider;
-import net.brainas.android.app.infrustructure.Synchronization;
+import net.brainas.android.app.infrustructure.LocationProvider;
+import net.brainas.android.app.infrustructure.SynchronizationManager;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
@@ -28,11 +29,14 @@ import net.brainas.android.app.infrustructure.UserAccountDbHelper;
 public class BrainasApp extends Application implements AccountsManager.SingInObserver {
     public static final String BRAINAS_APP_PREFS = "BrainasAppPrefs";
 
+    public static final String TAG = "BrainasApp";
+    public static final String BROADCAST_ACTION_APP_VISABILITY_WAS_CHANGED = "net.brainas.android.app.brainasapp.visability_was_changed";
+
     private static Context context;
 
     private UserAccount userAccount = null;
 
-    private static boolean activityVisible;
+    private static boolean appVisible;
 
     // Activities
     private MainActivity mainActivity;
@@ -40,6 +44,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     // Domain Layer Managers
     private TasksManager tasksManager;
     private ActivationManager activationManager;
+    private SynchronizationManager synchronizationManager;
     private NotificationManager notificationManager;
     private TaskHelper taskHelper;
 
@@ -51,7 +56,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
     private UserAccountDbHelper userAccountDbHelper;
-    private GPSProvider gpsProvider;
+    private LocationProvider locationProvider;
     private GoogleApiHelper googleApiHelper;
 
     // Application Layer Managers
@@ -66,12 +71,14 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         taskDbHelper = new TaskDbHelper(appDbHelper);
         taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
-        gpsProvider = new GPSProvider(this);
+        locationProvider = new LocationProvider(this);
         googleApiHelper = new GoogleApiHelper(context);
         tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
         taskHelper = new TaskHelper();
         activationManager = new ActivationManager();
         accountsManager.attach(activationManager);
+        synchronizationManager = new SynchronizationManager();
+        accountsManager.attach(synchronizationManager);
         notificationManager = new NotificationManager();
     }
 
@@ -137,8 +144,12 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return googleApiHelper;
     }
 
-    public GPSProvider getGpsProvider() {
-        return this.gpsProvider;
+    public LocationProvider getLocationProvider() {
+        return this.locationProvider;
+    }
+
+    public SynchronizationManager getSynchronizationManager() {
+        return synchronizationManager;
     }
 
     public void setUserAccount(UserAccount userAccount) {
@@ -148,8 +159,8 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
                 userAccountDbHelper.updateOrCreate(userAccount);
                 userAccount.setLocalAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
                 saveLastUsedAccountInPref();
-                Synchronization.getInstance().stopSynchronization();
-                Synchronization.getInstance().startSynchronization(userAccount);
+                //synchronizationManager.stopSynchronizationService();
+                //synchronizationManager.startSynchronizationService();
             }
         } else {
             this.userAccount = null;
@@ -181,17 +192,21 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return this.accountsManager;
     }
 
-    public static boolean isActivityVisible() {
-        return activityVisible;
+    public static boolean isAppVisible() {
+        return appVisible;
     }
 
     public static void activityResumed() {
-        activityVisible = true;
+        appVisible = true;
+        notifyAboutSyncronization();
+        Log.i(TAG, "App is visable");
         NotificationController.removeActivationNotifications(BrainasApp.getAppContext());
     }
 
     public static void activityPaused() {
-        activityVisible = false;
+        appVisible = false;
+        notifyAboutSyncronization();
+        Log.i(TAG, "App is NOT visable");
     }
 
     private void saveLastUsedAccountInPref() {
@@ -199,5 +214,11 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("lastUsedAccount", userAccount.getAccountName());
         editor.commit();
+    }
+
+    private static void notifyAboutSyncronization() {
+        Intent intent = new Intent(BROADCAST_ACTION_APP_VISABILITY_WAS_CHANGED);
+        intent.putExtra("appVisible", appVisible);
+        BrainasApp.getAppContext().sendBroadcast(intent);
     }
 }

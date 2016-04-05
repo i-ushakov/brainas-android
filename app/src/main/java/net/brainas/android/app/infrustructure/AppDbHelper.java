@@ -37,12 +37,14 @@ public class AppDbHelper extends SQLiteOpenHelper {
         TaskDbHelper.onCreate(db);
         UserAccountDbHelper.onCreate(db);
         TaskChangesDbHelper.onCreate(db);
+        ServicesDbHelper.onCreate(db);
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         TaskDbHelper.onUpgrade(db);
         UserAccountDbHelper.onUpgrade(db);
         TaskChangesDbHelper.onUpgrade(db);
+        ServicesDbHelper.onUpgrade(db);
         onCreate(db);
     }
 
@@ -50,6 +52,7 @@ public class AppDbHelper extends SQLiteOpenHelper {
         TaskDbHelper.onDowngrade(db, oldVersion, newVersion);
         UserAccountDbHelper.onDowngrade(db, oldVersion, newVersion);
         TaskChangesDbHelper.onDowngrade(db, oldVersion, newVersion);
+        ServicesDbHelper.onDowngrade(db, oldVersion, newVersion);
         onUpgrade(db, oldVersion, newVersion);
     }
 

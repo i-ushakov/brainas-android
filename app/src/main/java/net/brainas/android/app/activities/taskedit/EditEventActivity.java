@@ -33,7 +33,7 @@ import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventGPS;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.GPSProvider;
+import net.brainas.android.app.infrustructure.LocationProvider;
 
 
 /**
@@ -242,8 +242,8 @@ public class EditEventActivity extends EditTaskActivity
             @Override
             protected LatLng doInBackground(Void... params) {
                 LatLng latLng = null;
-                GPSProvider gpsProvider = ((BrainasApp)BrainasApp.getAppContext()).getGpsProvider();
-                Location location = gpsProvider.getLocation();
+                LocationProvider locationProvider = ((BrainasApp)BrainasApp.getAppContext()).getLocationProvider();
+                Location location = locationProvider.getLocation();
                 if (location != null) {
                     latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 }
