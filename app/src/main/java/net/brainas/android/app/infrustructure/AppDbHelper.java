@@ -1,20 +1,8 @@
 package net.brainas.android.app.infrustructure;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.domain.models.Condition;
-import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
-import net.brainas.android.app.domain.models.Task;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Kit Ushakov on 11/12/2015.

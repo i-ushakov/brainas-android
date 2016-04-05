@@ -12,14 +12,12 @@ import android.widget.LinearLayout;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.brainas.android.app.R;
-import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.fragments.MapFragment;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by innok on 12/11/2015.
@@ -129,9 +127,9 @@ public class ConditionBlockView extends LinearLayout {
     LatLng getGPSCoordinates(ArrayList<Event> events) {
         LatLng latLng = null;
         for (Event event : events) {
-            if (event instanceof EventGPS) {
-                double lat = ((EventGPS)event).getLat();
-                double lng = ((EventGPS)event).getLng();
+            if (event instanceof EventLocation) {
+                double lat = ((EventLocation)event).getLat();
+                double lng = ((EventLocation)event).getLng();
                 latLng = new LatLng(lat, lng);
             }
         }

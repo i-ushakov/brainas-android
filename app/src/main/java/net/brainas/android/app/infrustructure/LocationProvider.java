@@ -1,164 +1,146 @@
 package net.brainas.android.app.infrustructure;
 
-import android.app.Service;
 import android.content.Context;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 
-import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.Utils;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.LocationListener;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 /**
  * Created by Kit Ushakov on 12/2/2015.
  */
-public class LocationProvider implements LocationListener {
+public class LocationProvider implements
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private static final String TAG = "LocationProvider";
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0;
-    private static final long MIN_TIME_BW_UPDATES = 0;
 
     private Context context;
 
-    private boolean canGetGPSLocation = false;
-    private Location location = null;
-
-    private double latitude;
-    private double longtitude;
-    private boolean isGPSEnabled = false;
-    private boolean isNetworkEnabled = false;
-
-    protected LocationManager locationManager;
+    private GoogleApiClient mGoogleApiClient;
+    private Location mCurrentLocation;
+    private LocationRequest mLocationRequest;
+    private String mLastUpdateTime;
+    private boolean mRequestingLocationUpdates = true; //http://developer.android.com/training/location/receive-location-updates.html#save-state
 
     public LocationProvider(Context context) {
         this.context = context;
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        initNetwork();
+        initConnection(context);
+        createLocationRequest();
     }
 
-    public Location initGPS() {
-        Log.i(TAG, "isGPSEnabled?");
-        Utils.appendLog(TAG, "isGPSEnabled?");
-        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        Log.i(TAG, "->" + isGPSEnabled);
-        Utils.appendLog(TAG, "->" + isGPSEnabled);
-        if (isGPSEnabled) {
-            locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                    MIN_TIME_BW_UPDATES,
-                    this);
-
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Log.i(TAG, "We have gotten location (GPS) with accuracy: " + location.getAccuracy());
-            Utils.appendLog(TAG, "We have gotten location (GPS) with accuracy: " + location.getAccuracy());
-            return location;
-        } else {
-            return null;
+    public void initConnection(Context context) {
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(context)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
         }
+
+        mGoogleApiClient.connect();
     }
 
-    private Location initNetwork() {
-        Log.i(TAG, "isNetworkEnabled?");
-        Utils.appendLog(TAG, "isNetworkEnabled?");
-        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        Log.i(TAG, "->" + isNetworkEnabled);
-        Utils.appendLog(TAG, "->" + isNetworkEnabled);
+    public void disconnect() {
+        mGoogleApiClient.disconnect();
+    }
 
-        if (isNetworkEnabled) {
-            locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                    MIN_TIME_BW_UPDATES,
-                    this);
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mCurrentLocation != null) {
+            Log.i(TAG, "Last location from FusedLocationApi lat = " + mCurrentLocation.getLatitude() + " lng: " + mCurrentLocation.getLongitude());
+        }
 
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            return location;
-        } else {
-            return null;
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
         }
     }
 
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.w(TAG, "Google Location Services connection is failed");
+    }
 
-    public Location getLocation() {
-        if (!isNetworkEnabled) {
-            location = initNetwork();
-            if (location == null || location.getAccuracy() > 100) {
-                if(!isGPSEnabled) {
-                    location = initGPS();
-                } else {
-                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    Log.i(TAG, "We have gotten location (GPS) with lat: " + location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy());
-                    Utils.appendLog(TAG, "We have gotten location (GPS) with lat: " +  location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy());
-                }
-            }
-        } else {
-            if (isGPSEnabled) {
-                resetProvider();
-            }
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            Log.i(TAG, "We have gotten location (NETWORK) with lat: " +  location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy());
-            Utils.appendLog(TAG, "We have gotten location (NETWORK) with lat: " +  location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy());
-        }
-        if (location == null && !isGPSEnabled && !isNetworkEnabled) {
-            if (context instanceof BrainasApp) {
-                // TODO Notification from app (Dialog)
-            } else if (context instanceof Service) {
-                // TODO Notification from service (top of screen)
-            }
-            Log.w(TAG, "Location services not available");
-            Utils.appendLog(TAG, "Location services not available");
-        }
-        return location;
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        this.location = location;
-        Log.i(TAG, "Location was changed (lat: " + location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy() + ")");
-        Utils.appendLog(TAG, "Location was changed (lat: " + location.getLatitude() + " lng: " + location.getLongitude() + " accuracy: " + location.getAccuracy() + ")");
+        mCurrentLocation = location;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        Log.i(TAG, "onLocationChanged: mCurrentLocation = " + mCurrentLocation + "mLastUpdateTime" + mLastUpdateTime);
     }
 
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
+    public Location getCurrentLocation() {
+        return mCurrentLocation;
     }
 
-    public double getLatitude() {
-        if (location != null) {
-            latitude = location.getLatitude();
-        }
-        return latitude;
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(15000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                        builder.build());
+
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult locationSettingsResult) {
+                final Status status = locationSettingsResult.getStatus();
+                final LocationSettingsStates locationSettingsStates = locationSettingsResult.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can
+                        // initialize location requests here.
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        //http://developer.android.com/training/location/change-location-settings.html#get-settings
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        //try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        //status.startResolutionForResult(
+                        //OuterClass.this,
+                        //REQUEST_CHECK_SETTINGS);
+                        //} catch (IntentSender.SendIntentException e) {
+                        // Ignore the error.
+                        //}
+                        Log.i(TAG, "RESOLUTION_REQUIRED");
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
     }
 
-    public double getLongitude() {
-        if (location != null) {
-            longtitude = location.getLongitude();
-        }
-        return longtitude;
-    }
-
-    public boolean canGetGPSLocation() {
-        return isGPSEnabled;
-    }
-
-    public void showSettingAlert() {
-        //TODO
-    }
-
-
-    @Override
-    public void onProviderDisabled(String provider) {
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-    }
-
-    public void resetProvider() {
-        locationManager.removeUpdates(this);
-        initNetwork();
-        Log.i(TAG, "resetProvider");
-        Utils.appendLog(TAG,"resetProvider");
+    private void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 }

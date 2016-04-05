@@ -1,18 +1,15 @@
 package net.brainas.android.app.domain.helpers;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.util.TypedValue;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,14 +26,14 @@ public class TaskHelper {
 
         switch (eventType.name()) {
             case "GPS" :
-                String address = ((EventGPS) event).getAddress();
+                String address = ((EventLocation) event).getAddress();
                 if (address != null && !address.equals("")) {
-                    info = "Location: " + ((EventGPS) event).getAddress();
+                    info = "Location: " + ((EventLocation) event).getAddress();
                 } else {
-                    info = "Location: " + "{lng:" + String.format("%.5f", ((EventGPS) event).getLng()) +
-                            ", lat:" + String.format("%.5f", ((EventGPS) event).getLat()) + ", rad:" + ((EventGPS) event).getRadius() + "}";
+                    info = "Location: " + "{lng:" + String.format("%.5f", ((EventLocation) event).getLng()) +
+                            ", lat:" + String.format("%.5f", ((EventLocation) event).getLat()) + ", rad:" + ((EventLocation) event).getRadius() + "}";
                     GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
-                    googleApiHelper.setAddressByLocation((EventGPS)event, true);
+                    googleApiHelper.setAddressByLocation((EventLocation)event, true);
                 }
                 break;
         }

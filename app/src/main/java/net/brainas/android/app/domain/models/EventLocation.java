@@ -13,18 +13,18 @@ import org.w3c.dom.Element;
 /**
  * Created by innok on 11/27/2015.
  */
-public class EventGPS extends Event {
+public class EventLocation extends Event {
     static String EVENT_NAME = "Location";
     Double lat = null;
     Double lng = null;
     Double radius = null;
     String address = null;
 
-    public EventGPS(){
+    public EventLocation(){
         super();
     }
 
-    public EventGPS(Long id, Integer globalId, Condition condition){
+    public EventLocation(Long id, Integer globalId, Condition condition){
         super(id, globalId, condition);
     }
 
@@ -91,12 +91,12 @@ public class EventGPS extends Event {
 
     @Override
     public boolean isTriggered(ActivationService activationService) {
-        Location location = activationService.getGPSLocation();
+        Location location = activationService.getCurrentLocation();
         if (location != null) {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();
             Double distance = distance(lat, lng, currentLat, currentLng, "M");
-            if (distance <= radius) {
+            if (distance <= radius + 2 * location.getAccuracy()) {
                 return true;
             }
             return false;

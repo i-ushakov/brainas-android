@@ -31,7 +31,7 @@ import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.GoogleApiHelper;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.LocationProvider;
 
@@ -70,7 +70,7 @@ public class EditEventActivity extends EditTaskActivity
             event = app.getTasksManager().retriveEventFromTaskById(task,eventId);
         } else {
             editMode = false;
-            event = new EventGPS();
+            event = new EventLocation();
         }
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -183,7 +183,7 @@ public class EditEventActivity extends EditTaskActivity
         setMarker(location);
         event.setParams(location.latitude, location.longitude, null, null);
         GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
-        googleApiHelper.setAddressByLocation((EventGPS)event, false);
+        googleApiHelper.setAddressByLocation((EventLocation)event, false);
 
     }
 
@@ -228,8 +228,8 @@ public class EditEventActivity extends EditTaskActivity
     private boolean validateEvent() {
         switch (event.getType().getLabel(this)) {
             case "GPS":
-                if (((EventGPS) event).getLat() != null &&
-                        ((EventGPS) event).getLng() != null) {
+                if (((EventLocation) event).getLat() != null &&
+                        ((EventLocation) event).getLng() != null) {
                     return true;
                 }
                 break;
@@ -243,7 +243,7 @@ public class EditEventActivity extends EditTaskActivity
             protected LatLng doInBackground(Void... params) {
                 LatLng latLng = null;
                 LocationProvider locationProvider = ((BrainasApp)BrainasApp.getAppContext()).getLocationProvider();
-                Location location = locationProvider.getLocation();
+                Location location = locationProvider.getCurrentLocation();
                 if (location != null) {
                     latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 }

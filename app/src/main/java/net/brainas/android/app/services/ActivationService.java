@@ -80,6 +80,7 @@ public class ActivationService extends Service {
             }
         }
         tasksManager = new TasksManager(taskDbHelper, accountId);
+
         Log.i(TAG, "ActivationService was started for user with account id = " + accountId);
         initCheckConditionsInWL();
         return Service.START_STICKY;
@@ -94,6 +95,7 @@ public class ActivationService extends Service {
     @Override
     public void onDestroy() {
         accountId = null;
+        locationProvider.disconnect();
         Log.i(TAG, "ActivationService was destroyed");
     }
 
@@ -137,8 +139,8 @@ public class ActivationService extends Service {
         }
     }
 
-    public Location getGPSLocation() {
-        return locationProvider.getLocation();
+    public Location getCurrentLocation() {
+        return locationProvider.getCurrentLocation();
     }
 
     private void notifyAboutActivation(ArrayList<Long> activatedTasksIds) {
@@ -153,7 +155,7 @@ public class ActivationService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             isBrainasAppVisible = intent.getBooleanExtra("appVisible", false);
-            Log.i(TAG, "Got notification about that main App visible is" + isBrainasAppVisible);
+            Log.i(TAG, "Got notification about that main App visible is " + isBrainasAppVisible);
         }
     };
 }

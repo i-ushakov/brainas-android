@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.Task;
 
 import java.util.ArrayList;
@@ -483,7 +483,7 @@ public class TaskDbHelper {
                 event = null;
                 switch (type) {
                     case "GPS" :
-                        event = new EventGPS(id, globalId, condition);
+                        event = new EventLocation(id, globalId, condition);
                         event.setParent(condition);
                     break;
                 }

@@ -8,7 +8,7 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.services.SynchronizationService;
 
@@ -350,13 +350,13 @@ public class SyncHelper {
                 Condition condition = new Condition(null,conditionId, task.getId());
                 NodeList events = conditionEl.getElementsByTagName("event");
                 for(int k = 0; k < events.getLength(); ++k) {
-                    EventGPS event = null;
+                    EventLocation event = null;
                     Element eventEl = (Element)events.item(k);
                     String type = eventEl.getAttribute("type");
                     int eventId = Integer.parseInt(eventEl.getAttribute("id"));
                     switch (type) {
                         case "GPS" :
-                            event = new EventGPS(null, eventId, null);
+                            event = new EventLocation(null, eventId, null);
                             event.fillInParamsFromXML(eventEl);
                             break;
                     }

@@ -8,10 +8,8 @@ import android.os.AsyncTask;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.domain.models.Event;
-import net.brainas.android.app.domain.models.EventGPS;
+import net.brainas.android.app.domain.models.EventLocation;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -22,26 +20,26 @@ import java.util.Locale;
 public class GoogleApiHelper {
     Context context;
     TasksManager tasksManager;
-    EventGPS gpsEvent;
+    EventLocation gpsEvent;
     boolean needSavingTheEvent;
 
     public GoogleApiHelper(Context context) {
         this.context = context;
     }
 
-    public void setAddressByLocation(EventGPS gpsEvent, boolean needSavingTheEvent) {
+    public void setAddressByLocation(EventLocation gpsEvent, boolean needSavingTheEvent) {
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         this.gpsEvent = gpsEvent;
         this.needSavingTheEvent = needSavingTheEvent;
         new GettingAddressByLocation().execute(gpsEvent);
     }
 
-    private class GettingAddressByLocation extends AsyncTask<EventGPS, Void, String> {
+    private class GettingAddressByLocation extends AsyncTask<EventLocation, Void, String> {
         @Override
-        protected String doInBackground(EventGPS... gpsEvents) {
+        protected String doInBackground(EventLocation... gpsEvents) {
             String address = null;
 
-            EventGPS gpsEvent = gpsEvents[0];
+            EventLocation gpsEvent = gpsEvents[0];
             Double lng = gpsEvent.getLng();
             Double lat = gpsEvent.getLat();
             LatLng location = new LatLng(lat, lng);
