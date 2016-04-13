@@ -10,4 +10,9 @@
     <color name="north_sea">#38a398</color>
     <color name="black">#000000</color>
     <color name="lightyellow">#FFFFE0</color>
+    <color name="colorForLocationEvent">#FFFFE0</color>
+    <color name="colorForTimeEvent">#5bc0de</color>
+    <color name="textColorForLocationEvent">#000000</color>
+    <color name="textColorForTimeEvent">#ffffff</color>
+
 </resources>

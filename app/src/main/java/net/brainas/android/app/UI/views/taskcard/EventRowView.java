@@ -29,7 +29,11 @@ public class EventRowView extends LinearLayout {
         inflate(getContext(), R.layout.view_event_row, this);
 
         ImageView eventIconView = (ImageView)findViewById(R.id.event_icon);
-        eventIconView.setImageResource(event.getIconDrawableId());
+        String colorIcon = null;
+        if (event.getType().equals(Event.TYPES.TIME)) {
+            colorIcon = "WHITE";
+        }
+        eventIconView.setImageResource(event.getIconDrawableId(colorIcon));
 
         TextView eventTypeView = (TextView)findViewById(R.id.event_type);
         eventTypeView.setText(event.getType().toString() + ": ");

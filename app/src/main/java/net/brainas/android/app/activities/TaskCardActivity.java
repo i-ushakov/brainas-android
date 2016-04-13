@@ -207,7 +207,9 @@ public class TaskCardActivity extends AppCompatActivity
         }
         ((BrainasApp)BrainasApp.getAppContext()).getActivationManager().detach(this);
         ((BrainasApp)BrainasApp.getAppContext()).getSynchronizationManager().detach(this);
-        this.task.detachObserver(this);
+        if (this.task != null) {
+            this.task.detachObserver(this);
+        }
         super.onDestroy();
     }
 

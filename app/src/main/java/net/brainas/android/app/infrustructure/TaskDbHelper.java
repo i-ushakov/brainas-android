@@ -8,6 +8,7 @@ import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
+import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Task;
 
 import java.util.ArrayList;
@@ -363,7 +364,6 @@ public class TaskDbHelper {
                 condition.setId(newRowId);
             }
 
-
             saveEvents(condition.getEvents(), condition.getId());
         }
     }
@@ -484,11 +484,16 @@ public class TaskDbHelper {
                 switch (type) {
                     case "GPS" :
                         event = new EventLocation(id, globalId, condition);
-                        event.setParent(condition);
-                    break;
+                        break;
+
+                    case "TIME" :
+                        event = new EventTime(id, globalId, condition);
+                        break;
                 }
-                event.fillInParamsFromJSONString(params);
-                events.add(event);
+                if (event != null){
+                    event.fillInParamsFromJSONString(params);
+                    events.add(event);
+                }
             } while (cursor.moveToNext());
         }
 

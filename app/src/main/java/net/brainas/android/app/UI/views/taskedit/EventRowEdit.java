@@ -1,14 +1,13 @@
 package net.brainas.android.app.UI.views.taskedit;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.models.Event;
 
 /**
@@ -27,19 +26,11 @@ public class EventRowEdit extends LinearLayout {
         this.context = context;
         inflate(getContext(), R.layout.view_event_row_edit, this);
 
+        LinearLayout linearLayout = (LinearLayout)findViewById(R.id.event_row_layout);
+        linearLayout.setBackgroundColor(ContextCompat.getColor(context, event.getBackgroundColor()));
+        ((TextView)linearLayout.findViewById(R.id.eventTypeAndParams)).setTextColor(ContextCompat.getColor(context, event.getTextColor()));
+
         TextView typeAndParamsView = (TextView)findViewById(R.id.eventTypeAndParams);
         typeAndParamsView.setText(((BrainasApp)(BrainasApp.getAppContext())).getTaskHelper().getEventInfo(event));
-
-        //TextView eventTParamsView = (TextView)findViewById(R.id.eventParams);
-        //eventTParamsView.setText(event.getJSONStringWithParams());
-
-        /*ImageView eventIconView = (ImageView)findViewById(R.id.event_icon);
-        eventIconView.setImageResource(event.getIconDrawableId());
-
-        TextView eventTypeView = (TextView)findViewById(R.id.event_type);
-        eventTypeView.setText(event.getType().toString() + ": ");
-
-        TextView eventTParamsView = (TextView)findViewById(R.id.event_params);
-        eventTParamsView.setText(event.getJSONStringWithParams());*/
     }
 }

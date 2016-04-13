@@ -181,7 +181,7 @@ public class EditEventActivity extends EditTaskActivity
 
     private void changeLocation(LatLng location) {
         setMarker(location);
-        event.setParams(location.latitude, location.longitude, null, null);
+        ((EventLocation)event).setParams(location.latitude, location.longitude, null, null);
         GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
         googleApiHelper.setAddressByLocation((EventLocation)event, false);
 

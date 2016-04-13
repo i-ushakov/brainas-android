@@ -10,8 +10,11 @@ import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
+import net.brainas.android.app.domain.models.EventTime;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,6 +37,20 @@ public class TaskHelper {
                             ", lat:" + String.format("%.5f", ((EventLocation) event).getLat()) + ", rad:" + ((EventLocation) event).getRadius() + "}";
                     GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
                     googleApiHelper.setAddressByLocation((EventLocation)event, true);
+                }
+                break;
+
+            case "TIME" :
+                //String datetime = ((EventTime) event).getDatetimeFromatedStr();
+                Calendar datetime = ((EventTime) event).getDatetime();
+                Integer datetimeYear = datetime.get(Calendar.YEAR);
+                Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
+                if (datetimeYear.equals(currentYear)) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("D MMM HH:mm");
+                    info = sdf.format(datetime.getTime());
+                } else {
+                    SimpleDateFormat sdf = new SimpleDateFormat("D MMM yyyy HH:mm");
+                    info = sdf.format(datetime.getTime());
                 }
                 break;
         }

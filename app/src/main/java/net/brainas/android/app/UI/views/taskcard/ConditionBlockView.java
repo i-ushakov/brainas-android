@@ -1,6 +1,12 @@
 package net.brainas.android.app.UI.views.taskcard;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.DrawableContainer;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.shapes.Shape;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.view.View;
@@ -8,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -42,23 +49,31 @@ public class ConditionBlockView extends LinearLayout {
         ArrayList<Event> events = condition.getEvents();
         for (Event event : events) {
             LinearLayout eventView = new EventRowView(context, event);
+            ((TextView)eventView.findViewById(R.id.event_type)).setTextColor(ContextCompat.getColor(context, event.getTextColor()));
+            ((TextView)eventView.findViewById(R.id.event_params)).setTextColor(ContextCompat.getColor(context, event.getTextColor()));
             eventsRowViewGroup.addView(eventView);
         }
 
         final ViewGroup conditionDetailsViewGroup = (ViewGroup) findViewById(R.id.condition_details);
         conditionDetailsViewGroup.setVisibility(View.GONE);
-        eventsRowViewGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (conditionDetailsViewGroup.getVisibility() == View.VISIBLE) {
-                    collapseConditionDetails(conditionDetailsViewGroup);
-                } else {
-                    expandConditionsDetails(conditionDetailsViewGroup);
+        Event event = condition.getEvents().get(0);
+        if (event.getType().equals(Event.TYPES.GPS)) {
+            eventsRowViewGroup.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (conditionDetailsViewGroup.getVisibility() == View.VISIBLE) {
+                        collapseConditionDetails(conditionDetailsViewGroup);
+                    } else {
+                        expandConditionsDetails(conditionDetailsViewGroup);
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        setConditionDetails((AppCompatActivity)context, condition);
+        ((GradientDrawable)findViewById(R.id.condition_block).getBackground()).setColor(ContextCompat.getColor(context, event.getBackgroundColor()));
+        //findViewById(R.id.condition_block).setBackgroundColor(ContextCompat.getColor(context, event.getBackgroundColor()));
+
+        setConditionDetails((AppCompatActivity) context, condition);
     }
 
     public static void expandConditionsDetails(final View v) {

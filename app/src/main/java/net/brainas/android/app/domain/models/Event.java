@@ -21,7 +21,8 @@ public abstract class Event {
     private int globalConditionId;
 
     public enum TYPES {
-        GPS;
+        GPS,
+        TIME;
         public String getLabel(Context context) {
             Resources res = context.getResources();
             int resId = res.getIdentifier(this.name(), "string", context.getPackageName());
@@ -44,14 +45,13 @@ public abstract class Event {
 
         if (condition != null) {
             this.conditionId = condition.getId();
+            this.parent = condition;
         }
     }
 
     abstract public void fillInParamsFromXML(Element xmlParams);
 
     abstract public void fillInParamsFromJSONString(String params);
-
-    abstract public void setParams(double lat, double lng, Double radius , String address);
 
     abstract public String getJSONStringWithParams();
 
@@ -62,6 +62,12 @@ public abstract class Event {
     abstract public boolean isTriggered(ActivationService activationService);
 
     abstract public int getIconDrawableId();
+
+    abstract public int getIconDrawableId(String colorName);
+
+    abstract public int getBackgroundColor();
+
+    abstract public int getTextColor();
 
     abstract public boolean isExecutable();
 

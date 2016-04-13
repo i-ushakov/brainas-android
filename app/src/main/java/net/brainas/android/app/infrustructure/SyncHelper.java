@@ -8,7 +8,9 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
+import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
+import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.services.SynchronizationService;
 
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -343,15 +346,20 @@ public class SyncHelper {
             if (statusEl != null) {
                 task.setStatus(statusEl.getTextContent());
             }
-            NodeList conditions = taskEl.getElementsByTagName("condition");
-            for (int j = 0; j < conditions.getLength(); ++j) {
-                Element conditionEl = (Element)conditions.item(j);
+
+            // Conditions
+            CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<Condition>();
+            NodeList conditionsNL = taskEl.getElementsByTagName("condition");
+            for (int j = 0; j < conditionsNL.getLength(); ++j) {
+                Element conditionEl = (Element)conditionsNL.item(j);
                 Integer conditionId = Integer.parseInt(conditionEl.getAttribute("id"));
                 Condition condition = new Condition(null,conditionId, task.getId());
                 NodeList events = conditionEl.getElementsByTagName("event");
+                Event event = null;
+                Element eventEl = null;
                 for(int k = 0; k < events.getLength(); ++k) {
-                    EventLocation event = null;
-                    Element eventEl = (Element)events.item(k);
+                    event = null;
+                    eventEl = (Element)events.item(k);
                     String type = eventEl.getAttribute("type");
                     int eventId = Integer.parseInt(eventEl.getAttribute("id"));
                     switch (type) {
@@ -359,12 +367,20 @@ public class SyncHelper {
                             event = new EventLocation(null, eventId, null);
                             event.fillInParamsFromXML(eventEl);
                             break;
+
+                        case "TIME" :
+                            event = new EventTime(null, eventId, null);
+                            event.fillInParamsFromXML(eventEl);
+                            break;
                     }
-                    condition.addEvent(event);
+                    if (event != null) {
+                        condition.addEvent(event);
+                    }
                 }
-                task.addCondition(condition);
-                tasksManager.saveTask(task);
+                conditions.add(condition);
             }
+            task.setConditions(conditions);
+            tasksManager.saveTask(task);
         }
     }
 

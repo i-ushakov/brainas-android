@@ -3,7 +3,6 @@ package net.brainas.android.app.domain.models;
 import android.location.Location;
 
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.services.ActivationService;
 
 import org.json.JSONException;
@@ -41,12 +40,15 @@ public class EventLocation extends Event {
         this.lat = Double.parseDouble(eventEl.getElementsByTagName("lat").item(0).getTextContent());
         this.lng = Double.parseDouble(eventEl.getElementsByTagName("lng").item(0).getTextContent());
         this.radius = Double.parseDouble(eventEl.getElementsByTagName("radius").item(0).getTextContent());
+        if (eventEl.getElementsByTagName("address") != null) {
+            this.address = eventEl.getElementsByTagName("address").item(0).getTextContent();
+        }
     }
 
     @Override
     public void fillInParamsFromJSONString(String paramsJSONStr) {
         try {
-            JSONObject params= new JSONObject(paramsJSONStr);
+            JSONObject params = new JSONObject(paramsJSONStr);
             lat  = params.getDouble("lat");
             lng  = params.getDouble("lng");
             radius  = params.getDouble("radius");
@@ -73,7 +75,6 @@ public class EventLocation extends Event {
         return params.toString();
     }
 
-    @Override
     public void setParams(double lat, double lng, Double radius , String address) {
         this.lat = lat;
         this.lng = lng;
@@ -96,7 +97,7 @@ public class EventLocation extends Event {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();
             Double distance = distance(lat, lng, currentLat, currentLng, "M");
-            if (distance <= radius + 2 * location.getAccuracy()) {
+            if (distance <= radius) {
                 return true;
             }
             return false;
@@ -104,10 +105,27 @@ public class EventLocation extends Event {
         return false;
     }
 
-
+    @Override
     public int getIconDrawableId() {
+        return getIconDrawableId(null);
+    }
+
+    @Override
+    public int getIconDrawableId(String colorName) {
         return R.drawable.gps_icon_100;
     }
+
+
+    @Override
+    public int getBackgroundColor() {
+        return R.color.colorForLocationEvent;
+    }
+
+    @Override
+    public int getTextColor() {
+        return R.color.textColorForLocationEvent;
+    }
+
 
     public Double getLat() {
         return this.lat;
