@@ -56,7 +56,12 @@ public class ConditionBlockView extends LinearLayout {
 
         final ViewGroup conditionDetailsViewGroup = (ViewGroup) findViewById(R.id.condition_details);
         conditionDetailsViewGroup.setVisibility(View.GONE);
-        Event event = condition.getEvents().get(0);
+        Event event = null;
+        if (condition.getEvents().size() > 0) {
+            event = condition.getEvents().get(0);
+        } else {
+            return;
+        }
         if (event.getType().equals(Event.TYPES.GPS)) {
             eventsRowViewGroup.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    static String serverUrl = "http://192.168.1.105/backend/web/connection/";
+    static String serverUrl = "http://192.168.1.104/backend/web/connection/";
     //static String serverUrl = "http://brainas.net/backend/web/connection/";
 
     static String TAG = "SYNC";

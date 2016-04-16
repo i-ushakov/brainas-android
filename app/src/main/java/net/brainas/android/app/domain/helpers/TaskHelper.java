@@ -46,10 +46,10 @@ public class TaskHelper {
                 Integer datetimeYear = datetime.get(Calendar.YEAR);
                 Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
                 if (datetimeYear.equals(currentYear)) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("D MMM HH:mm");
+                    SimpleDateFormat sdf = new SimpleDateFormat("d MMM HH:mm");
                     info = sdf.format(datetime.getTime());
                 } else {
-                    SimpleDateFormat sdf = new SimpleDateFormat("D MMM yyyy HH:mm");
+                    SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy HH:mm");
                     info = sdf.format(datetime.getTime());
                 }
                 break;
@@ -76,9 +76,19 @@ public class TaskHelper {
             }
         }
         if (eventTypesOccurrence.containsKey(Event.TYPES.GPS)) {
-            ImageView eventTypeImage = Utils.createImageView(R.drawable.gps_icon_in_circle, 100, context);
-            imagesBlock.addView(eventTypeImage);
+            imagesBlock.addView(eventTypeImage(R.drawable.gps_icon_in_circle, context));
+        }
+        if (eventTypesOccurrence.containsKey(Event.TYPES.TIME)) {
+            imagesBlock.addView(eventTypeImage(R.drawable.ic_alarm_on_blue_in_cirle, context));
         }
         return imagesBlock;
+    }
+
+    private ImageView eventTypeImage (int imageResId, Context context) {
+        ImageView eventTypeImage = Utils.createImageView(imageResId, 70, context);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(5, 0, 5, 0);
+        eventTypeImage.setLayoutParams(lp);
+        return eventTypeImage;
     }
 }

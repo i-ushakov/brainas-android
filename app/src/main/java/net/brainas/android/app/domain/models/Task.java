@@ -190,20 +190,46 @@ public class Task {
     }
 
     public boolean isConditionsSatisfied(ActivationService activationService) {
+        HashMap<Event.TYPES, Boolean> triggeredEventsMap = new HashMap<>();
         for(Condition condition : conditions) {
             ArrayList<Event> events = condition.getEvents();
-            boolean haveToBeActivated = false;
             for(Event evnet : events) {
-                if (evnet.isTriggered(activationService)) {
-                    haveToBeActivated = true;
-                } else {
-                    haveToBeActivated = false;
-                    break;
+                Event.TYPES eventType = evnet.getType();
+                switch (eventType.name()) {
+                    case "GPS":
+                        if ((!triggeredEventsMap.containsKey(Event.TYPES.GPS) || triggeredEventsMap.get(Event.TYPES.GPS) == false)) {
+                            if (evnet.isTriggered(activationService)) {
+                                triggeredEventsMap.put(Event.TYPES.GPS, true);
+                            } else {
+                                triggeredEventsMap.put(Event.TYPES.GPS, false);
+                            }
+                            break;
+                        }
+
+                    case "TIME" :
+                        if (evnet.isTriggered(activationService)) {
+                            triggeredEventsMap.put(Event.TYPES.TIME, true);
+                        } else {
+                            triggeredEventsMap.put(Event.TYPES.TIME, false);
+                        }
+                        break;
                 }
             }
-            if (haveToBeActivated) {
-                return true;
+        }
+
+        boolean haveToBeActivated = false;
+        Iterator it = triggeredEventsMap.entrySet().iterator();
+        while (it.hasNext()) {
+            HashMap.Entry pair = (HashMap.Entry)it.next();
+            if((Boolean)pair.getValue()) {
+                haveToBeActivated = true;
+            } else {
+                haveToBeActivated = false;
+                break;
             }
+        }
+        if (haveToBeActivated) {
+            return true;
         }
         return false;
     }

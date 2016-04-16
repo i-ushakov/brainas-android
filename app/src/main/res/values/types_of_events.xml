@@ -2,5 +2,6 @@
 <resources>
     <string-array name="types_of_events">
         <item>Location</item>
+        <item>Time</item>
     </string-array>
 </resources>

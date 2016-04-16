@@ -21,13 +21,12 @@ public class EventTime extends Event {
     SimpleDateFormat sdf = null;
 
     public EventTime(){
-        super();
+        this(null, null, null);
     }
 
     public EventTime(Long id, Integer globalId, Condition condition){
         super(id, globalId, condition);
-
-        sdf = new SimpleDateFormat("dd-mm-yyyy HH:mm:ss");
+        sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     }
 
     public TYPES getType() {
@@ -40,17 +39,17 @@ public class EventTime extends Event {
 
     @Override
     public void fillInParamsFromXML(Element eventEl) {
-        String datetimeStr = eventEl.getElementsByTagName("datetime").item(0).getTextContent();
-        datetime = getCalendarFromString(datetimeStr);
         offset = Integer.parseInt(eventEl.getElementsByTagName("offset").item(0).getTextContent());
+        String datetimeStr = eventEl.getElementsByTagName("datetime").item(0).getTextContent();
+        datetime = getCalendarFromString(datetimeStr, offset);
     }
 
     @Override
     public void fillInParamsFromJSONString(String paramsJSONStr) {
         try {
             JSONObject params = new JSONObject(paramsJSONStr);
-            datetime  = getCalendarFromString( params.getString("datetime"));
             offset  = params.getInt("offset");
+            datetime  = getCalendarFromString( params.getString("datetime"), offset);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -68,16 +67,16 @@ public class EventTime extends Event {
         return params.toString();
     }
 
-    public void setParams(String datetime, Integer offset) {
-        this.datetime = getCalendarFromString(datetime);
-        this.offset = offset;
+    public void setParams(Calendar datetime) {
+        this.datetime = datetime;
+        this.offset = datetime.getTimeZone().getOffset(datetime.getTime().getTime()) / (1000 * 60);
     }
 
     @Override
     public boolean isTriggered(ActivationService activationService) {
         Calendar currentTime = Calendar.getInstance();
         if (datetime != null) {
-            if (datetime.before(currentTime.getTime())) {
+            if (datetime.before(currentTime)) {
                 return true;
             }
             return false;
@@ -118,7 +117,7 @@ public class EventTime extends Event {
         return datetime;
     }
 
-    public String getDatetimeFromatedStr() {
+    public String getDatetimeFromatedStr(Calendar datetime) {
         return sdf.format(datetime.getTime());
     }
 
@@ -130,7 +129,8 @@ public class EventTime extends Event {
         return true;
     }
 
-    private Calendar getCalendarFromString(String datetimeStr) {
+    private Calendar getCalendarFromString(String datetimeStr, Integer offset) {
+        // TODO Using offset to work with time zone
         Calendar calendar = Calendar.getInstance();
         try {
             calendar.setTime(sdf.parse(datetimeStr));
