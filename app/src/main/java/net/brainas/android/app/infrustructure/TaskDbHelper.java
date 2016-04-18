@@ -268,13 +268,16 @@ public class TaskDbHelper {
         String selectQuery = "SELECT * FROM " + TABLE_CONDITIONS + " WHERE task_id = " + taskId;
         Cursor cursor = db.rawQuery(selectQuery, null);
         if (cursor.moveToFirst()) {
-            int conditionId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_ID)));
+            do {
+                int conditionId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_CONDITIONS_ID)));
 
-            // delete events
-            String selectionForEvents = COLUMN_NAME_EVENTS_CONDITION + " LIKE ?";
-            String[] selectionArgsForEvent = { String.valueOf(conditionId) };
-            db.delete(TABLE_EVENTS, selectionForEvents, selectionArgsForEvent);
+                // delete events
+                String selectionForEvents = COLUMN_NAME_EVENTS_CONDITION + " LIKE ?";
+                String[] selectionArgsForEvent = {String.valueOf(conditionId)};
+                db.delete(TABLE_EVENTS, selectionForEvents, selectionArgsForEvent);
+            } while (cursor.moveToNext());
         }
+
         String selectionForConditions = COLUMN_NAME_CONDITIONS_TASK + " LIKE ?";
         String[]  selectionArgsForConditions = { String.valueOf(taskId) };
         db.delete(TABLE_CONDITIONS, selectionForConditions, selectionArgsForConditions);
