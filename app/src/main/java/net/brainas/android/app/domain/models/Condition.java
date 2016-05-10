@@ -85,4 +85,34 @@ public class Condition {
     public Task getParent() {
         return this.parent;
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) return false;
+        if (object == this) return true;
+        if (!(object instanceof Condition)) return false;
+        Condition condition = (Condition)object;
+
+        //check id
+        if (this.getId() != condition.getId()) {
+            return false;
+        }
+
+        //check globalID
+        if (this.getGlobalId() != condition.getGlobalId()) {
+            return false;
+        }
+
+        // check events
+        ArrayList<Event> objectEvents = condition.getEvents();
+        if (objectEvents.size() != this.events.size()) {
+            return false;
+        }
+        for(int i = 0; i < objectEvents.size();i++) {
+            if(!this.events.get(i).equals(objectEvents.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -2,11 +2,11 @@ package net.brainas.android.app.services;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.google.common.base.Charsets;
@@ -21,25 +21,19 @@ import net.brainas.android.app.infrustructure.ServicesDbHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
+import net.brainas.android.app.infrustructure.AllTasksSync;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -65,7 +59,7 @@ public class SynchronizationService extends Service {
     private SyncHelper syncHelper;
     private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
-    private TaskChangesDbHelper tasksChangesDbHelper;
+    private TaskChangesDbHelper taskChangesDbHelper;
     private ServicesDbHelper servicesDbHelper;
     private TasksManager tasksManager;
 
@@ -73,7 +67,7 @@ public class SynchronizationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         appDbHelper = new AppDbHelper(this);
         taskDbHelper = new TaskDbHelper(appDbHelper);
-        tasksChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
+        taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         servicesDbHelper = new ServicesDbHelper(appDbHelper);
         if (intent != null) {
             accountId = intent.getExtras().getInt("accountId");
@@ -98,7 +92,7 @@ public class SynchronizationService extends Service {
         }
 
         tasksManager = new TasksManager(taskDbHelper, accountId);
-        syncHelper = new SyncHelper(tasksManager, tasksChangesDbHelper, taskDbHelper);
+        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, servicesDbHelper, accountId);
         startSynchronization();
         Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +
                 " with access code = " + accessCode +
@@ -146,96 +140,45 @@ public class SynchronizationService extends Service {
         accessCode = null;
     }
 
-    private void synchronization() {
+    public void synchronization() {
+        File allChangesInXMLFile;
+        String allChangesInXML;
+
+        // Retrieve all changes from database and prepare for sending in the form of XML-file
+        try {
+            allChangesInXML = syncHelper.getAllChangesInXML(accountId);
+            allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
+            Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
+            Log.v(TAG, allChangesInXMLFile.getName() + " was created");
+            Log.v(TAG, Utils.printFileToString(allChangesInXMLFile));
+        } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
+            Log.e(TAG, "Cannot create XML-file with changes");
+            e.printStackTrace();
+            return;
+        }
+
         asyncTask = new AllTasksSync();
+        asyncTask.setListener(new AllTasksSync.AllTasksSyncListener() {
+            @Override
+            public void onComplete(String response, Exception e) {
+                handleResponseFromServer(response);
+            }});
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
         else {
-            asyncTask.execute();
-        }
-    }
-
-    private class AllTasksSync extends AsyncTask<File, Void, Void> {
-        @Override
-        protected Void doInBackground(File... files) {
-            File allChangesInXMLFile;
-            String allChangesInXML;
-            String response = null;
-            List<Task> updatedTasksFromServer;
-            ArrayList<Integer> deletedTasksFromServer;
-
-            // Retrieve all changes from database and prepare for sending in the form of XML-file
-            try {
-                allChangesInXML = syncHelper.getAllChangesInXML(accountId);
-                allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
-                Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
-                Log.v(TAG, allChangesInXMLFile.getName() + " was created");
-                Log.v(TAG, Utils.printFileToString(allChangesInXMLFile));
-            } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
-                Log.e(TAG, "Cannot create XML-file with changes");
-                e.printStackTrace();
-                return null;
-            }
-
-            // send changes to server for processing
-            try {
-                response = SyncHelper.sendAllChanges(allChangesInXMLFile);
-            } catch (IOException e) {
-                Log.e(TAG, "Exchange of sync data has failed");
-                e.printStackTrace();
-            }
-
-
-            // parse response from server
-            if (response != null) {
-                Log.i(TAG, response);
-                try {
-                    JSONObject syncDate = parseResponse(response);
-                    deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
-                } catch (ParserConfigurationException | IOException | SAXException |JSONException e) {
-                    Log.e(TAG, "Cannot parse xml-document that gotten from server");
-                    e.printStackTrace();
-                    return null;
-                }
-
-                // refreshe and delete tasks in DB
-                syncHelper.deleteTasksFromDb(deletedTasksFromServer);
-            }
-
-            // notify about updates
-            notifyAboutSyncronization();
-
-            return null;
-        }
-    }
-
-    private  JSONObject parseResponse(String xmlStr) throws ParserConfigurationException, IOException, SAXException, JSONException {
-        JSONObject syncDate = new JSONObject();
-        List<Task> tasks;
-        ArrayList<Integer> deletedTasks;
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        InputSource is = new InputSource(new StringReader(xmlStr));
-        Document xmlDocument = builder.parse(is);
-
-        syncHelper.handleResultOfSyncWithServer(xmlDocument);
-        initSyncTime = syncHelper.retrieveTimeOfInitialSync(xmlDocument);
-        String accessToken = syncHelper.retrieveAccessToken(xmlDocument);
-        if (accessToken != null) {
-            SynchronizationService.accessToken = accessToken;
-            servicesDbHelper.addServiceParam(SERVICE_NAME, "accessToken", accessToken);
-            Log.v(TAG, "Access token was gotten :" + accessToken);
+            asyncTask.execute(allChangesInXMLFile);
         }
 
-        syncHelper.handlingOfTasksFromServer(xmlDocument, accountId);
-
-        deletedTasks = syncHelper.retriveDeletedTasks(xmlDocument, "deletedTask");
-        syncDate.put("deletedTasks", deletedTasks);
-
-        return syncDate;
+        // TODO Remove File
     }
 
+    private void handleResponseFromServer (String response) {
+
+        syncHelper.handleResponseFromServer(response);
+
+        // notify about updates
+        notifyAboutSyncronization();
+    }
     private void notifyAboutSyncronization() {
         Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION);
         //intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));

@@ -99,52 +99,6 @@ public class InfrustructureHelper {
         return connection;
     }
 
-    public static Element taskToXML(Document doc, Task task, String elementName) throws ParserConfigurationException {
-        if (elementName ==  null) {
-            elementName = "task";
-        }
-        Element taskEl = doc.createElement(elementName);
-        taskEl.setAttribute("id", ((Long)task.getId()).toString());
-        taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
-        // message
-        Element messageEl = doc.createElement("message");
-        messageEl.setTextContent(task.getMessage());
-        taskEl.appendChild(messageEl);
-
-        // description
-        Element descriptionEl = doc.createElement("description");
-        descriptionEl.setTextContent(task.getDescription());
-        taskEl.appendChild(descriptionEl);
-
-        // conditions
-        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
-        Element conditionsEl = doc.createElement("conditions");
-        for(Condition condition : conditions) {
-            Element conditionEl = doc.createElement("condition");
-            conditionEl.setAttribute("localId", Long.toString(condition.getId()));
-            conditionEl.setAttribute("globalId", Long.toString(condition.getGlobalId()));
-            ArrayList<Event> events = condition.getEvents();
-            Element eventsEl = doc.createElement("events");
-            for(Event event : events) {
-                Element eventEl = doc.createElement("event");
-                eventEl.setAttribute("localId", Long.toString(event.getId()));
-                eventEl.setAttribute("globalId", Long.toString(event.getGlobalId()));
-                Element eventTypeEl = doc.createElement("type");
-                eventTypeEl.setTextContent(event.getType().toString());
-                eventEl.appendChild(eventTypeEl);
-                Element eventParamsEl = doc.createElement("params");
-                eventParamsEl.setTextContent(event.getJSONStringWithParams());
-                eventEl.appendChild(eventParamsEl);
-                eventsEl.appendChild(eventEl);
-            }
-            conditionEl.appendChild(eventsEl);
-            conditionsEl.appendChild(conditionEl);
-        }
-        taskEl.appendChild(conditionsEl);
-
-        return taskEl;
-    }
-
     /*
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
         String string = "hello world!";

@@ -23,6 +23,7 @@ public class UserAccountDbHelper {
     public static final String COLUMN_NAME_USER_ACCOUNTS_ID = "id";
     public static final String COLUMN_NAME_USER_ACCOUNTS_EMAIL = "email";
     public static final String COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME = "person_name";
+    public static final String COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE = "access_code";
     public static final String COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT = "last_visit";
     public static final String COLUMN_NAME_USER_ACCOUNTS_CREATED = "created";
     private static final String CREATE_TABLE_USER_ACCOUNTS =
@@ -30,6 +31,7 @@ public class UserAccountDbHelper {
                     COLUMN_NAME_USER_ACCOUNTS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT ," +
                     COLUMN_NAME_USER_ACCOUNTS_EMAIL + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT + " DATETIME DEFAULT CURRENT_TIMESTAMP" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_CREATED + " DATETIME" + " )";
     private static final String DELETE_TABLE_USER_ACCOUNTS =
@@ -39,6 +41,7 @@ public class UserAccountDbHelper {
             COLUMN_NAME_USER_ACCOUNTS_ID,
             COLUMN_NAME_USER_ACCOUNTS_EMAIL,
             COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME,
+            COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE,
             COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT,
             COLUMN_NAME_USER_ACCOUNTS_CREATED
     };
@@ -69,6 +72,9 @@ public class UserAccountDbHelper {
 
         values.put(COLUMN_NAME_USER_ACCOUNTS_EMAIL, email);
         values.put(COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME, userAccount.getPersonName());
+        if(userAccount.getAccessCode() != null) {
+            values.put(COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE, userAccount.getAccessCode());
+        }
 
         int nRowsEffected = db.update(
                 TABLE_USER_ACCOUNTS,
@@ -138,6 +144,8 @@ public class UserAccountDbHelper {
             String personName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME));
             userAccount.setLocalAccountId(accountId);
             userAccount.setPersonName(personName);
+            String accessCode = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE));
+            userAccount.setAccessCode(accessCode);
 
             return userAccount;
         }

@@ -260,6 +260,61 @@ public class Task {
         }
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) return false;
+        if (object == this) return true;
+        if (!(object instanceof Task))return false;
+        Task task = (Task)object;
+
+        // check id
+        if (task.getId() != this.id) {
+            return false;
+        }
+        // check globalId
+        if (task.getGlobalId() != this.globalId) {
+            return false;
+        }
+
+        // check message
+        String objectMessage = task.getMessage();
+        if ((objectMessage == null && this.message != null) || (objectMessage != null && this.message == null)) {
+            return false;
+        }
+        if (objectMessage != null) {
+            if (!objectMessage.equals(this.message)) {
+                return false;
+            }
+        }
+
+        // check description
+        String objectDescription = task.getDescription();
+        if ((objectDescription == null && this.description != null) || (objectDescription != null && this.description == null)) {
+            return false;
+        }
+        if (objectDescription!=null) {
+            if (!objectDescription.equals(this.description)) {
+                return false;
+            }
+        }
+
+        // check conditions
+        CopyOnWriteArrayList<Condition> objectConditions = task.getConditions();
+        if ((objectConditions == null && this.conditions != null) || (objectConditions != null && this.conditions == null)) {
+            return false;
+        }
+        if (objectConditions.size() != this.conditions.size() ) {
+            return false;
+        }
+        for(int i = 0; i < objectConditions.size();i++) {
+            if(!this.conditions.get(i).equals(objectConditions.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void notifyAboutTask() {
         // TODO notivication of User  (NotificationManager.class /TaskManager.class)
     }

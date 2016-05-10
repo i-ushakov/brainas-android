@@ -3,9 +3,8 @@ package net.brainas.android.app.infrustructure;
 import android.util.Log;
 import android.support.v4.util.Pair;
 
-
-import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
+import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -15,9 +14,12 @@ import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -27,14 +29,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
@@ -53,85 +58,23 @@ public class SyncHelper {
 
     static String lineEnd = "\r\n";
     static String boundary =  "*****";
-    static String xmlOutDirPath = "/app_sync/xml/out";
 
     private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
     private TaskDbHelper taskDbHelper;
+    private ServicesDbHelper servicesDbHelper;
+    private int accountId;
 
-    public SyncHelper (TasksManager tasksManager, TaskChangesDbHelper taskChangesDbHelper, TaskDbHelper taskDbHelper) {
+    public SyncHelper (TasksManager tasksManager,
+                       TaskChangesDbHelper taskChangesDbHelper,
+                       TaskDbHelper taskDbHelper,
+                       ServicesDbHelper servicesDbHelper,
+                       int accountId) {
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
         this.taskDbHelper = taskDbHelper;
-    }
-
-
-    /*
-     * Getting all changes that still isn't synchronized with the server in format of XML-String
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * <changedTasks>
-     *     <changedTask globalId="1" id="1">
-     *         <message>message</message>
-     *          <change>
-     *              <status>UPDATED</status>
-     *              <changeDatetime>2016-02-12 10:14:41</changeDatetime>
-     *          </change>
-     *     </changedTask>
-     * </changedTasks>
-     */
-    public String getAllChangesInXML(int accountId)
-            throws IOException, JSONException, ParserConfigurationException, TransformerException {
-
-        String allChangesInXML;
-
-        HashMap<Long, android.support.v4.util.Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangedTasks(accountId);
-
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-        Element root = doc.createElement("changes");
-        doc.appendChild(root);
-        Element changedTasksEl = doc.createElement("changedTasks");
-        root.appendChild(changedTasksEl);
-
-        Iterator it = tasksChanges.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry)it.next();
-                long localId = (long) pair.getKey();
-                Pair<String, String> change = (Pair<String, String>) pair.getValue();
-
-                Task task = tasksManager.getTaskByLocalId(localId);
-                Element changedTaskEl;
-                if (task != null) {
-                    changedTaskEl = InfrustructureHelper.taskToXML(doc, task, "changedTask");
-                } else {
-                    Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(localId);
-                    if (globalId != 0 && change.first.equals("DELETED")) {
-                        changedTaskEl = doc.createElement("changedTask");
-                        changedTaskEl.setAttribute("globalId", globalId.toString());
-                        changedTaskEl.setAttribute("id", Long.toString(localId));
-                    } else {
-                        // We don't need send info about the deleted task, that is not known for server
-                        taskChangesDbHelper.uncheckFromSync(localId);
-                        continue;
-                    }
-                }
-                Element changeEl = doc.createElement("change");
-                Element statusEl = doc.createElement("status");
-                statusEl.setTextContent(change.first);
-                changeEl.appendChild(statusEl);
-                Element datetimeEl = doc.createElement("changeDatetime");
-                datetimeEl.setTextContent(change.second);
-                changeEl.appendChild(datetimeEl);
-                changedTaskEl.appendChild(changeEl);
-                changedTasksEl.appendChild(changedTaskEl);
-            }
-
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        transformer.transform(new DOMSource(doc), result);
-        allChangesInXML = writer.toString();
-
-        return allChangesInXML;
+        this.servicesDbHelper = servicesDbHelper;
+        this.accountId =  accountId;
     }
 
     public static String sendAllChanges(File allChangesInXML) throws IOException {
@@ -142,18 +85,6 @@ public class SyncHelper {
                 connection.getOutputStream());
 
         request.writeBytes("--" + boundary + lineEnd);
-
-        /*if (initSync) {
-            // set initSync param
-            String initSync = "true";
-            request.writeBytes("Content-Disposition: form-data; name=\"initSync\"" + lineEnd);
-            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + initSync.length() + lineEnd);
-            request.writeBytes(lineEnd);
-            request.writeBytes(initSync);
-            request.writeBytes(lineEnd);
-            request.writeBytes("--" + boundary + lineEnd);
-        }*/
 
         if (SynchronizationService.initSyncTime != null) {
             // set initSync param
@@ -218,61 +149,263 @@ public class SyncHelper {
         }
 
         return response;
-
     }
 
-    public void handleResultOfSyncWithServer(Document xmlDocument) {
-        Element synchronizedObjectsEl = (Element)xmlDocument.getElementsByTagName("synchronizedObjects").item(0);
-        // Synchronized Tasks
-        NodeList synchronizedTasks = synchronizedObjectsEl.getElementsByTagName("synchronizedTask");
-        if (synchronizedTasks != null) {
-            for (int i = 0; i < synchronizedTasks.getLength(); ++i) {
-                Element synchronizedTaskEl = (Element) synchronizedTasks.item(i);
-                long localTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("localId").item(0).getTextContent());
-                long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
-                if (localTaskId != 0) {
-                    Task task = tasksManager.getTaskByLocalId(localTaskId);
-                    // task can be null if user deleted it while synchronisation
-                    if (task != null) {
-                        task.setGlobalId(globalTaskId);
-                        tasksManager.saveTask(task, false, false);
-                        taskChangesDbHelper.uncheckFromSync(localTaskId);
+    /**
+     *  Getting all changes that still isn't synchronized with the server in format of XML-String
+     *
+     * @param accountId - user account id
+     * @return allChangesInXML - string with all changes that must be synchronized with
+     */
+    public String getAllChangesInXML(int accountId)
+            throws IOException, JSONException, ParserConfigurationException, TransformerException {
+
+        String allChangesInXML;
+
+        HashMap<Long, android.support.v4.util.Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangedTasks(accountId);
+
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+        Element root = doc.createElement("changes");
+        doc.appendChild(root);
+        Element changedTasksEl = doc.createElement("changedTasks");
+        root.appendChild(changedTasksEl);
+
+        Iterator it = tasksChanges.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry)it.next();
+                long localId = (long) pair.getKey();
+                Pair<String, String> change = (Pair<String, String>) pair.getValue();
+
+                Task task = tasksManager.getTaskByLocalId(localId);
+                Element changedTaskEl;
+                if (task != null) {
+                    changedTaskEl = TaskHelper.taskToXML(doc, task, "changedTask");
+                } else {
+                    Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(localId);
+                    if (globalId != 0 && change.first.equals("DELETED")) {
+                        changedTaskEl = doc.createElement("changedTask");
+                        changedTaskEl.setAttribute("globalId", globalId.toString());
+                        changedTaskEl.setAttribute("id", Long.toString(localId));
+                    } else {
+                        // We don't need send info about the deleted task, that is not known for server
+                        taskChangesDbHelper.uncheckFromSync(localId);
+                        continue;
+                    }
+                }
+                Element changeEl = doc.createElement("change");
+                Element statusEl = doc.createElement("status");
+                statusEl.setTextContent(change.first);
+                changeEl.appendChild(statusEl);
+                Element datetimeEl = doc.createElement("changeDatetime");
+                datetimeEl.setTextContent(change.second);
+                changeEl.appendChild(datetimeEl);
+                changedTaskEl.appendChild(changeEl);
+                changedTasksEl.appendChild(changedTaskEl);
+            }
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        transformer.transform(new DOMSource(doc), result);
+        allChangesInXML = writer.toString();
+
+        return allChangesInXML;
+    }
+
+    /**
+     *  Handle response from server
+     *
+     * @param response - xml string with response from server
+     */
+    public void handleResponseFromServer(String response) {
+        JSONObject syncDate = null;
+        JSONObject synchronizedObjects = null;
+        ArrayList<Integer> deletedTasksFromServer = null;
+        ArrayList<Task> updatedTasksFromServer = null;
+
+        // parse response from server
+        if (response != null) {
+            Log.i(TAG, response);
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                InputSource is = new InputSource(new StringReader(response));
+                Document xmlDocument = builder.parse(is);
+                syncDate = parseResponse(xmlDocument);
+            } catch (ParserConfigurationException | IOException | SAXException |JSONException e) {
+                Log.e(TAG, "Cannot parse xml-document that gotten from server");
+                e.printStackTrace();
+                return;
+            }
+            if (syncDate == null) {
+                return;
+            }
+
+            try {
+                synchronizedObjects = (JSONObject)syncDate.get("synchronizedObjects");
+                deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
+                updatedTasksFromServer = (ArrayList<Task>)syncDate.get("updatedTasks");
+                SynchronizationService.initSyncTime = (String) syncDate.get("initSyncTime");
+                if ((String) syncDate.get("accessToken") != null) {
+                    SynchronizationService.accessToken = (String) syncDate.get("accessToken");
+                    servicesDbHelper.addServiceParam(SynchronizationService.SERVICE_NAME, "accessToken", SynchronizationService.accessToken);
+                    Log.v(TAG, "Access token was gotten :" + SynchronizationService.accessToken);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            // uncheck or remove synchronized tasks from sync List in local database, set globalId
+            try {
+                ArrayList<Pair<Long, Long>> synchronizedTasks = (ArrayList<Pair<Long, Long>>)synchronizedObjects.get("synchronizedTasks");
+                for (Pair<Long, Long> synchronizedTask : synchronizedTasks) {
+                    Long localTaskId = synchronizedTask.first;
+                    Long globalTaskId = synchronizedTask.second;
+                    if (localTaskId != 0) {
+                        Task task = tasksManager.getTaskByLocalId(localTaskId);
+                        // task can be null if user deleted it while synchronisation
+                        if (task != null) {
+                            task.setGlobalId(globalTaskId);
+                            tasksManager.saveTask(task, false, false);
+                            taskChangesDbHelper.uncheckFromSync(localTaskId);
+                        } else {
+                            taskChangesDbHelper.removeFromSync(globalTaskId);
+                        }
                     } else {
                         taskChangesDbHelper.removeFromSync(globalTaskId);
                     }
-                } else {
-                    taskChangesDbHelper.removeFromSync(globalTaskId);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            // set globalId for synchronized conditions
+            try {
+                ArrayList<Pair<Long, Long>> synchronizedConditions = (ArrayList<Pair<Long, Long>>)synchronizedObjects.get("synchronizedConditions");
+                for (Pair<Long, Long>synchronizedCondition : synchronizedConditions) {
+                    Long localConditionId = synchronizedCondition.first;
+                    Long globalConditionId = synchronizedCondition.second;
+                    if (localConditionId != 0 && globalConditionId != 0) {
+                        taskDbHelper.setConditionGlobalId(localConditionId, globalConditionId);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            // set globalId for synchronized events
+            try {
+                ArrayList<Pair<Long, Long>> synchronizedEvents = (ArrayList<Pair<Long, Long>>)synchronizedObjects.get("synchronizedEvents");
+                for (Pair<Long, Long>synchronizedEvent : synchronizedEvents) {
+                    Long localEventId = synchronizedEvent.first;
+                    Long globalEventId = synchronizedEvent.second;
+                    if (localEventId != 0 && globalEventId != 0) {
+                        taskDbHelper.setEventGlobalId(localEventId, globalEventId);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+            // update tasks in DB
+            for(Task updatedTask : updatedTasksFromServer) {
+                tasksManager.saveTask(updatedTask);
+            }
+
+            // delete tasks in DB (that previously were deleted on server)
+            for(Integer deletedTaskId : deletedTasksFromServer) {
+                tasksManager.deleteTaskByGlobalId(deletedTaskId);
+            }
+            return;
+        }
+        return;
+    }
+
+    private  JSONObject parseResponse(Document responseXmlDocument) throws ParserConfigurationException, IOException, SAXException, JSONException {
+        JSONObject syncDate = new JSONObject();
+        List<Task> updatedTasks;
+        ArrayList<Integer> deletedTasks;
+
+        syncDate.put("synchronizedObjects", retriveSynchronizedObjects(responseXmlDocument));
+
+        syncDate.put("initSyncTime", retrieveTimeOfInitialSync(responseXmlDocument));
+        syncDate.put("accessToken", retrieveAccessToken(responseXmlDocument));
+
+        updatedTasks = retrieveUpdatedTasksFromServer(responseXmlDocument);
+        syncDate.put("updatedTasks", updatedTasks);
+
+        deletedTasks = retrieveDeletedTasksFromServer(responseXmlDocument, "deletedTask");
+        syncDate.put("deletedTasks", deletedTasks);
+
+        return syncDate;
+    }
+
+    /**
+     * This function parsing and handling synchronizer section
+     * in xml Document that was got from server. It uncheck objects from sync list
+     * and save global ids
+     *
+     * @param xmlDocument - xml got from server
+     * @return synchronizedObjects - JSON with arrays of pairs local and global ids
+     */
+    public JSONObject retriveSynchronizedObjects(Document xmlDocument) {
+        JSONObject synchronizedObjects = new JSONObject();
+        ArrayList<Pair<Long,Long>> synchronizedTasks = new ArrayList<>();
+        Element synchronizedObjectsEl = (Element)xmlDocument.getElementsByTagName("synchronizedObjects").item(0);
+        // Synchronized Tasks
+        NodeList synchronizedTasksNL = synchronizedObjectsEl.getElementsByTagName("synchronizedTask");
+        if (synchronizedTasksNL != null) {
+            for (int i = 0; i < synchronizedTasksNL.getLength(); ++i) {
+                Element synchronizedTaskEl = (Element) synchronizedTasksNL.item(i);
+                long localTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("localId").item(0).getTextContent());
+                long globalTaskId = Long.valueOf(synchronizedTaskEl.getElementsByTagName("globalId").item(0).getTextContent());
+                synchronizedTasks.add(new Pair<>(localTaskId, globalTaskId));
             }
         }
 
         // Synchronized Conditions
-        NodeList synchronizedConditions = synchronizedObjectsEl.getElementsByTagName("synchronizedCondition");
-        if (synchronizedConditions != null) {
-            for (int i = 0; i < synchronizedConditions.getLength(); ++i) {
-                Element synchronizedConditionEl = (Element) synchronizedConditions.item(i);
+        ArrayList<Pair<Long,Long>> synchronizedConditions = new ArrayList<Pair<Long,Long>>();
+        NodeList synchronizedConditionsND = synchronizedObjectsEl.getElementsByTagName("synchronizedCondition");
+        if (synchronizedConditionsND != null) {
+            for (int i = 0; i < synchronizedConditionsND.getLength(); ++i) {
+                Element synchronizedConditionEl = (Element) synchronizedConditionsND.item(i);
                 long localConditionId = Long.valueOf(synchronizedConditionEl.getElementsByTagName("localId").item(0).getTextContent());
                 long globalConditionId = Long.valueOf(synchronizedConditionEl.getElementsByTagName("globalId").item(0).getTextContent());
-                if (localConditionId != 0 && globalConditionId != 0) {
-                    taskDbHelper.setConditionGlobalId(localConditionId, globalConditionId);
-                }
+                synchronizedConditions.add(new Pair<>(localConditionId,globalConditionId));
+
             }
         }
 
         // Synchronized Events
-        NodeList synchronizedEvents = synchronizedObjectsEl.getElementsByTagName("synchronizedEvent");
-        if (synchronizedEvents != null) {
-            for (int i = 0; i < synchronizedEvents.getLength(); ++i) {
-                Element synchronizedEventEl = (Element) synchronizedEvents.item(i);
-                long localConditionId = Long.valueOf(synchronizedEventEl.getElementsByTagName("localId").item(0).getTextContent());
-                long globalConditionId = Long.valueOf(synchronizedEventEl.getElementsByTagName("globalId").item(0).getTextContent());
-                if (localConditionId != 0 && globalConditionId != 0) {
-                    taskDbHelper.setEventGlobalId(localConditionId, globalConditionId);
-                }
+        ArrayList<Pair<Long,Long>> synchronizedEvents = new ArrayList<Pair<Long,Long>>();
+        NodeList synchronizedEventsND = synchronizedObjectsEl.getElementsByTagName("synchronizedEvent");
+        if (synchronizedEventsND != null) {
+            for (int i = 0; i < synchronizedEventsND.getLength(); ++i) {
+                Element synchronizedEventEl = (Element) synchronizedEventsND.item(i);
+                long localEventId = Long.valueOf(synchronizedEventEl.getElementsByTagName("localId").item(0).getTextContent());
+                long globalEventId = Long.valueOf(synchronizedEventEl.getElementsByTagName("globalId").item(0).getTextContent());
+                synchronizedEvents.add(new Pair<>(localEventId,globalEventId));
             }
         }
+
+        try {
+            synchronizedObjects.put("synchronizedTasks", synchronizedTasks);
+            synchronizedObjects.put("synchronizedConditions", synchronizedConditions);
+            synchronizedObjects.put("synchronizedEvents", synchronizedEvents);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return synchronizedObjects;
     }
 
+    /**
+     * Retrieve TimeOfInitialSync from server's xml response
+     *
+     * @param xmlDocument - xml got from server
+     * @return accessToken
+     */
     public String retrieveTimeOfInitialSync(Document xmlDocument) {
         String initSyncTime;
         Element initSyncTimeEl = (Element)xmlDocument.getElementsByTagName("initSyncTime").item(0);
@@ -285,6 +418,13 @@ public class SyncHelper {
         }
     }
 
+    /**
+     * Comare dattime of server's changes with datetime of local last changes
+     *
+     * @param globalId
+     * @param timeOfServerChanges
+     * @return accessToken
+     */
     public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
         Task task = tasksManager.getTaskByGlobalId(globalId);
         if (task != null) {
@@ -303,6 +443,12 @@ public class SyncHelper {
         return false;
     }
 
+    /**
+     * Retrieving access token from xml response from server
+     *
+     * @param xmlDocument - xml-document that was got from server
+     * @return accessToken
+     */
     public String retrieveAccessToken(Document xmlDocument) {
         String accessToken;
 
@@ -320,7 +466,14 @@ public class SyncHelper {
         }
     }
 
-    public void handlingOfTasksFromServer(Document xmlDocument, int accountId) {
+    /**
+     * Retrieving an updated and created tasks from xml response from server
+     *
+     * @param xmlDocument - xml-document that was got from server
+     * @return updatedTasks
+     */
+    public ArrayList<Task> retrieveUpdatedTasksFromServer(Document xmlDocument) {
+        ArrayList<Task> updatedTasks = new ArrayList<>();
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
         for (int i = 0; i < taskList.getLength(); ++i) {
@@ -335,7 +488,7 @@ public class SyncHelper {
             String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
             Task task = tasksManager.getTaskByGlobalId(globalId);
             if (task == null) {
-                task = new Task(accountId, message);
+                task = new Task(this.accountId, message);
                 task.setGlobalId(globalId);
                 tasksManager.saveTask(task, false, false);
             } else {
@@ -352,8 +505,8 @@ public class SyncHelper {
             NodeList conditionsNL = taskEl.getElementsByTagName("condition");
             for (int j = 0; j < conditionsNL.getLength(); ++j) {
                 Element conditionEl = (Element)conditionsNL.item(j);
-                Integer conditionId = Integer.parseInt(conditionEl.getAttribute("id"));
-                Condition condition = new Condition(null,conditionId, task.getId());
+                Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("id"));
+                Condition condition = new Condition(null,conditionGlobalId, task.getId());
                 NodeList events = conditionEl.getElementsByTagName("event");
                 Event event = null;
                 Element eventEl = null;
@@ -380,13 +533,24 @@ public class SyncHelper {
                 conditions.add(condition);
             }
             task.setConditions(conditions);
-            tasksManager.saveTask(task);
+            updatedTasks.add(task);
         }
+        return updatedTasks;
     }
 
-    public ArrayList<Integer> retriveDeletedTasks(Document xmlDocument, String type) throws JSONException {
+    /**
+     * Parsing the xml-document that was got from server
+     * and retrieving list with global ids of deleted tasks.
+     * We check the relevance of server changes (deleting) before add to final list
+     *
+     * @param xmlDocument - xml-document that was got from server
+     * @param tagName - name of tag for deleted tasks in xml
+     * @return deletedTasks
+     * @throws JSONException
+     */
+    public ArrayList<Integer> retrieveDeletedTasksFromServer(Document xmlDocument, String tagName) throws JSONException {
         ArrayList<Integer> deletedTasks = new ArrayList<Integer>();
-        NodeList deletedTasksList = xmlDocument.getElementsByTagName(type);
+        NodeList deletedTasksList = xmlDocument.getElementsByTagName(tagName);
         for (int i = 0; i < deletedTasksList.getLength(); ++i) {
             Element deletedTaskEl = (Element)deletedTasksList.item(i);
             int globalId = Integer.parseInt(deletedTaskEl.getAttribute("global-id"));
@@ -396,13 +560,5 @@ public class SyncHelper {
             }
         }
         return deletedTasks;
-    }
-
-    public void deleteTasksFromDb(ArrayList<Integer> deletedTasks) {
-        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        TasksManager tasksManager = app.getTasksManager();
-        for(Integer deletedTaskId : deletedTasks) {
-            tasksManager.deleteTaskByGlobalId(deletedTaskId);
-        }
     }
 }

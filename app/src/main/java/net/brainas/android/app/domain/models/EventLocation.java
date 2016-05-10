@@ -41,6 +41,7 @@ public class EventLocation extends Event {
         this.lng = Double.parseDouble(eventEl.getElementsByTagName("lng").item(0).getTextContent());
         this.radius = Double.parseDouble(eventEl.getElementsByTagName("radius").item(0).getTextContent());
         if (eventEl.getElementsByTagName("address") != null) {
+            if ( eventEl.getElementsByTagName("address").item(0) != null)
             this.address = eventEl.getElementsByTagName("address").item(0).getTextContent();
         }
     }
@@ -86,10 +87,6 @@ public class EventLocation extends Event {
         this.address = address;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     @Override
     public boolean isTriggered(ActivationService activationService) {
         Location location = activationService.getCurrentLocation();
@@ -127,21 +124,64 @@ public class EventLocation extends Event {
     }
 
 
+    public void setLat(Double lat) {
+        this.lat = lat;
+    }
     public Double getLat() {
         return this.lat;
+    }
+
+    public void setLng(Double lng) {
+        this.lng = lng;
     }
 
     public Double getLng() {
         return this.lng;
     }
 
+    public void setRadius(Double radius) {
+        this.radius = radius;
+    }
+
     public Double getRadius() {
         return this.radius;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getAddress() {return  this.address;}
 
     public boolean isExecutable() {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) return false;
+        if (object == this) return true;
+        if (!(object instanceof EventLocation)) return false;
+        EventLocation event = (EventLocation) object;
+
+        // check type
+        if (!event.getType().equals(this.getType())) {
+            return false;
+        }
+
+        // check params
+        if (!event.getAddress().equals(this.address)) {
+            return false;
+        }
+        if (!event.getRadius().equals(this.radius)) {
+            return false;
+        }
+        if (!event.getLng().equals(this.lng)) {
+            return false;
+        }
+        if (!event.getLat().equals(this.lat)) {
+            return false;
+        }
         return true;
     }
 

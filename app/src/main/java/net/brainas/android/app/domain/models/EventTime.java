@@ -129,7 +129,29 @@ public class EventTime extends Event {
         return true;
     }
 
-    private Calendar getCalendarFromString(String datetimeStr, Integer offset) {
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) return false;
+        if (object == this) return true;
+        if (!(object instanceof EventTime)) return false;
+        EventTime event = (EventTime) object;
+
+        // check type
+        if (!event.getType().equals(this.getType())) {
+            return false;
+        }
+
+        // check params
+        if (!event.getOffset().equals(this.offset)) {
+            return false;
+        }
+        if (!event.getDatetime().equals(this.datetime)) {
+            return false;
+        }
+        return true;
+    }
+
+    public Calendar getCalendarFromString(String datetimeStr, Integer offset) {
         // TODO Using offset to work with time zone
         Calendar calendar = Calendar.getInstance();
         try {

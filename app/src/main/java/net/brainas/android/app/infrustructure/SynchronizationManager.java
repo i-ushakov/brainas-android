@@ -27,13 +27,14 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    //static String serverUrl = "http://192.168.1.104/backend/web/connection/";
+    //static String serverUrl = "http://192.168.1.103/backend/web/connection/";
     static String serverUrl = "http://brainas.net/backend/web/connection/";
 
     static String TAG = "SYNC";
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
+
     private ScheduledFuture<?> syncThreadHandle = null;
 
     public BrainasApp app;

@@ -11,6 +11,10 @@ import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
+import net.brainas.android.app.domain.models.Task;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,11 +22,62 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 /**
  * Created by innok on 3/1/2016.
  */
 public class TaskHelper {
     public TaskHelper() {}
+
+    public static Element taskToXML(Document doc, Task task, String elementName) throws ParserConfigurationException {
+        if (elementName ==  null) {
+            elementName = "task";
+        }
+        Element taskEl = doc.createElement(elementName);
+        taskEl.setAttribute("id", ((Long)task.getId()).toString());
+        taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
+        // message
+        Element messageEl = doc.createElement("message");
+        messageEl.setTextContent(task.getMessage());
+        taskEl.appendChild(messageEl);
+
+        // description
+        Element descriptionEl = doc.createElement("description");
+        descriptionEl.setTextContent(task.getDescription());
+        taskEl.appendChild(descriptionEl);
+
+        // conditions
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        Element conditionsEl = doc.createElement("conditions");
+        if (conditions != null) {
+            for (Condition condition : conditions) {
+                Element conditionEl = doc.createElement("condition");
+                conditionEl.setAttribute("localId", Long.toString(condition.getId()));
+                conditionEl.setAttribute("globalId", Long.toString(condition.getGlobalId()));
+                ArrayList<Event> events = condition.getEvents();
+                Element eventsEl = doc.createElement("events");
+                for (Event event : events) {
+                    Element eventEl = doc.createElement("event");
+                    eventEl.setAttribute("localId", Long.toString(event.getId()));
+                    eventEl.setAttribute("globalId", Long.toString(event.getGlobalId()));
+                    Element eventTypeEl = doc.createElement("type");
+                    eventTypeEl.setTextContent(event.getType().toString());
+                    eventEl.appendChild(eventTypeEl);
+                    Element eventParamsEl = doc.createElement("params");
+                    eventParamsEl.setTextContent(event.getJSONStringWithParams());
+                    eventEl.appendChild(eventParamsEl);
+                    eventsEl.appendChild(eventEl);
+                }
+                conditionEl.appendChild(eventsEl);
+                conditionsEl.appendChild(conditionEl);
+            }
+        }
+        taskEl.appendChild(conditionsEl);
+
+        return taskEl;
+    }
+
     public String getEventInfo(Event event) {
         String info = "";
         Event.TYPES eventType = event.getType();
