@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppException;
+import net.brainas.android.app.R;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.Task;
@@ -14,8 +15,14 @@ import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,6 +30,14 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
@@ -83,10 +98,22 @@ public class InfrustructureHelper {
         return file;
     }
 
-    public static HttpURLConnection createHttpMultipartConn(String url) throws IOException {
+    public static HttpsURLConnection createHttpMultipartConn(String url) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, KeyManagementException {
+        KeyStore trustStore = KeyStore.getInstance("BKS");
+        InputStream trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
+        trustStore.load(trustStoreStream, (BrainasApp.getAppContext()).getResources().getString(R.string.key_store_pass_for_cert).toCharArray());
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
         URL urlObj = new URL(url);
 
-        HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) urlObj.openConnection();
+        connection.setSSLSocketFactory(sslContext.getSocketFactory());
+        connection.setHostnameVerifier(new CustomHostnameVerifier());
         connection.setRequestMethod("POST");
 
         connection.setRequestProperty("Connection", "Keep-Alive");
@@ -97,6 +124,29 @@ public class InfrustructureHelper {
                 "Content-Type", "multipart/form-data;boundary=" + SyncHelper.boundary);
 
         return connection;
+    }
+
+
+
+    public static class CustomHostnameVerifier implements HostnameVerifier {
+        String [] allowHosts = {
+                "192.168.1.101",
+                "192.168.1.102",
+                "192.168.1.103",
+                "192.168.1.104",
+                "192.168.1.105",
+                "brainas.net"
+        };
+
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            for (String allowHost : allowHosts) {
+                if (hostname.equalsIgnoreCase(allowHost)) {
+                   return true;
+                }
+            }
+          return false;
+        }
     }
 
     /*
