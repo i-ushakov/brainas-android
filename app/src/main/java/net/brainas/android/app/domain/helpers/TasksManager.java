@@ -93,8 +93,8 @@ public class TasksManager {
     }
 
     public ArrayList<Task> getTasksFromDB(Map<String, Object> params, int accountId) {
-        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        //BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        //TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         ArrayList<Task> tasks = taskDbHelper.getTasks(params, accountId);
         tasks = objectsMapping(tasks);
         /* TODO */
@@ -204,16 +204,16 @@ public class TasksManager {
     }
 
     public void deleteTaskByLocalId(int taskId) {
-        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        //BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        //TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         taskDbHelper.deleteTaskById(taskId);
         //taskDbHelper.close();
     }
 
     public void deleteTaskByGlobalId(int taskGlobalId) {
-        BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        TaskDbHelper taskDbHelper = app.getTaskDbHelper();
-        TaskChangesDbHelper taskChangesDbHelper = app.getTasksChangesDbHelper();
+        //BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
+        //TaskDbHelper taskDbHelper = app.getTaskDbHelper();
+        //TaskChangesDbHelper taskChangesDbHelper = app.getTasksChangesDbHelper();
         long localIdOfDeletedTask = taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
         taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
     }
