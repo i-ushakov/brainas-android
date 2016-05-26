@@ -18,6 +18,8 @@
     <string name="activity_accounts_title">Accounts</string>
     <string name="accounts_header_signedin">You are signed in via your google account</string>
     <string name="accounts_header_not_signedin">You are not signed in to brainas app</string>
+    <string name="accounts_offline_mode_warning">Offline mode!</string>
+
 
     <!-- EditEventActivity -->
     <string name="activity_event_title">Event</string>

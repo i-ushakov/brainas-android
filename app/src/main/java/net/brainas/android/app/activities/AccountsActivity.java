@@ -18,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 
 /**
@@ -36,6 +37,7 @@ public class AccountsActivity extends AppCompatActivity {
     private LinearLayout accountInfoBlock;
     private Button singInButton;
     private TextView accountActivityTitle;
+    private LinearLayout offlineModeWarning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,7 @@ public class AccountsActivity extends AppCompatActivity {
         singInButton = (Button) findViewById(R.id.sing_in_button);
         accountNameValue = (TextView) findViewById(R.id.account_name_value);
         userNameValue = (TextView) findViewById(R.id.user_name_value);
+        offlineModeWarning = (LinearLayout) findViewById(R.id.offline_mode_warning);
 
         renderContent();
 
@@ -130,6 +133,9 @@ public class AccountsActivity extends AppCompatActivity {
             accountNameValue.setText(app.getAccountsManager().getUserAccount().getAccountName());
             userNameValue.setText(app.getAccountsManager().getUserAccount().getPersonName());
             singInButton.setText("CHANGE ACCOUNT");
+            if(!NetworkHelper.isNetworkActive()) {
+                offlineModeWarning.setVisibility(View.VISIBLE);
+            }
         } else {
             accountActivityTitle.setText(R.string.accounts_header_not_signedin);
             accountInfoBlock.setVisibility(View.GONE);

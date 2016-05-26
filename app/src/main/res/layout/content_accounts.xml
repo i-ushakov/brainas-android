@@ -95,7 +95,27 @@
                 android:layout_marginTop="10dp" />
 
         </LinearLayout>
+    </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/offline_mode_warning"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:gravity="center"
+        android:layout_marginBottom="20dp">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_warning_white_24dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/accounts_offline_mode_warning"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            android:layout_marginLeft="2dp"/>
     </LinearLayout>
 
     <Button
