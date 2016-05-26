@@ -1,5 +1,6 @@
 package net.brainas.android.app;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -73,7 +74,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         userAccountDbHelper = new UserAccountDbHelper(appDbHelper);
         locationProvider = new LocationProvider(this);
         googleApiHelper = new GoogleApiHelper(context);
-        tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountsManager.getCurrentAccountId());
         taskHelper = new TaskHelper();
         activationManager = new ActivationManager();
         accountsManager.attach(activationManager);
@@ -83,11 +84,11 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public void updateAfterSingIn(UserAccount userAccount) {
-        tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
+        //tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
     }
 
     public void updateAfterSingOut() {
-        tasksManager = new TasksManager(taskDbHelper, null);
+        //tasksManager = new TasksManager(taskDbHelper, null);
     }
 
     @Override
@@ -109,7 +110,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public TasksManager getTasksManager() {
-        return this.tasksManager;
+        return new TasksManager(taskDbHelper, taskChangesDbHelper, accountsManager.getCurrentAccountId());
     }
 
     public TaskHelper getTaskHelper() {return this.taskHelper;}
@@ -159,8 +160,6 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
                 userAccountDbHelper.updateOrCreate(userAccount);
                 userAccount.setLocalAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
                 saveLastUsedAccountInPref();
-                //synchronizationManager.stopSynchronizationService();
-                //synchronizationManager.startSynchronizationService();
             }
         } else {
             this.userAccount = null;
@@ -207,6 +206,16 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         appVisible = false;
         notifyAboutSyncronization();
         Log.i(TAG, "App is NOT visable");
+    }
+
+    public boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void saveLastUsedAccountInPref() {

@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    //static String serverUrl = "http://192.168.1.103/backend/web/connection/";
+    //static String serverUrl = "https://192.168.1.101/backend/web/connection/";
     static String serverUrl = "http://brainas.net/backend/web/connection/";
 
     static String TAG = "SYNC";
@@ -69,10 +69,19 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
     }
 
     public void startSynchronizationService(Integer accountId, String accessCode) {
+        if (app.isMyServiceRunning(SynchronizationService.class)) {
+            registerSynchronizationServiceReceiver();
+            Log.i(TAG, "Service " + SynchronizationService.class + " already running");
+            return;
+        }
         Intent synchronizationService = new Intent(app.getBaseContext(), SynchronizationService.class);
         synchronizationService.putExtra("accountId", accountId);
         synchronizationService.putExtra("accessCode", accessCode);
         app.getBaseContext().startService(synchronizationService);
+        registerSynchronizationServiceReceiver();
+    }
+
+    public void registerSynchronizationServiceReceiver() {
         app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(SynchronizationService.BROADCAST_ACTION_SYNCHRONIZATION));
     }
 
