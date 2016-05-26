@@ -89,7 +89,9 @@ public class AccountsManager implements
         } else {
             userAccount = app.getLastUsedAccount();
             if (userAccount != null) {
+                hideProgressDialog();
                 app.setUserAccount(userAccount);
+                notifyAllObserversAboutSingIn();
                 Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
             } else {
                 Toast.makeText(activity, "You must to have an internet connection for start of using Brain Assistant's app.", Toast.LENGTH_LONG).show();
