@@ -169,7 +169,7 @@ public class EditEventActivity extends EditTaskActivity
         findViewById(R.id.eventTimePanel).setVisibility(View.VISIBLE);
         if (!initTime) {
             if (eventTime.getDatetime() == null) {
-                eventTime.setParams(Calendar.getInstance());
+                eventTime.setDatetime(Calendar.getInstance());
             }
             DatePicker pickerDate = (DatePicker)findViewById(R.id.pickerdate);
             pickerDate.init(
@@ -181,7 +181,7 @@ public class EditEventActivity extends EditTaskActivity
                         public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                             Calendar cal = Calendar.getInstance();
                             cal.set(year, monthOfYear, dayOfMonth);
-                            eventTime.setParams(cal);
+                            eventTime.setDatetime(cal);
                         }
                     }
             );

@@ -19,6 +19,7 @@ import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.LocationProvider;
 import net.brainas.android.app.infrustructure.ServicesDbHelper;
+import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
 import org.json.JSONException;
@@ -44,6 +45,7 @@ public class ActivationService extends Service {
 
     private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
+    private TaskChangesDbHelper taskChangesDbHelper;
     private TasksManager tasksManager;
     private ServicesDbHelper servicesDbHelper;
     private LocationProvider locationProvider;
@@ -59,6 +61,7 @@ public class ActivationService extends Service {
         appDbHelper = new AppDbHelper(this);
         taskDbHelper = new TaskDbHelper(appDbHelper);
         servicesDbHelper = new ServicesDbHelper(appDbHelper);
+        taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
         locationProvider = new LocationProvider(this);
         notificationManager = new NotificationController();
         this.registerReceiver(broadcastReceiver, new IntentFilter(BrainasApp.BROADCAST_ACTION_APP_VISABILITY_WAS_CHANGED));
@@ -79,7 +82,7 @@ public class ActivationService extends Service {
                 e.printStackTrace();
             }
         }
-        tasksManager = new TasksManager(taskDbHelper, accountId);
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountId);
 
         Log.i(TAG, "ActivationService was started for user with account id = " + accountId);
         initCheckConditionsInWL();

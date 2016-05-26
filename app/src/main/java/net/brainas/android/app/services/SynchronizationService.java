@@ -91,7 +91,7 @@ public class SynchronizationService extends Service {
             }
         }
 
-        tasksManager = new TasksManager(taskDbHelper, accountId);
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountId);
         syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, servicesDbHelper, accountId);
         startSynchronization();
         Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +

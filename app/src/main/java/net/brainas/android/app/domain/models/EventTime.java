@@ -67,7 +67,7 @@ public class EventTime extends Event {
         return params.toString();
     }
 
-    public void setParams(Calendar datetime) {
+    public void setDatetime(Calendar datetime) {
         this.datetime = datetime;
         this.offset = datetime.getTimeZone().getOffset(datetime.getTime().getTime()) / (1000 * 60);
     }

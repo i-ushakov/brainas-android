@@ -78,8 +78,10 @@ public abstract class Event {
     public long getId() {
         return id;
     }
-    public void setGlobalId(int globalId) {
+
+    public Event setGlobalId(int globalId) {
         this.globalId = globalId;
+        return this;
     }
 
     public int getGlobalId() {
@@ -94,8 +96,9 @@ public abstract class Event {
         return conditionId;
     }
 
-    public void setParent(Condition condition) {
+    public Event setParent(Condition condition) {
         this.parent = condition;
+        return this;
     }
 
     public Condition getParent() {

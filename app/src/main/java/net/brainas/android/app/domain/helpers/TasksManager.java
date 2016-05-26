@@ -22,6 +22,7 @@ public class TasksManager {
 
     private BrainasApp app;
     private TaskDbHelper taskDbHelper;
+    private TaskChangesDbHelper taskChangesDbHelper;
     private HashMap<Long, Task> tasksHashMap = new HashMap<>();
     private Integer accountId = null;
 
@@ -35,9 +36,10 @@ public class TasksManager {
     private ArrayList<Task> waitingList = new ArrayList<>();
     private ArrayList<Task> activeList = new ArrayList<>();
 
-    public TasksManager(TaskDbHelper taskDbHelper, Integer accountId) {
+    public TasksManager(TaskDbHelper taskDbHelper, TaskChangesDbHelper taskChangesDbHelper, Integer accountId) {
         this.accountId = accountId;
         this.taskDbHelper = taskDbHelper;
+        this.taskChangesDbHelper = taskChangesDbHelper;
     }
 
     public void addTasksToWaitingList(List<Task> tasks) {
@@ -246,12 +248,12 @@ public class TasksManager {
 
     public void saveTask(Task task, boolean needToNotify, boolean needToLoggingChanges){
         task.checkStatus();
-        TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
+        //TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(task);
         task.setId(taskId);
 
         if (needToLoggingChanges) {
-            TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
+            //TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
             taskChangesDbHelper.loggingChanges(task, this.accountId);
         }
         if (needToNotify) {

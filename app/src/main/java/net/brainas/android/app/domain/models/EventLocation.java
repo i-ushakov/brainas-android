@@ -124,31 +124,35 @@ public class EventLocation extends Event {
     }
 
 
-    public void setLat(Double lat) {
+    public EventLocation setLat(Double lat) {
         this.lat = lat;
+        return this;
     }
     public Double getLat() {
         return this.lat;
     }
 
-    public void setLng(Double lng) {
+    public EventLocation setLng(Double lng) {
         this.lng = lng;
+        return this;
     }
 
     public Double getLng() {
         return this.lng;
     }
 
-    public void setRadius(Double radius) {
+    public EventLocation setRadius(Double radius) {
         this.radius = radius;
+        return this;
     }
 
     public Double getRadius() {
         return this.radius;
     }
 
-    public void setAddress(String address) {
+    public EventLocation setAddress(String address) {
         this.address = address;
+        return this;
     }
 
     public String getAddress() {return  this.address;}
@@ -170,8 +174,14 @@ public class EventLocation extends Event {
         }
 
         // check params
-        if (!event.getAddress().equals(this.address)) {
-            return false;
+        if (event.getAddress() != null) {
+            if (!event.getAddress().equals(this.address)) {
+                return false;
+            }
+        } else {
+            if (this.address != null) {
+                return false;
+            }
         }
         if (!event.getRadius().equals(this.radius)) {
             return false;

@@ -32,12 +32,7 @@ public class AllTasksSync extends AsyncTask<File, Void, String> {
         File allChangesInXMLFile;
         allChangesInXMLFile = files[0];
         // send changes to server for processing
-        try {
-            response = SyncHelper.sendAllChanges(allChangesInXMLFile);
-        } catch (IOException e) {
-            Log.e(TAG, "Exchange of sync data has failed");
-            e.printStackTrace();
-        }
+        response = SyncHelper.sendAllChanges(allChangesInXMLFile);
 
         return response;
     }

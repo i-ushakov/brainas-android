@@ -32,6 +32,10 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -77,75 +82,94 @@ public class SyncHelper {
         this.accountId =  accountId;
     }
 
-    public static String sendAllChanges(File allChangesInXML) throws IOException {
+    public static String sendAllChanges(File allChangesInXML)  {
         String response = "";
-        HttpURLConnection connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "get-tasks");
+        HttpsURLConnection connection = null;
+        try {
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "get-tasks");
 
-        DataOutputStream request = new DataOutputStream(
-                connection.getOutputStream());
+            DataOutputStream request = new DataOutputStream(
+                    connection.getOutputStream());
 
-        request.writeBytes("--" + boundary + lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
 
-        if (SynchronizationService.initSyncTime != null) {
-            // set initSync param
-            String initSync = "true";
-            request.writeBytes("Content-Disposition: form-data; name=\"initSyncTime\"" + lineEnd);
-            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + SynchronizationService.initSyncTime.length() + lineEnd);
+            if (SynchronizationService.initSyncTime != null) {
+                // set initSync param
+                String initSync = "true";
+                request.writeBytes("Content-Disposition: form-data; name=\"initSyncTime\"" + lineEnd);
+                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.initSyncTime.length() + lineEnd);
+                request.writeBytes(lineEnd);
+                request.writeBytes(SynchronizationService.initSyncTime);
+                request.writeBytes(lineEnd);
+                request.writeBytes("--" + boundary + lineEnd);
+            }
+
+            // set user identity token
+            if (SynchronizationService.accessToken != null) {
+                request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
+                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
+                request.writeBytes(lineEnd);
+                request.writeBytes(SynchronizationService.accessToken);
+                request.writeBytes(lineEnd);
+                request.writeBytes("--" + boundary + lineEnd);
+            } else {
+                request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
+                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
+                request.writeBytes(lineEnd);
+                request.writeBytes(SynchronizationService.accessCode);
+                request.writeBytes(lineEnd);
+                request.writeBytes("--" + boundary + lineEnd);
+            }
+
+            // attach file with all changes
+            request.writeBytes("Content-Disposition: form-data; " +
+                    "name=\"" + "all_changes_xml" + "\"" +
+                    "; filename=\"" + allChangesInXML.getName() + "\"" + lineEnd);
+            request.writeBytes("Content-Type: text/xml" + lineEnd);
+            request.writeBytes("Content-Length: " + allChangesInXML.length() + lineEnd);
             request.writeBytes(lineEnd);
-            request.writeBytes(SynchronizationService.initSyncTime);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(allChangesInXML));
+            byte[] buffer = new byte[(int) allChangesInXML.length()];
+            bis.read(buffer);
+            request.write(buffer);
             request.writeBytes(lineEnd);
             request.writeBytes("--" + boundary + lineEnd);
+            bis.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Sending sync data to server has failed");
+            e.printStackTrace();
+            return null;
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
         }
-
-        // set user identity token
-        if (SynchronizationService.accessToken != null) {
-            request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
-            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
-            request.writeBytes(lineEnd);
-            request.writeBytes(SynchronizationService.accessToken);
-            request.writeBytes(lineEnd);
-            request.writeBytes("--" + boundary + lineEnd);
-        } else {
-            request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
-            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-            request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
-            request.writeBytes(lineEnd);
-            request.writeBytes(SynchronizationService.accessCode);
-            request.writeBytes(lineEnd);
-            request.writeBytes("--" + boundary + lineEnd);
-        }
-
-
-        // attach file with all changes
-        request.writeBytes("Content-Disposition: form-data; " +
-                "name=\"" + "all_changes_xml" + "\"" +
-                "; filename=\"" + allChangesInXML.getName() + "\"" + lineEnd);
-        request.writeBytes("Content-Type: text/xml" + lineEnd);
-        request.writeBytes("Content-Length: " + allChangesInXML.length() + lineEnd);
-        request.writeBytes(lineEnd);
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(allChangesInXML));
-        byte[] buffer = new byte[(int) allChangesInXML.length()];
-        bis.read(buffer);
-        request.write(buffer);
-        request.writeBytes(lineEnd);
-        request.writeBytes("--" + boundary + lineEnd);
-        bis.close();
 
         // parse server response
-        if (((HttpURLConnection)connection).getResponseCode() == 200) {
-            InputStream stream = ((HttpURLConnection) connection).getInputStream();
-            InputStreamReader isReader = new InputStreamReader(stream);
-            BufferedReader br = new BufferedReader(isReader);
-            String line;
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                response += line + System.getProperty("line.separator");
+        try {
+            if (((HttpURLConnection)connection).getResponseCode() == 200) {
+                InputStream stream = ((HttpURLConnection) connection).getInputStream();
+                InputStreamReader isReader = new InputStreamReader(stream);
+                BufferedReader br = new BufferedReader(isReader);
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                    response += line + System.getProperty("line.separator");
+                }
+            } else {
+                Log.e(TAG, "XML file was sent but error on server is occured");
+                return null;
             }
-        } else {
-            Log.e(TAG, "XML file was sent but error on server is occured");
-            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Getting response sync data from server has failed");
         }
 
         return response;
@@ -307,12 +331,6 @@ public class SyncHelper {
                 e.printStackTrace();
             }
 
-
-            // update tasks in DB
-            for(Task updatedTask : updatedTasksFromServer) {
-                tasksManager.saveTask(updatedTask);
-            }
-
             // delete tasks in DB (that previously were deleted on server)
             for(Integer deletedTaskId : deletedTasksFromServer) {
                 tasksManager.deleteTaskByGlobalId(deletedTaskId);
@@ -332,7 +350,7 @@ public class SyncHelper {
         syncDate.put("initSyncTime", retrieveTimeOfInitialSync(responseXmlDocument));
         syncDate.put("accessToken", retrieveAccessToken(responseXmlDocument));
 
-        updatedTasks = retrieveUpdatedTasksFromServer(responseXmlDocument);
+        updatedTasks = retrieveAndSaveTasksFromServer(responseXmlDocument);
         syncDate.put("updatedTasks", updatedTasks);
 
         deletedTasks = retrieveDeletedTasksFromServer(responseXmlDocument, "deletedTask");
@@ -472,7 +490,7 @@ public class SyncHelper {
      * @param xmlDocument - xml-document that was got from server
      * @return updatedTasks
      */
-    public ArrayList<Task> retrieveUpdatedTasksFromServer(Document xmlDocument) {
+    public ArrayList<Task> retrieveAndSaveTasksFromServer(Document xmlDocument) {
         ArrayList<Task> updatedTasks = new ArrayList<>();
         NodeList taskList = xmlDocument.getElementsByTagName("task");
 
@@ -533,6 +551,7 @@ public class SyncHelper {
                 conditions.add(condition);
             }
             task.setConditions(conditions);
+            tasksManager.saveTask(task);
             updatedTasks.add(task);
         }
         return updatedTasks;

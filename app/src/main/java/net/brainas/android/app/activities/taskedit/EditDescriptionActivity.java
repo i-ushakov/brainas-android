@@ -51,7 +51,7 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_description);
 
-        BrainasApp app = ((BrainasApp) BrainasApp.getAppContext());
+        app = (BrainasApp) (BrainasApp.getAppContext());
         tasksManager = app.getTasksManager();
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = tasksManager.getTaskByLocalId(taskLocalId);
@@ -80,8 +80,6 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
         //setSaveBtnOnClickListener();
 
         refreshPanel();
-
-        app = (BrainasApp) (BrainasApp.getAppContext());
     }
 
 
