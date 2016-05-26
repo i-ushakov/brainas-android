@@ -287,9 +287,9 @@ public class SyncHelperTest {
     }
 
     @Test
-    public void retrieveUpdatedTasksFromServerTest () {
+    public void retrieveAndSaveTasksFromServerTest () {
         int accountId = 1;
-        ArrayList<Task> updatedTasks = syncHelper.retrieveUpdatedTasksFromServer(xmlDocumentFromServer);
+        ArrayList<Task> updatedTasks = syncHelper.retrieveAndSaveTasksFromServer(xmlDocumentFromServer);
 
         // create expected Task1
         ArrayList<Task> expected = new ArrayList<>();
@@ -318,7 +318,7 @@ public class SyncHelperTest {
         CopyOnWriteArrayList<Condition> conditions2 = new CopyOnWriteArrayList<Condition>();
         Condition condition21 =  new Condition(null, condition21GlobalId, task2.getId());
         EventTime event211 = new EventTime(null, event211Id, null);
-        event211.setParams(event211.getCalendarFromString(event211Datetime, event211Offset));
+        event211.setDatetime(event211.getCalendarFromString(event211Datetime, event211Offset));
         condition21.addEvent(event211);
         conditions2.add(condition21);
         task2.setConditions(conditions2);

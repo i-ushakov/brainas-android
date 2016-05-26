@@ -36,8 +36,8 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
  * Created by Kit Ushakov on 4/28/2016.
  */
 @RunWith(AndroidJUnit4.class)
-public class UserAccountDbHelperTest extends InstrumentationTestCase {
-    private static String TAG = "UserAccountDbHelperTest";
+public class UserAccountDbHelperFTest extends InstrumentationTestCase {
+    private static String TAG = "UserAccountDbHelperFTest";
     UserAccountDbHelper userAccountDbHelper;
 
     UserAccountDbHelper userAccountDbHelperSpy;
