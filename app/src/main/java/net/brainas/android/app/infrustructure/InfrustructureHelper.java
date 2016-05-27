@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppException;
@@ -45,6 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class InfrustructureHelper {
     static private String PATH_TO_TASK_IMAGES_FOLDER = "/app_images/task_images/";
+    static private  String TAG = "InfrustructureHelper";
 
     static public Bitmap getTaskImage(Task task) throws BrainasAppException {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
@@ -98,7 +100,12 @@ public class InfrustructureHelper {
         return file;
     }
 
-    public static HttpsURLConnection createHttpMultipartConn(String url) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, KeyManagementException {
+    public static HttpsURLConnection createHttpMultipartConn(String url) throws
+            IOException,
+            KeyStoreException,
+            CertificateException,
+            NoSuchAlgorithmException,
+            KeyManagementException {
         KeyStore trustStore = KeyStore.getInstance("BKS");
         InputStream trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
         trustStore.load(trustStoreStream, (BrainasApp.getAppContext()).getResources().getString(R.string.key_store_pass_for_cert).toCharArray());
@@ -111,7 +118,12 @@ public class InfrustructureHelper {
 
         URL urlObj = new URL(url);
 
-        HttpsURLConnection connection = (HttpsURLConnection) urlObj.openConnection();
+        HttpsURLConnection connection;
+        try {
+            connection = (HttpsURLConnection) urlObj.openConnection();
+        } catch (ClassCastException e) {
+            throw new ClassCastException(e.getMessage());
+        }
         connection.setSSLSocketFactory(sslContext.getSocketFactory());
         connection.setHostnameVerifier(new CustomHostnameVerifier());
         connection.setRequestMethod("POST");
@@ -130,6 +142,7 @@ public class InfrustructureHelper {
 
     public static class CustomHostnameVerifier implements HostnameVerifier {
         String [] allowHosts = {
+                "192.168.1.100",
                 "192.168.1.101",
                 "192.168.1.102",
                 "192.168.1.103",

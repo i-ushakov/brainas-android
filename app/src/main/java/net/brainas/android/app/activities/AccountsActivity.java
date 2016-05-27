@@ -133,7 +133,7 @@ public class AccountsActivity extends AppCompatActivity {
             accountNameValue.setText(app.getAccountsManager().getUserAccount().getAccountName());
             userNameValue.setText(app.getAccountsManager().getUserAccount().getPersonName());
             singInButton.setText("CHANGE ACCOUNT");
-            if(!NetworkHelper.isNetworkActive()) {
+            if(!accountsManager.isOnline()) {
                 offlineModeWarning.setVisibility(View.VISIBLE);
             }
         } else {

@@ -111,6 +111,7 @@ public class SyncHelper {
                 request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
                 request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
                 request.writeBytes(lineEnd);
+                Log.i("TOKEN_TEST", "Sending token " + SynchronizationService.accessToken);
                 request.writeBytes(SynchronizationService.accessToken);
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
@@ -119,6 +120,7 @@ public class SyncHelper {
                 request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
                 request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
                 request.writeBytes(lineEnd);
+                Log.i("TOKEN_TEST", "Sending code " + SynchronizationService.accessCode);
                 request.writeBytes(SynchronizationService.accessCode);
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
@@ -144,12 +146,19 @@ public class SyncHelper {
             return null;
         } catch (CertificateException e) {
             e.printStackTrace();
+            return null;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            return null;
         } catch (KeyStoreException e) {
             e.printStackTrace();
+            return null;
         } catch (KeyManagementException e) {
             e.printStackTrace();
+            return null;
+        } catch (ClassCastException e) {
+            Log.i(TAG, "Probably we have a problem with internet connection");
+            return null;
         }
 
         // parse server response
@@ -272,6 +281,7 @@ public class SyncHelper {
                 SynchronizationService.initSyncTime = (String) syncDate.get("initSyncTime");
                 if ((String) syncDate.get("accessToken") != null) {
                     SynchronizationService.accessToken = (String) syncDate.get("accessToken");
+                    Log.i("TOKEN_TEST", "Saving accessToken " + SynchronizationService.accessToken + " for service " + SynchronizationService.SERVICE_NAME);
                     servicesDbHelper.addServiceParam(SynchronizationService.SERVICE_NAME, "accessToken", SynchronizationService.accessToken);
                     Log.v(TAG, "Access token was gotten :" + SynchronizationService.accessToken);
                 }
@@ -468,12 +478,14 @@ public class SyncHelper {
      * @return accessToken
      */
     public String retrieveAccessToken(Document xmlDocument) {
+        Log.i("TOKEN_TEST", "retrieveAccessToken mothod");
         String accessToken;
 
         Element accessTokenEl = (Element)xmlDocument.getElementsByTagName("accessToken").item(0);
         if (accessTokenEl != null) {
             accessToken = accessTokenEl.getTextContent();
             if (!accessToken.equals("")) {
+                Log.i("TOKEN_TEST", "return accessToken = " + accessToken);
                 return accessToken;
             } else {
                 return null;

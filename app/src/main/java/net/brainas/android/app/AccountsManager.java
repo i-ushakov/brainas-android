@@ -20,6 +20,7 @@ import com.google.android.gms.common.api.Status;
 
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.services.SynchronizationService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,9 +40,11 @@ public class AccountsManager implements
     private BrainasApp app;
     private GoogleSignInOptions gso;
     private HashMap<Integer, GoogleApiClient> GoogleApiClients= new HashMap<Integer, GoogleApiClient>();
+    private  GoogleApiClient mGoogleApiClient = null;
     private UserAccount userAccount = null;
     private String accessCode = null;
     private List<SingInObserver> observers = new ArrayList<>();
+    private boolean serverIsOffline = false;
 
     public interface SingInObserver {
         void updateAfterSingIn(UserAccount userAccount);
@@ -74,26 +77,27 @@ public class AccountsManager implements
     public boolean initialSingIn(AppCompatActivity activity) {
         showProgressDialog(activity);
         buildApiClient(activity);
-        if (NetworkHelper.isNetworkActive()) {
+        if (isOnline()) {
             OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(GoogleApiClients.get(activity.hashCode()));
-            if (opr.isDone()) {
+            if (opr.isDone()) {//opr.isCanceled()
                 // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
                 // and the GoogleSignInResult will be available instantly.
                 Log.d("ACCOUNT_MANAGER", "Got cached sign-in");
                 GoogleSignInResult result = opr.get();
                 handleSignInResult(result, activity);
             } else {
-                Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
-                signIn(activity);
+                if (((BrainasApp) BrainasApp.getAppContext()).isMyServiceRunning(SynchronizationService.class)) {
+                    if (!setLastUserAccount(activity)) {
+                        Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
+                        signIn(activity);
+                    }
+                } else {
+                        Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
+                        signIn(activity);
+                }
             }
         } else {
-            userAccount = app.getLastUsedAccount();
-            if (userAccount != null) {
-                hideProgressDialog();
-                app.setUserAccount(userAccount);
-                notifyAllObserversAboutSingIn();
-                Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
-            } else {
+            if (!setLastUserAccount(activity)) {
                 Toast.makeText(activity, "You must to have an internet connection for start of using Brain Assistant's app.", Toast.LENGTH_LONG).show();
                 return false;
             }
@@ -101,9 +105,20 @@ public class AccountsManager implements
         return true;
     }
 
+    private boolean setLastUserAccount(AppCompatActivity activity) {
+        userAccount = app.getLastUsedAccount();
+        if (userAccount != null) {
+            hideProgressDialog();
+            app.setUserAccount(userAccount);
+            notifyAllObserversAboutSingIn();
+            Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
+            return true;
+        }
+        return false;
+    }
 
     public void switchAccount(AppCompatActivity activity) {
-        if (NetworkHelper.isNetworkActive()) {
+        if (isOnline()) {
             showProgressDialog(activity);
             buildApiClient(activity);
             signOut(activity);
@@ -111,6 +126,13 @@ public class AccountsManager implements
         } else {
             Toast.makeText(activity, "You must have network connection to switch account", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public boolean isOnline() {
+        if (NetworkHelper.isNetworkActive() && !serverIsOffline ) {
+            return true;
+        }
+        return false;
     }
 
     public boolean handleSignInResult(GoogleSignInResult result, AppCompatActivity activity) {
@@ -170,7 +192,7 @@ public class AccountsManager implements
 
     public void buildApiClient(AppCompatActivity activity) {
         if (GoogleApiClients.get(activity.hashCode()) == null) {
-            GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(activity)
+            mGoogleApiClient = new GoogleApiClient.Builder(activity)
                         .enableAutoManage(activity /* FragmentActivity */, this /* OnConnectionFailedListener */)
                         .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                         .build();

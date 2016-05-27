@@ -74,6 +74,7 @@ public class SynchronizationService extends Service {
             accessCode = intent.getExtras().getString("accessCode");
             JSONObject serviceParamsJSON = new JSONObject();
             try {
+                Log.i("TOKEN_TEST", "Sync serv start with intent");
                 serviceParamsJSON.put("accountId", accountId);
                 serviceParamsJSON.put("accessCode", accessCode);
                 servicesDbHelper.saveServiceParams(SERVICE_NAME, serviceParamsJSON.toString());
@@ -82,10 +83,12 @@ public class SynchronizationService extends Service {
             }
         } else {
             try {
+                Log.i("TOKEN_TEST", "Sync serv start background");
                 JSONObject serviceParamsJSON = new JSONObject(servicesDbHelper.getServiceParams(SERVICE_NAME));
                 accountId = serviceParamsJSON.getInt("accountId");
                 accessCode = serviceParamsJSON.getString("accessCode");
                 accessToken = serviceParamsJSON.getString("accessToken");
+                Log.i("TOKEN_TEST", "Tokent from db" + accessToken);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
