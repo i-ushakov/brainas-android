@@ -84,11 +84,11 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public void updateAfterSingIn(UserAccount userAccount) {
-        //tasksManager = new TasksManager(taskDbHelper, accountsManager.getCurrentAccountId());
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountsManager.getCurrentAccountId());
     }
 
     public void updateAfterSingOut() {
-        //tasksManager = new TasksManager(taskDbHelper, null);
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, null);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public TasksManager getTasksManager() {
-        return new TasksManager(taskDbHelper, taskChangesDbHelper, accountsManager.getCurrentAccountId());
+        return tasksManager;
     }
 
     public TaskHelper getTaskHelper() {return this.taskHelper;}
