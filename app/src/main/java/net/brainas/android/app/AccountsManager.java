@@ -86,6 +86,9 @@ public class AccountsManager implements
                 GoogleSignInResult result = opr.get();
                 handleSignInResult(result, activity);
             } else {
+                // In this place may be situation when service is not running (temporary stop)....
+                // In future maybe it reasonable to handle this case
+                // but this situation is really uncommon and rare
                 if (((BrainasApp) BrainasApp.getAppContext()).isMyServiceRunning(SynchronizationService.class)) {
                     if (!setLastUserAccount(activity)) {
                         Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
