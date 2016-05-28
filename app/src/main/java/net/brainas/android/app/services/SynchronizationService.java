@@ -144,8 +144,8 @@ public class SynchronizationService extends Service {
     }
 
     public void synchronization() {
-        File allChangesInXMLFile;
         String allChangesInXML;
+        File allChangesInXMLFile = null;
 
         // Retrieve all changes from database and prepare for sending in the form of XML-file
         try {
@@ -154,22 +154,28 @@ public class SynchronizationService extends Service {
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
             Log.v(TAG, allChangesInXMLFile.getName() + " was created");
             Log.v(TAG, Utils.printFileToString(allChangesInXMLFile));
+
+            asyncTask = new AllTasksSync();
+            asyncTask.setListener(new AllTasksSync.AllTasksSyncListener() {
+                @Override
+                public void onComplete(String response, Exception e) {
+                    handleResponseFromServer(response);
+                }});
+            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
+                asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
+            else {
+                asyncTask.execute(allChangesInXMLFile);
+            }
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
             e.printStackTrace();
             return;
-        }
-
-        asyncTask = new AllTasksSync();
-        asyncTask.setListener(new AllTasksSync.AllTasksSyncListener() {
-            @Override
-            public void onComplete(String response, Exception e) {
-                handleResponseFromServer(response);
-            }});
-        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
-        else {
-            asyncTask.execute(allChangesInXMLFile);
+        } finally {
+            if (allChangesInXMLFile != null) {
+                if (allChangesInXMLFile.exists()) {
+                    allChangesInXMLFile.delete();
+                }
+            }
         }
 
         // TODO Remove File
