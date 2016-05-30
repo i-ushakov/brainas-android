@@ -70,6 +70,9 @@ public class EditTaskActivity extends AppCompatActivity {
             mode = Mode.EDIT;
             long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
             task = tasksManager.getTaskByLocalId(taskLocalId);
+            if (task == null) {
+                finish();
+            }
         } else {
             mode = Mode.CREATE;
         }

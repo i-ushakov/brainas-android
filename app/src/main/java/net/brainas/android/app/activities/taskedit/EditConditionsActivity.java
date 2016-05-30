@@ -38,6 +38,9 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
 
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager().getTaskByLocalId(taskLocalId);
+        if (task == null) {
+            finish();
+        }
         task.attachObserver(this);
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);

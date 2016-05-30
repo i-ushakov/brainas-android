@@ -55,6 +55,9 @@ public class EditDescriptionActivity extends AppCompatActivity implements Task.T
         tasksManager = app.getTasksManager();
         long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = tasksManager.getTaskByLocalId(taskLocalId);
+        if (task == null) {
+            finish();
+        }
         task.attachObserver(this);
         
         toolbar = (Toolbar) findViewById(R.id.toolbar);

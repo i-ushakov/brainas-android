@@ -184,9 +184,11 @@ public class TasksManager {
 
     public boolean restoreTaskToWaiting(long takId) {
         Task task = getTaskByLocalId(takId);
-        if (conditionsValidation(task.getConditions())) {
-            this.changeStatus(task, Task.STATUSES.WAITING);
-            return true;
+        if (task != null) {
+            if (conditionsValidation(task.getConditions())) {
+                this.changeStatus(task, Task.STATUSES.WAITING);
+                return true;
+            }
         }
         return false;
     }

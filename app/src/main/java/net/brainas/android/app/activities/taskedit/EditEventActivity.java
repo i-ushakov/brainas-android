@@ -76,6 +76,9 @@ public class EditEventActivity extends EditTaskActivity
 
         Long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
         task = app.getTasksManager().getTaskByLocalId(taskLocalId);
+        if (task == null) {
+            finish();
+        }
 
         Long eventId = getIntent().getLongExtra("eventId", 0);
         if (task != null && eventId != 0) {
