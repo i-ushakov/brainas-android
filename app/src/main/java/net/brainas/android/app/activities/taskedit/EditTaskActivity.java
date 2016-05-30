@@ -25,6 +25,7 @@ import net.brainas.android.app.domain.models.Task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -32,6 +33,7 @@ import java.util.Map;
  * Created by innok on 12/7/2015.
  */
 public class EditTaskActivity extends AppCompatActivity {
+    static HashMap<String, Boolean> existActivities = new HashMap<>();
 
     public enum Mode {
         CREATE, EDIT
@@ -60,6 +62,11 @@ public class EditTaskActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Boolean isActive = existActivities.get(this.getClass().getName());
+        if (isActive != null && isActive == true) {
+            finish();
+        }
+        existActivities.put(this.getClass().getName(), true);
         setContentView(R.layout.activity_edit_task);
 
         app = (BrainasApp) (BrainasApp.getAppContext());
@@ -100,6 +107,12 @@ public class EditTaskActivity extends AppCompatActivity {
     public void onPause() {
         super.onPause();
         BrainasApp.activityPaused();
+    }
+
+    @Override
+    protected void onDestroy() {
+        existActivities.put(this.getClass().getName(), false);
+        super.onDestroy();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
