@@ -43,15 +43,15 @@
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activities.taskedit.EditTaskActivity"
-            android:label="@string/activity_accounts_title"
+            android:label="@string/activity_edit_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activities.taskedit.EditDescriptionActivity"
-            android:label="@string/activity_accounts_title"
+            android:label="@string/activity_edit_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activities.taskedit.EditConditionsActivity"
-            android:label="@string/activity_accounts_title"
+            android:label="@string/activity_edit_title"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activities.taskedit.EditEventActivity"
