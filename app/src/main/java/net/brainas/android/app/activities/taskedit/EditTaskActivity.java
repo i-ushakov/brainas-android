@@ -135,10 +135,14 @@ public class EditTaskActivity extends AppCompatActivity {
         switch (tabLayout.getSelectedTabPosition()) {
             case 0:
                 taskTitlePanel.setVisibility(View.VISIBLE);
+                categoryPanel.setVisibility(View.VISIBLE);
+                conditionPanel.setVisibility(View.VISIBLE);
                 taskPicturePanel.setVisibility(View.GONE);
                 break;
             case 1:
                 taskTitlePanel.setVisibility(View.GONE);
+                categoryPanel.setVisibility(View.GONE);
+                conditionPanel.setVisibility(View.GONE);
                 taskPicturePanel.setVisibility(View.VISIBLE);
                 break;
             default:
