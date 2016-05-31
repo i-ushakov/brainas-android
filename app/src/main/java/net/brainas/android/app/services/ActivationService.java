@@ -99,6 +99,7 @@ public class ActivationService extends Service {
     public void onDestroy() {
         accountId = null;
         locationProvider.disconnect();
+        this.unregisterReceiver(broadcastReceiver);
         Log.i(TAG, "ActivationService was destroyed");
     }
 
