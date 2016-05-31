@@ -151,6 +151,7 @@ public class SynchronizationService extends Service {
         try {
             allChangesInXML = syncHelper.getAllChangesInXML(accountId);
             allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
+            final File allChangesInXMLFileFinal = allChangesInXMLFile;
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
             Log.v(TAG, allChangesInXMLFile.getName() + " was created");
             Log.v(TAG, Utils.printFileToString(allChangesInXMLFile));
@@ -160,6 +161,7 @@ public class SynchronizationService extends Service {
                 @Override
                 public void onComplete(String response, Exception e) {
                     handleResponseFromServer(response);
+                    deleteChangesXML(allChangesInXMLFileFinal);
                 }});
             if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
                 asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
@@ -168,19 +170,19 @@ public class SynchronizationService extends Service {
             }
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
+            deleteChangesXML(allChangesInXMLFile);
             e.printStackTrace();
             return;
-        } finally {
-            if (allChangesInXMLFile != null) {
-                if (allChangesInXMLFile.exists()) {
-                    allChangesInXMLFile.delete();
-                }
-            }
         }
-
-        // TODO Remove File
     }
 
+    private void deleteChangesXML(File allChangesInXMLFile) {
+        if (allChangesInXMLFile != null) {
+            if (allChangesInXMLFile.exists()) {
+                allChangesInXMLFile.delete();
+            }
+        }
+    }
     private void handleResponseFromServer (String response) {
 
         syncHelper.handleResponseFromServer(response);
