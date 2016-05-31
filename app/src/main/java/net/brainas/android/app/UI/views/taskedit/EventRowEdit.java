@@ -14,6 +14,8 @@ import net.brainas.android.app.domain.models.Event;
  * Created by innok on 3/1/2016.
  */
 public class EventRowEdit extends LinearLayout {
+    public Event event;
+
     private Context context;
 
     public EventRowEdit(Context context, Event event) {
@@ -24,6 +26,7 @@ public class EventRowEdit extends LinearLayout {
         super(context, attrs);
 
         this.context = context;
+        this.event = event;
         inflate(getContext(), R.layout.view_event_row_edit, this);
 
         LinearLayout linearLayout = (LinearLayout)findViewById(R.id.event_row_layout);

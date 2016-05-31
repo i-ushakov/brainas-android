@@ -74,16 +74,15 @@ public class EditEventActivity extends EditTaskActivity
         setContentView(R.layout.activity_edit_event);
         app = (BrainasApp) (BrainasApp.getAppContext());
 
-        Long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
-        task = app.getTasksManager().getTaskByLocalId(taskLocalId);
-        if (task == null) {
+        retrieveAndSetTask();
+        if (task != null) {
+            retrieveAndSetEvent(task);
+        } else {
             finish();
         }
 
-        Long eventId = getIntent().getLongExtra("eventId", 0);
-        if (task != null && eventId != 0) {
+        if (event != null) {
             editMode = true;
-            event = app.getTasksManager().retriveEventFromTaskById(task,eventId);
         } else {
             editMode = false;
             eventLocation = new EventLocation();
@@ -114,6 +113,28 @@ public class EditEventActivity extends EditTaskActivity
     public void cancel(View view) {
         UIHelper.addClickEffectToButton(view, this);
         finish();
+    }
+
+    private void retrieveAndSetTask() {
+        Long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
+        task = app.getTasksManager().getTaskByLocalId(taskLocalId);
+        if (task == null) {
+            finish();
+        }
+    }
+
+    private void retrieveAndSetEvent(Task task) {
+        Long eventId = getIntent().getLongExtra("eventId", 0);
+        if (eventId != 0) {
+            event = app.getTasksManager().retriveEventFromTaskById(task, eventId);
+            if (event != null) {
+                if (event instanceof EventLocation) {
+                    eventLocation = (EventLocation) event;
+                } else if (event instanceof EventTime) {
+                    eventTime = (EventTime) event;
+                }
+            }
+        }
     }
 
     private void renderContent() {
@@ -170,25 +191,23 @@ public class EditEventActivity extends EditTaskActivity
 
     private void renderTimeEventContent() {
         findViewById(R.id.eventTimePanel).setVisibility(View.VISIBLE);
-        if (!initTime) {
-            if (eventTime.getDatetime() == null) {
-                eventTime.setDatetime(Calendar.getInstance());
-            }
-            DatePicker pickerDate = (DatePicker)findViewById(R.id.pickerdate);
-            pickerDate.init(
-                    Calendar.getInstance().get(Calendar.YEAR),
-                    Calendar.getInstance().get(Calendar.MONTH),
-                    Calendar.getInstance().get(Calendar.DAY_OF_MONTH),
-                    new DatePicker.OnDateChangedListener() {
-                        @Override
-                        public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                            Calendar cal = Calendar.getInstance();
-                            cal.set(year, monthOfYear, dayOfMonth);
-                            eventTime.setDatetime(cal);
-                        }
-                    }
-            );
+        if (eventTime.getDatetime() == null) {
+            eventTime.setDatetime(Calendar.getInstance());
         }
+        DatePicker pickerDate = (DatePicker)findViewById(R.id.pickerdate);
+        pickerDate.init(
+                eventTime.getDatetime().get(Calendar.YEAR),
+                eventTime.getDatetime().get(Calendar.MONTH),
+                eventTime.getDatetime().get(Calendar.DAY_OF_MONTH),
+                new DatePicker.OnDateChangedListener() {
+                    @Override
+                    public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.set(year, monthOfYear, dayOfMonth);
+                        eventTime.setDatetime(cal);
+                    }
+                }
+        );
     }
 
     @Override
@@ -206,9 +225,14 @@ public class EditEventActivity extends EditTaskActivity
         this.googleMap = map;
         this.googleMap.setOnMapClickListener(EditEventActivity.this);
         this.googleMap.setOnMapLongClickListener(EditEventActivity.this);
-        if (initLoad) {
+        if (initLoad && !editMode) {
             getCurrentUserLocationAsync();
             initLoad = false;
+        }
+        if (editMode && eventLocation != null) {
+            LatLng location = new LatLng (eventLocation.getLat(), eventLocation.getLng());
+            setMarker(location);
+            moveAndZoomCamera(location);
         }
     }
 
@@ -221,6 +245,11 @@ public class EditEventActivity extends EditTaskActivity
                 Toast.makeText(EditEventActivity.this, validationMessage, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    protected  void onDestroy() {
+        super.onDestroy();
     }
 
     private void changeLocation(LatLng location) {
@@ -281,6 +310,10 @@ public class EditEventActivity extends EditTaskActivity
                 typeOfEventsSpinner.setSelection(adapter.getPosition("Time"));
                 break;
         }
+
+        if (editMode) {
+            typeOfEventsSpinner.setEnabled(false);
+        }
     }
 
     private void saveEvent() {
@@ -289,6 +322,7 @@ public class EditEventActivity extends EditTaskActivity
             newCondition.addEvent(event);
             event.setParent(newCondition);
             task.addCondition(newCondition);
+            newCondition.setParent(task);
         }
         tasksManager.saveTask(task);
         showTaskErrorsOrWarnings(task);
@@ -332,18 +366,15 @@ public class EditEventActivity extends EditTaskActivity
 
             protected void onPostExecute(LatLng latLng) {
                 if (latLng != null) {
-                    CameraUpdate center = CameraUpdateFactory.newLatLngZoom(latLng, 13);
-                    //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
-                    googleMap.moveCamera(center);
-                    //googleMap.animateCamera(zoom);
+                    moveAndZoomCamera(latLng);
                 }
             }
         }.execute();
     }
 
-    @Override
-    protected  void onDestroy() {
-        super.onDestroy();
+    private void moveAndZoomCamera(LatLng latLng) {
+        CameraUpdate center = CameraUpdateFactory.newLatLngZoom(latLng, 13);
+        googleMap.moveCamera(center);
     }
 }
 

@@ -1,6 +1,7 @@
 package net.brainas.android.app.UI.views.taskedit;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -14,6 +15,8 @@ import android.widget.Spinner;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.activities.taskedit.EditConditionsActivity;
+import net.brainas.android.app.activities.taskedit.EditEventActivity;
+import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 
@@ -22,9 +25,10 @@ import java.util.ArrayList;
 /**
  * Created by Kit Ushakov on 2/28/2016.
  */
-public class ConditionEditView extends LinearLayout {
+public class ConditionEditView extends LinearLayout implements View.OnClickListener {
     private EditConditionsActivity editConditionsActivity;
     private Condition condition;
+    private Context context;
 
     public ConditionEditView(EditConditionsActivity editConditionsActivity, Condition condition) {
         this(editConditionsActivity, null, condition);
@@ -32,7 +36,7 @@ public class ConditionEditView extends LinearLayout {
 
     public ConditionEditView(Context context, AttributeSet attrs, Condition condition) {
         super(context, attrs);
-
+        this.context = context;
         inflate(getContext(), R.layout.view_condition_edit, this);
 
         this.condition = condition;
@@ -47,6 +51,7 @@ public class ConditionEditView extends LinearLayout {
                 (int) getResources().getDimension(R.dimen.event_type_icon_edit_width),
                 (int) getResources().getDimension(R.dimen.event_type_icon_edit_height)));
             LinearLayout eventView = new EventRowEdit(context, event);
+            eventView.setOnClickListener(this);
             conditionEventsBlock.addView(eventView);
         }
     }
@@ -57,6 +62,14 @@ public class ConditionEditView extends LinearLayout {
 
     public void editCondition(View view) {
 
+    }
+
+    @Override
+    public void onClick(View eventView) {
+        Intent tasksIntent = new Intent(this.context, EditEventActivity.class);
+        tasksIntent.putExtra("taskLocalId", condition.getParent().getId());
+        tasksIntent.putExtra("eventId", ((EventRowEdit)eventView).event.getId());
+        this.context.startActivity(tasksIntent);
     }
 
     /*
