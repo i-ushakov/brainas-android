@@ -114,7 +114,7 @@ public class AccountsManager implements
             hideProgressDialog();
             app.setUserAccount(userAccount);
             notifyAllObserversAboutSingIn();
-            Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
             return true;
         }
         return false;
