@@ -25,6 +25,7 @@
 
     <!-- EditEventActivity -->
     <string name="activity_event_title">Event</string>
+    <string name="activity_event_already_have_time_event">You have already a time event in this task</string>
 
     <!-- Activation addServiceParam-->
     <string name="service_activation_name">Brainas activation service</string>

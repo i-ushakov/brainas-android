@@ -139,6 +139,16 @@ public class TaskHelper {
         return imagesBlock;
     }
 
+    static public boolean haveTaskATimeCondition(Task task) {
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        for (Condition condition : conditions) {
+            if(condition.getEvents().get(0).getType() == Event.TYPES.TIME) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private ImageView eventTypeImage (int imageResId, Context context) {
         ImageView eventTypeImage = Utils.createImageView(imageResId, 70, context);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
