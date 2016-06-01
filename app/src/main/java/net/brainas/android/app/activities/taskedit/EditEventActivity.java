@@ -1,7 +1,9 @@
 package net.brainas.android.app.activities.taskedit;
 
+import android.app.TimePickerDialog;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -10,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.Spinner;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -31,6 +34,7 @@ import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.GoogleApiHelper;
+import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
@@ -38,6 +42,8 @@ import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.LocationProvider;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 
@@ -194,20 +200,45 @@ public class EditEventActivity extends EditTaskActivity
         if (eventTime.getDatetime() == null) {
             eventTime.setDatetime(Calendar.getInstance());
         }
-        DatePicker pickerDate = (DatePicker)findViewById(R.id.pickerdate);
-        pickerDate.init(
+        DatePicker datePicker = (DatePicker) findViewById(R.id.pickerdate);
+        datePicker.init(
                 eventTime.getDatetime().get(Calendar.YEAR),
                 eventTime.getDatetime().get(Calendar.MONTH),
                 eventTime.getDatetime().get(Calendar.DAY_OF_MONTH),
                 new DatePicker.OnDateChangedListener() {
                     @Override
                     public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                        Calendar cal = Calendar.getInstance();
-                        cal.set(year, monthOfYear, dayOfMonth);
-                        eventTime.setDatetime(cal);
+                        eventTime.getDatetime().set(Calendar.YEAR, year);
+                        eventTime.getDatetime().set(Calendar.MONTH, monthOfYear);
+                        eventTime.getDatetime().set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                        eventTime.getDatetime().set(Calendar.SECOND, 0);
                     }
                 }
         );
+        datePicker.getCalendarView().setFirstDayOfWeek(Calendar.getInstance().getFirstDayOfWeek());
+        datePicker.getCalendarView().setShowWeekNumber(false);
+
+        TimePicker timePicker = (TimePicker) findViewById(R.id.timePicker);
+        timePicker.setIs24HourView(true);
+        int hour = eventTime.getDatetime().get(Calendar.HOUR_OF_DAY);
+        int minute = eventTime.getDatetime().get(Calendar.MINUTE);
+        if (Build.VERSION.SDK_INT >= 23) {
+            timePicker.setHour(hour);
+            timePicker.setMinute(minute);
+        }
+        else {
+            timePicker.setCurrentHour(hour);
+            timePicker.setCurrentMinute(minute);
+        }
+
+        timePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
+            @Override
+            public void onTimeChanged(TimePicker view, int hourOfDay, int minute) {
+                eventTime.getDatetime().set(Calendar.HOUR_OF_DAY, hourOfDay);
+                eventTime.getDatetime().set(Calendar.MINUTE, minute);
+                eventTime.getDatetime().set(Calendar.SECOND, 0);
+            }
+        });
     }
 
     @Override
@@ -273,8 +304,12 @@ public class EditEventActivity extends EditTaskActivity
 
     private void setTypeSpinner() {
         Spinner typeOfEventsSpinner = (Spinner)findViewById(R.id.typeOfEventSpinner);
-        final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.types_of_events, android.R.layout.simple_spinner_item);
+        ArrayList eventTypeList = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.types_of_events)));
+        final ArrayAdapter<CharSequence> adapter = new ArrayAdapter (
+                this,
+                android.R.layout.simple_spinner_item,
+                eventTypeList
+        );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeOfEventsSpinner.setAdapter(adapter);
         typeOfEventsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -313,6 +348,8 @@ public class EditEventActivity extends EditTaskActivity
 
         if (editMode) {
             typeOfEventsSpinner.setEnabled(false);
+        } else if (TaskHelper.haveTaskATimeCondition(task)) {
+            eventTypeList.remove(adapter.getPosition("Time"));
         }
     }
 
