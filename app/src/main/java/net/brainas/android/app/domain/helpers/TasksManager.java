@@ -92,7 +92,18 @@ public class TasksManager {
         return tasks;
     }
 
-    public ArrayList<Task> getTasksFromDB(Map<String, Object> params, int accountId) {
+    /*
+     * Getting tasks derectly from Database
+     */
+    public ArrayList<Task> getAllTasks() {
+        ArrayList<Task> tasks = getTasksFromDB(null, null);
+        return tasks;
+    }
+
+    public ArrayList<Task> getTasksFromDB(Map<String, Object> params, Integer accountId) {
+        if (accountId == null) {
+            accountId = this.accountId;
+        }
         //BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
         //TaskDbHelper taskDbHelper = app.getTaskDbHelper();
         ArrayList<Task> tasks = taskDbHelper.getTasks(params, accountId);

@@ -200,6 +200,11 @@ public class SyncHelper {
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element root = doc.createElement("changes");
         doc.appendChild(root);
+
+        Element existingTasks = doc.createElement("existingTasks");
+        existingTasks.setTextContent(getAllExistingTasksWithGlobalId().toString());
+        root.appendChild(existingTasks);
+
         Element changedTasksEl = doc.createElement("changedTasks");
         root.appendChild(changedTasksEl);
 
@@ -243,6 +248,22 @@ public class SyncHelper {
         allChangesInXML = writer.toString();
 
         return allChangesInXML;
+    }
+
+    public JSONObject getAllExistingTasksWithGlobalId() {
+        JSONObject existingTasks = new JSONObject();
+        ArrayList<Task> tasks = tasksManager.getAllTasks();
+        for (Task task : tasks) {
+            if (task.getGlobalId() != 0) {
+                try {
+                    existingTasks.put(Long.toString(task.getGlobalId()), Long.toString(task.getId()));
+                } catch (JSONException e) {
+                    Log.e(TAG, "Cannot create JSONObject with existing tasks that have globalId");
+                    e.printStackTrace();
+                }
+            }
+        }
+        return existingTasks;
     }
 
     /**

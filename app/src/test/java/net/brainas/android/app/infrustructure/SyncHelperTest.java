@@ -167,10 +167,15 @@ public class SyncHelperTest {
         when(eventTime.getType()).thenReturn(Event.TYPES.TIME);
         when(eventTime.getJSONStringWithParams()).thenReturn("{\"offset\":180,\"datetime\":\"20-04-2016 14:38:41\"}");
 
+        ArrayList<Task> tasks = new ArrayList<>();
+        tasks.add(task);
+        when(tasksManager.getAllTasks()).thenReturn(tasks);
+
         String actual  = syncHelper.getAllChangesInXML(accountId);
         System.out.println(actual);
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" +
                 "<changes>" +
+                "<existingTasks>{\"1\":\"1\"}</existingTasks>" +
                     "<changedTasks>" +
                         "<changedTask globalId=\"1\" id=\"1\">" +
                             "<message>Message of tasks</message>" +
@@ -521,5 +526,42 @@ public class SyncHelperTest {
         verify(taskChangesDbHelper, times(1)).removeFromSync(task3SynchronizedFromServerGlobalId);
         verify(taskDbHelper, times(1)).setConditionGlobalId(condition6SynchronizedFromServerLocalId, condition6SynchronizedFromServerGlobalId);
         verify(taskDbHelper, times(1)).setEventGlobalId(event7SynchronizedFromServerLocalId, event7SynchronizedFromServerGlobalId);
+    }
+
+    @Test
+    public void getAllExistingTasksWithGlobalId() {
+        ArrayList<Task> tasks = new ArrayList<>();
+        Task task1 = new Task(1, "Test 1");
+        task1.setId(1);
+        task1.setGlobalId(11);
+        tasks.add(task1);
+
+        Task task2 = new Task(1, "Test 2");
+        task2.setId(2);
+        task2.setGlobalId(22);
+        tasks.add(task2);
+
+        Task task3 = new Task(1, "Test 3");
+        task3.setId(3);
+        task3.setGlobalId(0);
+        tasks.add(task3);
+        when(tasksManager.getAllTasks()).thenReturn(tasks);
+
+        JSONObject expected = new JSONObject();
+        try {
+            expected.put("11","1");
+            expected.put("22","2");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JSONObject actual = syncHelper.getAllExistingTasksWithGlobalId();
+        try {
+            Assert.assertEquals(expected.get("11"), actual.get("11"));
+            Assert.assertEquals(expected.get("22"), actual.get("22"));
+            Assert.assertEquals(expected.toString(), actual.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }
