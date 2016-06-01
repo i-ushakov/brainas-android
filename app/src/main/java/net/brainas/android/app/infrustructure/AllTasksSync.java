@@ -32,7 +32,11 @@ public class AllTasksSync extends AsyncTask<File, Void, String> {
         File allChangesInXMLFile;
         allChangesInXMLFile = files[0];
         // send changes to server for processing
-        response = SyncHelper.sendAllChanges(allChangesInXMLFile);
+        if (NetworkHelper.isNetworkActive()) {
+            response = SyncHelper.sendAllChanges(allChangesInXMLFile);
+        } else {
+            Log.i(TAG, "Network is not available");
+        }
 
         return response;
     }
