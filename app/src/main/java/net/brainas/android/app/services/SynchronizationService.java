@@ -17,6 +17,7 @@ import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
+import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.ServicesDbHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
@@ -114,9 +115,13 @@ public class SynchronizationService extends Service {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        Log.i(TAG, "Sync was start!");
-                        synchronization();
-                        Log.i(TAG, "Sync was done!");
+                        if(NetworkHelper.isNetworkActive()) {
+                            Log.i(TAG, "Sync was start!");
+                            synchronization();
+                            Log.i(TAG, "Sync was done!");
+                        } else {
+                            Log.i(TAG, "NetworkActive wis not active!");
+                        }
                     }
                 });
             }
