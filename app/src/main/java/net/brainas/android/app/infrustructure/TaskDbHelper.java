@@ -57,7 +57,7 @@ public class TaskDbHelper {
             "CREATE TABLE " + TABLE_CONDITIONS + " (" +
                     COLUMN_NAME_CONDITIONS_ID + " INTEGER PRIMARY KEY," +
                     COLUMN_NAME_CONDITIONS_TASK + " INTEGER," +
-                    COLUMN_NAME_CONDITIONS_GLOBALID + " INTEGER" + " )";
+                    COLUMN_NAME_CONDITIONS_GLOBALID + " INTEGER UNIQUE " + " )";
     private static final String DELETE_TABLE_CONDITIONS =
             "DROP TABLE IF EXISTS " + TABLE_CONDITIONS;
 
@@ -72,7 +72,7 @@ public class TaskDbHelper {
     private static final String CREATE_TABLE_EVENTS =
             "CREATE TABLE " + TABLE_EVENTS + " (" +
                     COLUMN_NAME_EVENTS_ID + " INTEGER PRIMARY KEY," +
-                    COLUMN_NAME_EVENTS_GLOBALID + " INTEGER" + COMMA_SEP +
+                    COLUMN_NAME_EVENTS_GLOBALID + " INTEGER UNIQUE" + COMMA_SEP +
                     COLUMN_NAME_EVENTS_CONDITION + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_EVENTS_TYPE + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_EVENTS_PARAMS + " TEXT" + " )";

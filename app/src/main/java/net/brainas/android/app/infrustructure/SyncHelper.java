@@ -557,7 +557,7 @@ public class SyncHelper {
             for (int j = 0; j < conditionsNL.getLength(); ++j) {
                 Element conditionEl = (Element)conditionsNL.item(j);
                 Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("id"));
-                Condition condition = new Condition(null,conditionGlobalId, task.getId());
+                Condition condition = new Condition(null, conditionGlobalId, task.getId());
                 NodeList events = conditionEl.getElementsByTagName("event");
                 Event event = null;
                 Element eventEl = null;
