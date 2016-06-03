@@ -606,10 +606,10 @@ public class SyncHelper {
         for (int i = 0; i < deletedTasksList.getLength(); ++i) {
             Element deletedTaskEl = (Element)deletedTasksList.item(i);
             int globalId = Integer.parseInt(deletedTaskEl.getAttribute("global-id"));
-            String timeChanges = deletedTaskEl.getAttribute("time-changes");
-            if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
-                deletedTasks.add(globalId);
-            }
+            //String timeChanges = deletedTaskEl.getAttribute("time-changes");
+            //if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
+            deletedTasks.add(globalId);
+            //}
         }
         return deletedTasks;
     }
