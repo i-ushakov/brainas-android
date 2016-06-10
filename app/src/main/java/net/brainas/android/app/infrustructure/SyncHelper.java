@@ -3,6 +3,7 @@ package net.brainas.android.app.infrustructure;
 import android.util.Log;
 import android.support.v4.util.Pair;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
@@ -68,25 +69,89 @@ public class SyncHelper {
     private TaskChangesDbHelper taskChangesDbHelper;
     private TaskDbHelper taskDbHelper;
     private ServicesDbHelper servicesDbHelper;
+    private UserAccount userAccount;
     private int accountId;
 
     public SyncHelper (TasksManager tasksManager,
                        TaskChangesDbHelper taskChangesDbHelper,
                        TaskDbHelper taskDbHelper,
-                       ServicesDbHelper servicesDbHelper,
-                       int accountId) {
+                       UserAccount userAccount) {
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
         this.taskDbHelper = taskDbHelper;
-        this.servicesDbHelper = servicesDbHelper;
-        this.accountId =  accountId;
+        this.userAccount = userAccount;
+        this.accountId =  userAccount.getId();
     }
 
-    public static String sendAllChanges(File allChangesInXML)  {
+    public static String sendAuthRequest(String accessCode) {
+        String token = null;
+
+        HttpsURLConnection connection = null;
+
+        try {
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "fetch-access-token");
+
+            DataOutputStream request = new DataOutputStream(
+                    connection.getOutputStream());
+
+            request.writeBytes("--" + boundary + lineEnd);
+
+            request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
+            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+            request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
+            request.writeBytes(lineEnd);
+            Log.i(TAG, "Sending code to server " + accessCode);
+            request.writeBytes(accessCode);
+            request.writeBytes(lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+
+        // parse server response
+        try {
+            if (((HttpURLConnection)connection).getResponseCode() == 200) {
+                InputStream stream = ((HttpURLConnection) connection).getInputStream();
+                InputStreamReader isReader = new InputStreamReader(stream);
+                BufferedReader br = new BufferedReader(isReader);
+                String line;
+                token = "";
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                    token += line;
+                }
+            } else {
+                Log.e(TAG, "The Code was sent, but Token haven't gotten! (!= 200)");
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "The Code was sent, but Token haven't gotten! (IOException)");
+            return null;
+        }
+
+        if (token.equals("null")) {
+            return null;
+        }
+        return token;
+    }
+
+    public static String sendSyncRequest(File allChangesInXML)  {
         String response = "";
         HttpsURLConnection connection = null;
         try {
             connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "get-tasks");
+            connection.setRequestProperty( "Accept-Encoding", "" );
+            System.setProperty("http.keepAlive", "false");
 
             DataOutputStream request = new DataOutputStream(
                     connection.getOutputStream());
@@ -111,19 +176,13 @@ public class SyncHelper {
                 request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
                 request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
                 request.writeBytes(lineEnd);
-                Log.i("TOKEN_TEST", "Sending token " + SynchronizationService.accessToken);
+                Log.i(TAG, "Sending token " + SynchronizationService.accessToken);
                 request.writeBytes(SynchronizationService.accessToken);
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
             } else {
-                request.writeBytes("Content-Disposition: form-data; name=\"accessCode\"" + lineEnd);
-                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-                request.writeBytes("Content-Length: " + SynchronizationService.accessCode + lineEnd);
-                request.writeBytes(lineEnd);
-                Log.i("TOKEN_TEST", "Sending code " + SynchronizationService.accessCode);
-                request.writeBytes(SynchronizationService.accessCode);
-                request.writeBytes(lineEnd);
-                request.writeBytes("--" + boundary + lineEnd);
+                Log.i(TAG, "NO ACCESS_TOKEN!!!"); // TODO Stop service and try to restart with new google ACCESS CODE
+                return null;
             }
 
             // attach file with all changes
@@ -163,14 +222,14 @@ public class SyncHelper {
 
         // parse server response
         try {
-            if (((HttpURLConnection)connection).getResponseCode() == 200) {
+            if (((HttpsURLConnection)connection).getResponseCode() == 200) {
                 InputStream stream = ((HttpURLConnection) connection).getInputStream();
                 InputStreamReader isReader = new InputStreamReader(stream);
                 BufferedReader br = new BufferedReader(isReader);
                 String line;
                 while ((line = br.readLine()) != null) {
                     System.out.println(line);
-                    response += line + System.getProperty("line.separator");
+                    response += line;
                 }
             } else {
                 Log.e(TAG, "XML file was sent but error on server is occured");
@@ -179,8 +238,8 @@ public class SyncHelper {
         } catch (IOException e) {
             e.printStackTrace();
             Log.e(TAG, "Getting response sync data from server has failed");
+            return null;
         }
-
         return response;
     }
 
@@ -302,8 +361,8 @@ public class SyncHelper {
                 SynchronizationService.initSyncTime = (String) syncDate.get("initSyncTime");
                 if ((String) syncDate.get("accessToken") != null) {
                     SynchronizationService.accessToken = (String) syncDate.get("accessToken");
-                    Log.i("TOKEN_TEST", "Saving accessToken " + SynchronizationService.accessToken + " for service " + SynchronizationService.SERVICE_NAME);
-                    servicesDbHelper.addServiceParam(SynchronizationService.SERVICE_NAME, "accessToken", SynchronizationService.accessToken);
+                    userAccount.setAccessToken(SynchronizationService.accessToken);
+                    AccountsManager.saveUserAccount(userAccount);
                     Log.v(TAG, "Access token was gotten :" + SynchronizationService.accessToken);
                 }
             } catch (JSONException e) {

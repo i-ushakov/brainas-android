@@ -4,12 +4,14 @@ import android.graphics.Point;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.SynchronizationManager;
+import net.brainas.android.app.infrustructure.UserAccount;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,8 @@ import java.util.List;
 public class ReminderScreenManager implements
         SynchronizationManager.TaskSyncObserver,
         ActivationManager.ActivationObserver,
-        Task.TaskChangesObserver {
+        Task.TaskChangesObserver,
+        AccountsManager.SingInObserver {
     private int panelWidth;
     private ViewGroup tilesPanel;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
@@ -81,6 +84,23 @@ public class ReminderScreenManager implements
         });
     }
 
+    @Override
+    public void updateAfterSingIn(UserAccount userAccount) {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
+    }
+
+    @Override
+    public void updateAfterSingOut() {
+        ((BrainasApp)(BrainasApp.getAppContext())).getMainActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                refreshTilesWithActiveTasks();
+            }
+        });
+    }
 ;
 
     private List<TaskTileView> initTiles(List<Task> tasks) {

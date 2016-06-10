@@ -43,7 +43,7 @@ public class ActivationManager implements AccountsManager.SingInObserver {
 
     @Override
     public void updateAfterSingIn(UserAccount userAccount) {
-        Integer accountId = userAccount.getLocalAccountId();
+        Integer accountId = userAccount.getId();
         startActivationService(accountId);
     }
 

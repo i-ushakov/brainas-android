@@ -5,35 +5,24 @@ import android.util.Log;
 
 import net.brainas.android.app.domain.models.Task;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.xml.sax.SAXException;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by Kit Ushakov on 5/9/2016.
  */
-public class AllTasksSync extends AsyncTask<File, Void, String> {
-    static String TAG = "AllTasksSync";
-    private AllTasksSyncListener mListener = null;
+public class AuthAsyncTask extends AsyncTask<String, Void, String> {
+    static String TAG = "TasksSyncAsyncTask";
+    private AuthAsyncTaskListener mListener = null;
     private Exception mError = null;
 
     @Override
-    protected String doInBackground(File... files) {
+    protected String doInBackground(String... accessCode) {
         String response = null;
-        List<Task> updatedTasksFromServer;
-        ArrayList<Integer> deletedTasksFromServer;
-        File allChangesInXMLFile;
-        allChangesInXMLFile = files[0];
         // send changes to server for processing
         if (NetworkHelper.isNetworkActive()) {
-            response = SyncHelper.sendAllChanges(allChangesInXMLFile);
+            response = SyncHelper.sendAuthRequest(accessCode[0]);
         } else {
             Log.i(TAG, "Network is not available");
         }
@@ -56,12 +45,12 @@ public class AllTasksSync extends AsyncTask<File, Void, String> {
         }
     }
 
-    public AllTasksSync setListener(AllTasksSyncListener listener) {
+    public AuthAsyncTask setListener(AuthAsyncTaskListener listener) {
         this.mListener = listener;
         return this;
     }
 
-    public interface AllTasksSyncListener {
+    public interface AuthAsyncTaskListener {
         public void onComplete(String jsonString, Exception e);
     }
 }

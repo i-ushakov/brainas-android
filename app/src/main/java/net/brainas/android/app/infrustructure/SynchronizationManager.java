@@ -57,9 +57,8 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
 
     @Override
     public void updateAfterSingIn(UserAccount userAccount) {
-        Integer accountId = userAccount.getLocalAccountId();
-        String accessCode = userAccount.getAccessCode();
-        startSynchronizationService(accountId, accessCode);
+        String accountName = userAccount.getAccountName();
+        startSynchronizationService(accountName);
     }
 
 
@@ -68,21 +67,21 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         stopSynchronizationService();
     }
 
-    public void startSynchronizationService(Integer accountId, String accessCode) {
+    public void startSynchronizationService(String accountName) {
         if (app.isMyServiceRunning(SynchronizationService.class)) {
-            registerSynchronizationServiceReceiver();
+            registerSynchronizationServiceReceivers();
             Log.i(TAG, "Service " + SynchronizationService.class + " already running");
             return;
         }
         Intent synchronizationService = new Intent(app.getBaseContext(), SynchronizationService.class);
-        synchronizationService.putExtra("accountId", accountId);
-        synchronizationService.putExtra("accessCode", accessCode);
+        synchronizationService.putExtra("accountName", accountName);
         app.getBaseContext().startService(synchronizationService);
-        registerSynchronizationServiceReceiver();
+        registerSynchronizationServiceReceivers();
     }
 
-    public void registerSynchronizationServiceReceiver() {
-        app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(SynchronizationService.BROADCAST_ACTION_SYNCHRONIZATION));
+    public void registerSynchronizationServiceReceivers() {
+        app.getBaseContext().registerReceiver(syncWasDoneReceiver, new IntentFilter(SynchronizationService.BROADCAST_ACTION_SYNCHRONIZATION));
+        app.getBaseContext().registerReceiver(syncMustBeStoppedReceiver, new IntentFilter(SynchronizationService.BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED));
     }
 
     public void stopSynchronizationService() {
@@ -96,11 +95,19 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         }
     }
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver syncWasDoneReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             notifyAllObservers();
             Log.i(TAG, "Got notification about synchronization");
+        }
+    };
+
+    private BroadcastReceiver syncMustBeStoppedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Got notification about synchronization must be stopped");
+            stopSynchronizationService();
         }
     };
 }

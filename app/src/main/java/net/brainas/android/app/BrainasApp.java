@@ -155,9 +155,8 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
 
     public void setUserAccount(UserAccount userAccount) {
         if (userAccount != null) {
-            if (this.userAccount == null || this.userAccount.getLocalAccountId() != userAccount.getLocalAccountId()) {
+            if (this.userAccount == null || this.userAccount.getId() != userAccount.getId()) {
                 this.userAccount = userAccount;
-                userAccountDbHelper.updateOrCreate(userAccount);
                 userAccount.setLocalAccountId(userAccountDbHelper.getUserAccountId(userAccount.getAccountName()));
                 saveLastUsedAccountInPref();
             }

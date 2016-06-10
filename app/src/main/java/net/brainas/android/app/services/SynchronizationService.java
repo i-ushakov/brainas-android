@@ -6,30 +6,29 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import net.brainas.android.app.AccountsManager;
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.AppDbHelper;
+import net.brainas.android.app.infrustructure.AuthAsyncTask;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
-import net.brainas.android.app.infrustructure.ServicesDbHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
-import net.brainas.android.app.infrustructure.AllTasksSync;
+import net.brainas.android.app.infrustructure.TasksSyncAsyncTask;
+import net.brainas.android.app.infrustructure.UserAccount;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,70 +42,105 @@ import javax.xml.transform.TransformerException;
  */
 public class SynchronizationService extends Service {
     public static final String BROADCAST_ACTION_SYNCHRONIZATION = "net.brainas.android.app.services.synchronization";
+    public static final String BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED = "net.brainas.android.app.services.synchronizationMustBeStopped";
 
-    private static String TAG = "SynchronizationService";
+    private static String TAG = "SYNCHRONIZATION";
     public static final String SERVICE_NAME = "synchronization";
+    public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
     public static String initSyncTime = null;
     public static String accessToken = null;
     public static String accessCode = null;
-    public static Integer accountId;
+    public static String accountName = null;
+    public static Integer accountId = null;
+
+    public BrainasApp app;
+    public static  AccountsManager accountManager;
+    public static  UserAccount userAccount;
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> syncThreadHandle = null;
-    private AllTasksSync asyncTask;
+    private TasksSyncAsyncTask tasksSyncAsyncTask;
 
     private SyncHelper syncHelper;
     private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
-    private ServicesDbHelper servicesDbHelper;
     private TasksManager tasksManager;
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        appDbHelper = new AppDbHelper(this);
-        taskDbHelper = new TaskDbHelper(appDbHelper);
-        taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
-        servicesDbHelper = new ServicesDbHelper(appDbHelper);
+        initHelpers();
         if (intent != null) {
-            accountId = intent.getExtras().getInt("accountId");
-            accessCode = intent.getExtras().getString("accessCode");
-            JSONObject serviceParamsJSON = new JSONObject();
-            try {
-                Log.i("TOKEN_TEST", "Sync serv start with intent");
-                serviceParamsJSON.put("accountId", accountId);
-                serviceParamsJSON.put("accessCode", accessCode);
-                servicesDbHelper.saveServiceParams(SERVICE_NAME, serviceParamsJSON.toString());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            accountName = intent.getExtras().getString("accountName");
+            userAccount = AccountsManager.getUserAccountByName(accountName);
+            setUserSyncParams(userAccount);
+            Log.i(TAG, "Sync service started with intent; accessCode = " + accessCode + "; accessToken = " + accessToken);
         } else {
-            try {
-                Log.i("TOKEN_TEST", "Sync serv start background");
-                JSONObject serviceParamsJSON = new JSONObject(servicesDbHelper.getServiceParams(SERVICE_NAME));
-                accountId = serviceParamsJSON.getInt("accountId");
-                accessCode = serviceParamsJSON.getString("accessCode");
-                accessToken = serviceParamsJSON.getString("accessToken");
-                Log.i("TOKEN_TEST", "Tokent from db" + accessToken);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            userAccount = app.getLastUsedAccount();
+            setUserSyncParams(userAccount);
+            Log.i(TAG, "Sync service started in background; accessCode = " + accessCode + "; accessToken = " + accessToken);
         }
 
-        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountId);
-        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, servicesDbHelper, accountId);
-        startSynchronization();
-        Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +
-                " with access code = " + accessCode +
-                " and accessToken =" + accessToken);
+        tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, userAccount.getId());
+        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, userAccount);
+
+        if (accessCode != null && NetworkHelper.isNetworkActive()) {
+            fetchTokenAndStartSync();
+        } else if (accessToken != null) {
+            startSynchronization();
+        } else {
+            notifyAboutServiceMustBeStopped();
+        }
+
         return Service.START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void initHelpers() {
+        app = ((BrainasApp)BrainasApp.getAppContext());
+        taskDbHelper = app.getTaskDbHelper();
+        taskChangesDbHelper = app.getTasksChangesDbHelper();
+    }
+
+    private void setUserSyncParams(UserAccount userAccount) {
+        accountId = userAccount.getId();
+        accessCode = userAccount.getAccessCode();
+        accessToken = userAccount.getAccessToken();
+    }
+
+    private void fetchTokenAndStartSync() {
+        AuthAsyncTask authAsyncTask = new AuthAsyncTask();
+        authAsyncTask.setListener(new AuthAsyncTask.AuthAsyncTaskListener() {
+            @Override
+            public void onComplete(String accessToken, Exception e) {
+                if (accessToken != null) {
+                    SynchronizationService.accessToken = accessToken;
+                    userAccount.setAccessToken(accessToken);
+                    AccountsManager.saveUserAccount(userAccount);
+                    startSynchronization();
+                    Log.i(TAG, "We have gotten accessToken = " + accessToken + " from server by accessCode");
+                } else {
+                    notifyAboutServiceMustBeStopped();
+                    Log.i(TAG, "We still not have accessToken; synchronization was stopped");
+                    return;
+                }
+            }
+        });
+
+        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
+            authAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, accessCode);
+        else {
+            authAsyncTask.execute(accessCode);
+        }
+        userAccount.setAccessCode(null);
+        AccountsManager.saveUserAccount(userAccount);
     }
 
     private void startSynchronization() {
@@ -129,6 +163,10 @@ public class SynchronizationService extends Service {
 
         syncThreadHandle =
                 scheduler.scheduleAtFixedRate(syncTask, 5, 50, java.util.concurrent.TimeUnit.SECONDS);
+
+        Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +
+                " with access code = " + accessCode +
+                " and accessToken =" + accessToken);
     }
 
     @Override
@@ -158,20 +196,20 @@ public class SynchronizationService extends Service {
             allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
             final File allChangesInXMLFileFinal = allChangesInXMLFile;
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
-            Log.v(TAG, allChangesInXMLFile.getName() + " was created");
-            Log.v(TAG, Utils.printFileToString(allChangesInXMLFile));
+            Log.i(TAG, allChangesInXMLFile.getName() + " was created");
+            Log.i(TAG, Utils.printFileToString(allChangesInXMLFile));
 
-            asyncTask = new AllTasksSync();
-            asyncTask.setListener(new AllTasksSync.AllTasksSyncListener() {
+            tasksSyncAsyncTask = new TasksSyncAsyncTask();
+            tasksSyncAsyncTask.setListener(new TasksSyncAsyncTask.AllTasksSyncListener() {
                 @Override
                 public void onComplete(String response, Exception e) {
                     handleResponseFromServer(response);
                     deleteChangesXML(allChangesInXMLFileFinal);
                 }});
             if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-                asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
+                tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
             else {
-                asyncTask.execute(allChangesInXMLFile);
+                tasksSyncAsyncTask.execute(allChangesInXMLFile);
             }
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
@@ -189,16 +227,30 @@ public class SynchronizationService extends Service {
         }
     }
     private void handleResponseFromServer (String response) {
+        if (response != null && response.equals(RESPONSE_STATUS_INVALID_TOKEN)) {
+            notifyAboutServiceMustBeStopped();
+            return;
+        }
 
         syncHelper.handleResponseFromServer(response);
 
         // notify about updates
         notifyAboutSyncronization();
     }
+
     private void notifyAboutSyncronization() {
         Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION);
         //intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));
         Log.i(TAG, "Notify About Syncronization");
         sendBroadcast(intent);
+    }
+
+    private void notifyAboutServiceMustBeStopped() {
+        userAccount.setAccessCode(null);
+        userAccount.setAccessToken(null);
+        accountManager.saveUserAccount(userAccount);
+        Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED);
+        sendBroadcast(intent);
+        Log.i(TAG, "Something went wrong, for example we couldn't exchange code on token, so service must be stopped");
     }
 }

@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public void run() {
                 ReminderScreenManager reminderScreenManager = new ReminderScreenManager(massagesPanel);
+                app.getAccountsManager().attach(reminderScreenManager);
                 app.setReminderScreenManager(reminderScreenManager);
                 reminderScreenManager.refreshTilesWithActiveTasks();
 

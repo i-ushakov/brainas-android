@@ -20,7 +20,6 @@ import com.google.android.gms.common.api.Status;
 
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
-import net.brainas.android.app.services.SynchronizationService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,6 +66,20 @@ public class AccountsManager implements
                 .build();
     }
 
+    static public UserAccount getUserAccountByName(String accountName) {
+        BrainasApp app = ((BrainasApp)(BrainasApp.getAppContext()));
+        UserAccount userAccount = app.getUserAccountDbHelper().retrieveUserAccountFromDB(accountName);
+        return userAccount;
+    }
+
+    static public boolean saveUserAccount(UserAccount userAccount) {
+        BrainasApp app = ((BrainasApp)(BrainasApp.getAppContext()));
+        if (app.getUserAccountDbHelper().saveUserAccount(userAccount) != 0) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         // An unresolvable error has occurred and Google APIs (including Sign-In) will not
@@ -77,7 +90,7 @@ public class AccountsManager implements
     public boolean initialSingIn(AppCompatActivity activity) {
         showProgressDialog(activity);
         buildApiClient(activity);
-        if (isOnline()) {
+        if (NetworkHelper.isNetworkActive()) {
             OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(GoogleApiClients.get(activity.hashCode()));
             if (opr.isDone()) {//opr.isCanceled()
                 // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
@@ -86,17 +99,9 @@ public class AccountsManager implements
                 GoogleSignInResult result = opr.get();
                 handleSignInResult(result, activity);
             } else {
-                // In this place may be situation when service is not running (temporary stop)....
-                // In future maybe it reasonable to handle this case
-                // but this situation is really uncommon and rare
-                if (((BrainasApp) BrainasApp.getAppContext()).isMyServiceRunning(SynchronizationService.class)) {
-                    if (!setLastUserAccount(activity)) {
-                        Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
-                        signIn(activity);
-                    }
-                } else {
-                        Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
-                        signIn(activity);
+                if (!doesLastUserHaveTheToken() || !setLastUserAccount(activity)) {
+                    Log.d("ACCOUNT_MANAGER", "Try to sign-in...");
+                    signIn(activity);
                 }
             }
         } else {
@@ -120,8 +125,15 @@ public class AccountsManager implements
         return false;
     }
 
+    private boolean doesLastUserHaveTheToken() {
+        if (app.getLastUsedAccount().getAccessToken() != null) {
+            return true;
+        }
+        return false;
+    }
+
     public void switchAccount(AppCompatActivity activity) {
-        if (isOnline()) {
+        if (NetworkHelper.isNetworkActive()) {
             showProgressDialog(activity);
             buildApiClient(activity);
             signOut(activity);
@@ -132,7 +144,7 @@ public class AccountsManager implements
     }
 
     public boolean isOnline() {
-        if (NetworkHelper.isNetworkActive() && !serverIsOffline ) {
+        if (NetworkHelper.isNetworkActive()) {
             return true;
         }
         return false;
@@ -150,7 +162,9 @@ public class AccountsManager implements
             userAccount.setPersonName(personName);
             String accessCode = acct.getServerAuthCode();//acct.getIdToken();
             userAccount.setAccessCode(accessCode);
+            saveUserAccount(userAccount);
             app.setUserAccount(userAccount);
+            saveUserAccount();
             notifyAllObserversAboutSingIn();
             Toast.makeText(activity, "You are signed in as " + personName, Toast.LENGTH_LONG).show();
             return true;
@@ -166,6 +180,7 @@ public class AccountsManager implements
     }
 
     public boolean isUserSingIn() {
+        // May be add Online/Offline params to account (set when user make signin)
         if (userAccount != null) {
             return true;
         } else {
@@ -173,9 +188,25 @@ public class AccountsManager implements
         }
     }
 
+    public boolean isUserHvaeToken() {
+        updateUserFromDb();
+        if (userAccount != null && userAccount.getAccessToken() != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public UserAccount updateUserFromDb() {
+        if (this.userAccount != null) {
+            this.userAccount = getUserAccountByName(this.userAccount.getAccountName());
+        }
+        return this.userAccount;
+    }
+
     public Integer getCurrentAccountId() {
-        if (isUserSingIn()) {
-            return userAccount.getLocalAccountId();
+        if (userAccount != null) {
+            return userAccount.getId();
         } else {
             return null;
         }
@@ -207,6 +238,13 @@ public class AccountsManager implements
         buildApiClient(activity);
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(GoogleApiClients.get(activity.hashCode()));
         activity.startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    public boolean saveUserAccount() {
+        if (app.getUserAccountDbHelper().saveUserAccount(this.userAccount) != 0) {
+            return true;
+        }
+        return false;
     }
 
     private void signOut(AppCompatActivity activity) {

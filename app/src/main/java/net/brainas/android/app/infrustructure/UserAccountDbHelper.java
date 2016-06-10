@@ -24,6 +24,7 @@ public class UserAccountDbHelper {
     public static final String COLUMN_NAME_USER_ACCOUNTS_EMAIL = "email";
     public static final String COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME = "person_name";
     public static final String COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE = "access_code";
+    public static final String COLUMN_NAME_USER_ACCOUNTS_ACCESS_TOKEN = "access_token";
     public static final String COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT = "last_visit";
     public static final String COLUMN_NAME_USER_ACCOUNTS_CREATED = "created";
     private static final String CREATE_TABLE_USER_ACCOUNTS =
@@ -32,6 +33,7 @@ public class UserAccountDbHelper {
                     COLUMN_NAME_USER_ACCOUNTS_EMAIL + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_USER_ACCOUNTS_ACCESS_TOKEN + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT + " DATETIME DEFAULT CURRENT_TIMESTAMP" + COMMA_SEP +
                     COLUMN_NAME_USER_ACCOUNTS_CREATED + " DATETIME" + " )";
     private static final String DELETE_TABLE_USER_ACCOUNTS =
@@ -42,6 +44,7 @@ public class UserAccountDbHelper {
             COLUMN_NAME_USER_ACCOUNTS_EMAIL,
             COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME,
             COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE,
+            COLUMN_NAME_USER_ACCOUNTS_ACCESS_TOKEN,
             COLUMN_NAME_USER_ACCOUNTS_LAST_VISIT,
             COLUMN_NAME_USER_ACCOUNTS_CREATED
     };
@@ -62,8 +65,8 @@ public class UserAccountDbHelper {
     public static void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    public long updateOrCreate(UserAccount userAccount) {
-        long  newAccountWasAdded = 0;
+    public int saveUserAccount(UserAccount userAccount) {
+        long  accountId = 0;
         String email = userAccount.getAccountName();
         String selection = COLUMN_NAME_USER_ACCOUNTS_EMAIL + " LIKE ?";
         String[] selectionArgs = { String.valueOf(email) };
@@ -72,9 +75,9 @@ public class UserAccountDbHelper {
 
         values.put(COLUMN_NAME_USER_ACCOUNTS_EMAIL, email);
         values.put(COLUMN_NAME_USER_ACCOUNTS_PERSON_NAME, userAccount.getPersonName());
-        if(userAccount.getAccessCode() != null) {
-            values.put(COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE, userAccount.getAccessCode());
-        }
+        values.put(COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE, userAccount.getAccessCode());
+        values.put(COLUMN_NAME_USER_ACCOUNTS_ACCESS_TOKEN, userAccount.getAccessToken());
+
 
         int nRowsEffected = db.update(
                 TABLE_USER_ACCOUNTS,
@@ -84,13 +87,15 @@ public class UserAccountDbHelper {
 
         values.put(COLUMN_NAME_USER_ACCOUNTS_CREATED, getDateTime());
         if (nRowsEffected == 0) {
-            newAccountWasAdded = db.insert(
+            accountId = db.insert(
                     TABLE_USER_ACCOUNTS,
                     null,
                     values);
+        } else {
+            accountId = getUserAccountId(userAccount.getAccountName());
         }
-
-        return newAccountWasAdded;
+        userAccount.setLocalAccountId((int)accountId);
+        return (int)accountId;
     }
 
     public int getUserAccountId(String accountName) {
@@ -146,6 +151,8 @@ public class UserAccountDbHelper {
             userAccount.setPersonName(personName);
             String accessCode = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_ACCESS_CODE));
             userAccount.setAccessCode(accessCode);
+            String accessToken = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER_ACCOUNTS_ACCESS_TOKEN));
+            userAccount.setAccessToken(accessToken);
 
             return userAccount;
         }

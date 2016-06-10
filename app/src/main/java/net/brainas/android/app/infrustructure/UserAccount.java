@@ -10,6 +10,8 @@ public class UserAccount {
     private String accountName;
     private String personName;
     private String accessCode = null;
+    private String accessToken = null;
+
 
 
     public UserAccount(String email) {
@@ -20,7 +22,7 @@ public class UserAccount {
         this.localAccountId = localAccountId;
     }
 
-    public int getLocalAccountId() {
+    public int getId() {
         return localAccountId;
     }
 
@@ -40,7 +42,17 @@ public class UserAccount {
         this.accessCode = accessToken;
     }
 
+
     public String getAccessCode() {
         return this.accessCode;
     }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getAccessToken() {
+        return this.accessToken;
+    }
+
 }
