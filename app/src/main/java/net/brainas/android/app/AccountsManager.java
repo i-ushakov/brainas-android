@@ -72,7 +72,7 @@ public class AccountsManager implements
         return userAccount;
     }
 
-    static public boolean saveUserAccount(UserAccount userAccount) {
+    public boolean saveUserAccount(UserAccount userAccount) {
         BrainasApp app = ((BrainasApp)(BrainasApp.getAppContext()));
         if (app.getUserAccountDbHelper().saveUserAccount(userAccount) != 0) {
             return true;
@@ -107,9 +107,11 @@ public class AccountsManager implements
         } else {
             if (!setLastUserAccount(activity)) {
                 Toast.makeText(activity, "You must to have an internet connection for start of using Brain Assistant's app.", Toast.LENGTH_LONG).show();
+                hideProgressDialog();
                 return false;
             }
         }
+        hideProgressDialog();
         return true;
     }
 
