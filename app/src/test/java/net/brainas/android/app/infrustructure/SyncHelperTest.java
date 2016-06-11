@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure;
 
 import android.support.v4.util.Pair;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -37,6 +38,7 @@ import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -109,6 +111,10 @@ public class SyncHelperTest {
     @Mock
     ServicesDbHelper servicesDbHelper;
     @Mock
+    UserAccount userAccount;
+    @Mock
+    AccountsManager accountsManager;
+    @Mock
     Task task, task3;
     @Mock
     Condition condition;
@@ -125,7 +131,9 @@ public class SyncHelperTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, servicesDbHelper, accountId);
+        when(accountsManager.getUserAccount()).thenReturn(userAccount);
+        when(userAccount.getId()).thenReturn(1);
+        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, userAccount, accountsManager);
     }
 
     @Test
@@ -515,6 +523,7 @@ public class SyncHelperTest {
                 "<initSyncTime>2016-05-09 11:04:59</initSyncTime>" +
                 "<accessToken>{\"access_token\":\"ya29.CjndAmGQy7PP9Ku1XDysVz7gYBnzltRqFG_h69ot_GAMSdIxH56vMI-GlSJxpNq-JzjWVVwFSPpWxi4\",\"token_type\":\"Bearer\",\"expires_in\":3593,\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjVmZWIxNGI5MjhiZjdjODc5ZjcwOGIxNWU3OTZmYTk2NzFkZWRiZDcifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdF9oYXNoIjoiWE1jNnJxTmdacWRFcW5TTE1hVEVYQSIsImF1ZCI6IjkyNTcwNTgxMTMyMC1jZW5icWcxZmU1amI4MDQxMTZvZWZsNzhzYmlzaG5nYS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjExNzQzMDE0MDk4NjA1ODg2ODM5OCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhenAiOiI5MjU3MDU4MTEzMjAtY2VuYnFnMWZlNWpiODA0MTE2b2VmbDc4c2Jpc2huZ2EuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJlbWFpbCI6ImtpdHVzaGFrb2ZmQGdtYWlsLmNvbSIsImlhdCI6MTQ2Mjc5MTg5OSwiZXhwIjoxNDYyNzk1NDk5LCJuYW1lIjoiS2l0IFVzaGFrb3YiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDQuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1nM0dYNFctUXFKSS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFCQS9DbmtyeE4xUzJ3MC9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiS2l0IiwiZmFtaWx5X25hbWUiOiJVc2hha292IiwibG9jYWxlIjoiZW4ifQ.gl5blgXCUvmUAtqGh4jaCasVdHjuoDOO9VtDR8Xq8HUjg5ksIaztgQR5Rg7NPJXPjvg7-nZBfUwCBSICQ5cfODlcMcRCVsqaX43fT4Y13Wa40ZnzHmg0mN2YFeuVW5A8ZSyWX-Folkd5IpXV0ETxndxklAmiyYsYpTv4DuZLCClMf0EQBHhUWopR-8fgVxLPKf1sVn5CghXtEskmK4s0h-6Kt2UMnK5y5JuZpxF5NEX-yM1VjVEIh6T_o1XldQKyjBJbzBQ4OOJVq9DOh5O_aydrppATWoFWwJCh9F4RRYb6NhPOoWLHhm0a7BEN6zaDRqW1VdxZgsoHf_Qia69ERw\",\"created\":1462791899,\"refresh_token\":\"1\\/-k_L3G2sWGkcTIrzc67TuzgxFwThzUhGCGSGymJeSPA\"}</accessToken></syncResponse>\n";
 
+        when(accountsManager.saveUserAccount(any(UserAccount.class))).thenReturn(true);
         syncHelper.handleResponseFromServer(response);
 
         verify(tasksManager, times(3)).saveTask(any(Task.class));

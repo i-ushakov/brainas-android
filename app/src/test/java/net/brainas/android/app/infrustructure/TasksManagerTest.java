@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure;
 
 import android.support.v4.util.Pair;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -106,9 +107,11 @@ public class TasksManagerTest {
     @Mock
     TaskDbHelper taskDbHelper;
     @Mock
-    ServicesDbHelper servicesDbHelper;
-    @Mock
     Task task, task3;
+    @Mock
+    UserAccount userAccount;
+    @Mock
+    AccountsManager accountsManager;
     @Mock
     Condition condition;
     @Mock
@@ -125,7 +128,8 @@ public class TasksManagerTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
         tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, 1);
-        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, servicesDbHelper, accountId);
+        when(userAccount.getId()).thenReturn(1);
+        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, userAccount, accountsManager);
     }
 
     @Test

@@ -68,19 +68,21 @@ public class SyncHelper {
     private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
     private TaskDbHelper taskDbHelper;
-    private ServicesDbHelper servicesDbHelper;
+    private AccountsManager accountsManager;
     private UserAccount userAccount;
     private int accountId;
 
     public SyncHelper (TasksManager tasksManager,
                        TaskChangesDbHelper taskChangesDbHelper,
                        TaskDbHelper taskDbHelper,
-                       UserAccount userAccount) {
+                       UserAccount userAccount,
+                       AccountsManager accountsManager) {
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
         this.taskDbHelper = taskDbHelper;
         this.userAccount = userAccount;
         this.accountId =  userAccount.getId();
+        this.accountsManager = accountsManager;
     }
 
     public static String sendAuthRequest(String accessCode) {
@@ -216,7 +218,7 @@ public class SyncHelper {
             e.printStackTrace();
             return null;
         } catch (ClassCastException e) {
-            Log.i(TAG, "Probably we have a problem with internet connection");
+            Log.e(TAG, "Probably we have a problem with internet connection");
             return null;
         }
 
@@ -362,7 +364,7 @@ public class SyncHelper {
                 if ((String) syncDate.get("accessToken") != null) {
                     SynchronizationService.accessToken = (String) syncDate.get("accessToken");
                     userAccount.setAccessToken(SynchronizationService.accessToken);
-                    AccountsManager.saveUserAccount(userAccount);
+                    accountsManager.saveUserAccount(userAccount);
                     Log.v(TAG, "Access token was gotten :" + SynchronizationService.accessToken);
                 }
             } catch (JSONException e) {
