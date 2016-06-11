@@ -55,7 +55,7 @@ public class SynchronizationService extends Service {
     public static Integer accountId = null;
 
     public BrainasApp app;
-    public static  AccountsManager accountManager;
+    public AccountsManager accountManager;
     public static  UserAccount userAccount;
 
     private final ScheduledExecutorService scheduler =
@@ -85,7 +85,7 @@ public class SynchronizationService extends Service {
         }
 
         tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, userAccount.getId());
-        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, userAccount);
+        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, userAccount, accountManager);
 
         if (accessCode != null && NetworkHelper.isNetworkActive()) {
             fetchTokenAndStartSync();
@@ -107,6 +107,7 @@ public class SynchronizationService extends Service {
         app = ((BrainasApp)BrainasApp.getAppContext());
         taskDbHelper = app.getTaskDbHelper();
         taskChangesDbHelper = app.getTasksChangesDbHelper();
+        accountManager = app.getAccountsManager();
     }
 
     private void setUserSyncParams(UserAccount userAccount) {
@@ -123,7 +124,7 @@ public class SynchronizationService extends Service {
                 if (accessToken != null) {
                     SynchronizationService.accessToken = accessToken;
                     userAccount.setAccessToken(accessToken);
-                    AccountsManager.saveUserAccount(userAccount);
+                    accountManager.saveUserAccount(userAccount);
                     startSynchronization();
                     Log.i(TAG, "We have gotten accessToken = " + accessToken + " from server by accessCode");
                 } else {
@@ -140,7 +141,7 @@ public class SynchronizationService extends Service {
             authAsyncTask.execute(accessCode);
         }
         userAccount.setAccessCode(null);
-        AccountsManager.saveUserAccount(userAccount);
+        accountManager.saveUserAccount(userAccount);
     }
 
     private void startSynchronization() {

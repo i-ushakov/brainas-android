@@ -28,7 +28,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
     //static String serverUrl = "https://192.168.1.101/backend/web/connection/";
-    static String serverUrl = "http://brainas.net/backend/web/connection/";
+    static String serverUrl = "https://brainas.net/backend/web/connection/";
 
     static String TAG = "SYNC";
 
