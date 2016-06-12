@@ -140,10 +140,12 @@ public class TaskHelper {
     }
 
     static public boolean haveTaskATimeCondition(Task task) {
-        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
-        for (Condition condition : conditions) {
-            if(condition.getEvents().get(0).getType() == Event.TYPES.TIME) {
-                return true;
+        if (task != null) {
+            CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+            for (Condition condition : conditions) {
+                if (condition.getEvents().get(0).getType() == Event.TYPES.TIME) {
+                    return true;
+                }
             }
         }
         return false;
