@@ -128,7 +128,7 @@ public class AccountsManager implements
     }
 
     private boolean doesLastUserHaveTheToken() {
-        if (app.getLastUsedAccount().getAccessToken() != null) {
+        if (app.getLastUsedAccount() != null && app.getLastUsedAccount().getAccessToken() != null) {
             return true;
         }
         return false;
