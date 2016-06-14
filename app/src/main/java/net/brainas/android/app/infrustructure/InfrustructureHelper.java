@@ -45,26 +45,25 @@ import javax.xml.parsers.ParserConfigurationException;
  * Created by innok on 11/11/2015.
  */
 public class InfrustructureHelper {
-    static private String PATH_TO_TASK_IMAGES_FOLDER = "/app_images/task_images/";
+    static public String PATH_TO_TASK_IMAGES_FOLDER = "/app_images/task_images/";
+
     static private  String TAG = "InfrustructureHelper";
 
     static public Bitmap getTaskImage(Task task) throws BrainasAppException {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-        File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getId() + "/");
+        /*File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getImage() + "/");
         if(parentDir == null) {
             throw new BrainasAppException("Wrong directory with image for task with id = " + task.getId());
         }
         List<File> fileList = InfrustructureHelper.getListOfFiles(parentDir);
         if(fileList == null) {
             throw new BrainasAppException("No image for task with id = " + task.getId());
-        }
-        if (fileList.size() > 0) {
-            File imageFile = fileList.get(0);
-            Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
-            return bmp;
-        }
-        return null;
+        }*/
+        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getImage() + "/");
+        Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
+        return bmp;
     }
+
 
     static public List<File> getListOfFiles(File parentDir) {
         ArrayList<File> inFiles = new ArrayList<File>();
@@ -85,18 +84,29 @@ public class InfrustructureHelper {
     }
 
     public static File createFileInDir(String dir, String fileName, String ext) throws IOException {
+        return  createFileInDir(dir, fileName, ext, true, true);
+    }
+
+    public static File createFileInDir(String dir, String fileName, String ext, boolean formatDate, boolean createFile) throws IOException {
         File file;
 
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
 
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        String dateTime;
         Calendar cal = Calendar.getInstance();
-        String xmlFileName = fileName + "_" + dateFormat.format(cal.getTime()) + "." + ext;
+        if (formatDate) {
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            dateTime = dateFormat.format(cal.getTime());
+        } else {
+            dateTime = cal.getTime().toString();
+        }
+        String fullFileName = fileName + "_" + dateTime + "." + ext;
 
-        file = new File(dataDir + dir +  xmlFileName);
+        file = new File(dataDir + dir +  fullFileName);
         file.getParentFile().mkdirs();
-        file.createNewFile();
-
+        if (createFile) {
+            file.createNewFile();
+        }
         return file;
     }
 

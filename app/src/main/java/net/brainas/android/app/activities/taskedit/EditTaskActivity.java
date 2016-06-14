@@ -1,17 +1,23 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -22,7 +28,11 @@ import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.BasicImageDownloader;
+import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +43,9 @@ import java.util.Map;
  * Created by innok on 12/7/2015.
  */
 public class EditTaskActivity extends AppCompatActivity {
+    static private String TAG ="EditTaskActivity";
+    static private String IMG_DOWNLOAD_TAG ="DOWNLOADING_IMAGES";
+
     static HashMap<String, Boolean> existActivities = new HashMap<>();
 
     public enum Mode {
@@ -160,6 +173,86 @@ public class EditTaskActivity extends AppCompatActivity {
                 categoryPanel.setVisibility(View.GONE);
                 conditionPanel.setVisibility(View.GONE);
                 taskPicturePanel.setVisibility(View.VISIBLE);
+
+                // TODO Move to another class
+                WebView googleSearchWebView = (WebView)findViewById(R.id.googleSearchWebView);
+                googleSearchWebView.setWebViewClient(new GoogleSearchWebViewClient());
+                googleSearchWebView.loadUrl("https://www.google.ru/search?q=hacker&tbm=isch");
+                this.registerForContextMenu(googleSearchWebView);
+                googleSearchWebView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        WebView.HitTestResult hr = ((WebView)v).getHitTestResult();
+                        if (hr.getType() == WebView.HitTestResult.IMAGE_TYPE){
+                            Toast.makeText(EditTaskActivity.this, "IMAGE_TYPE", Toast.LENGTH_SHORT).show();
+                        };
+                        Toast.makeText(EditTaskActivity.this, "onLongClick", Toast.LENGTH_SHORT).show();
+                        BasicImageDownloader basicImageDownloader = new BasicImageDownloader(new BasicImageDownloader.OnImageLoaderListener() {
+                            @Override
+                            public void onError(BasicImageDownloader.ImageError error) {
+
+                            }
+
+                            @Override
+                            public void onProgressChange(int percent) {
+                                // TODO set progress mProgress.setProgress(percent);
+                                Toast.makeText(EditTaskActivity.this, "onProgressChange " + percent, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onComplete(Bitmap result) {
+                                final File imageFile;
+                                try {
+                                    imageFile = InfrustructureHelper.createFileInDir(
+                                            InfrustructureHelper.PATH_TO_TASK_IMAGES_FOLDER,
+                                            "task_img", "png",
+                                            false, false
+                                    );
+                                    BasicImageDownloader.writeToDisk(imageFile, result, new BasicImageDownloader.OnBitmapSaveListener() {
+                                        @Override
+                                        public void onBitmapSaved() {
+                                            // set Task pictire name
+                                            // TODO close activity
+                                            task.setImage(imageFile.getName());
+                                            Toast.makeText(EditTaskActivity.this, "Image was saved", Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
+                                            Toast.makeText(EditTaskActivity.this, "Cannot save image for task ", Toast.LENGTH_SHORT).show();
+                                            Log.e(IMG_DOWNLOAD_TAG, "Cannot save image on disk");
+                                        }
+                                    }, Bitmap.CompressFormat.PNG, false);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    Toast.makeText(EditTaskActivity.this, "Cannot save image for task ", Toast.LENGTH_SHORT).show();
+                                    Log.e(IMG_DOWNLOAD_TAG, "Cannot save image on disk");
+                                }
+
+                                Toast.makeText(EditTaskActivity.this, "onComplete", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        basicImageDownloader.download(hr.getExtra(), true);
+                        return true;
+                    }
+                });
+                googleSearchWebView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(EditTaskActivity.this, "onClick", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                googleSearchWebView.setOnTouchListener(new View.OnTouchListener() {
+                    public boolean onTouch(View v, MotionEvent event) {
+                        WebView.HitTestResult hr = ((WebView)v).getHitTestResult();
+                        //if (v.getId() == R.id.web && event.getAction() == MotionEvent.ACTION_DOWN){
+                            //handler.sendEmptyMessageDelayed(CLICK_ON_WEBVIEW, 500);
+                            //Toast.makeText(EditTaskActivity.this, Integer.toString(hr.getType()), Toast.LENGTH_SHORT).show();
+                        //}
+                        return false;
+                    }
+                });
                 break;
             default:
                 TabLayout.Tab tab = tabLayout.getTabAt(0);
@@ -177,6 +270,49 @@ public class EditTaskActivity extends AppCompatActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             lp.gravity = Gravity.CENTER_HORIZONTAL;
             conditionPanel.addView(imagesOfEventTypes, lp);
+        }
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+
+        //WebView.HitTestResult result = view.getHitTestResult();
+
+        MenuItem.OnMenuItemClickListener handler = new MenuItem.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                // do the menu action
+                return true;
+            }
+        };
+
+      /*  if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
+                result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+            // Menu options for an image.
+            //set the header title to the image url
+            menu.setHeaderTitle(result.getExtra());
+            //menu.add(0, ID_SAVEIMAGE, 0, "Save Image").setOnMenuItemClickListener(handler);
+            //menu.add(0, ID_VIEWIMAGE, 0, "View Image").setOnMenuItemClickListener(handler);
+        } else if (result.getType() == WebView.HitTestResult.ANCHOR_TYPE ||
+                result.getType() == WebView.HitTestResult.SRC_ANCHOR_TYPE) {
+            // Menu options for a hyperlink.
+            //set the header title to the link url
+            menu.setHeaderTitle(result.getExtra());
+           // menu.add(0, ID_SAVELINK, 0, "Save Link").setOnMenuItemClickListener(handler);
+           // menu.add(0, ID_SHARELINK, 0, "Share Link").setOnMenuItemClickListener(handler);
+        }*/
+    }
+
+    private class GoogleSearchWebViewClient extends WebViewClient {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            if (url.contains("q=hacker") && url.contains("tbm=isch")) {
+                view.loadUrl(url);
+                return true;
+            } else {
+                Toast.makeText(EditTaskActivity.this, "This action is no avalibale", Toast.LENGTH_SHORT).show();
+                return true;
+            }
         }
     }
 

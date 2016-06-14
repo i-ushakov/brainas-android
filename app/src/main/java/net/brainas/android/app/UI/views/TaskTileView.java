@@ -96,9 +96,10 @@ public class TaskTileView extends RelativeLayout implements View.OnClickListener
     private void setTaskImage() throws BrainasAppException {
         int imageSize = (int)((double)this.getWidth()/1.5);
         int marginTop = (int)((float)imageSize/4);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(imageSize,imageSize);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(imageSize,imageSize);
         layoutParams.setMargins(0, marginTop, 0, 0);
-        layoutParams.gravity= Gravity.CENTER;
+        //layoutParams.gravity= Gravity.CENTER;
+        layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
         taskImageView.setLayoutParams(layoutParams);
         taskImageView.setImageBitmap(InfrustructureHelper.getTaskImage(this.task));
         ((ViewGroup)taskMessageView.getParent()).removeView(taskMessageView);
