@@ -1,7 +1,6 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -13,26 +12,22 @@ import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.BasicImageDownloader;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,8 +38,12 @@ import java.util.Map;
  * Created by innok on 12/7/2015.
  */
 public class EditTaskActivity extends AppCompatActivity {
+
+    static public String IMAGE_REQUEST_EXTRA_FIELD = "image_name";
+
     static private String TAG ="EditTaskActivity";
-    static private String IMG_DOWNLOAD_TAG ="DOWNLOADING_IMAGES";
+    static private int GET_IMAGE_REQUEST = 1001;
+
 
     static HashMap<String, Boolean> existActivities = new HashMap<>();
 
@@ -62,6 +61,7 @@ public class EditTaskActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewGroup taskTitlePanel;
     private ViewGroup taskPicturePanel;
+    private ImageView taskPictureView;
     private EditText editTitleField;
     private ViewGroup categoryPanel;
     private ViewGroup conditionPanel;
@@ -71,6 +71,8 @@ public class EditTaskActivity extends AppCompatActivity {
     private String validationErrorMessage = "";
     private Mode mode;
     private Task task = null;
+    private int userId;
+    private boolean needToRemoveImage = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +88,8 @@ public class EditTaskActivity extends AppCompatActivity {
         tasksManager = app.getTasksManager();
         taskHelper = app.getTaskHelper();
 
+        userId = app.getAccountsManager().getCurrentAccountId();
+
         if (getIntent().hasExtra("taskLocalId")) {
             mode = Mode.EDIT;
             long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
@@ -94,6 +98,8 @@ public class EditTaskActivity extends AppCompatActivity {
                 finish();
             }
         } else {
+            task = new Task(userId, getResources().getString(R.string.activity_edit_new_task));
+            task.setStatus(Task.STATUSES.DISABLED);
             mode = Mode.CREATE;
         }
         setToolBar();
@@ -101,6 +107,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
         taskTitlePanel = (ViewGroup) findViewById(R.id.taskTitlePanel);
         taskPicturePanel = (ViewGroup) findViewById(R.id.taskPicturePanel);
+        taskPictureView = (ImageView)findViewById(R.id.taskPictureView);
         editTitleField = (EditText) findViewById(R.id.editTitleField);
         setEditTitleFieldListeners();
         categoryPanel = (ViewGroup) findViewById(R.id.middleCategoryPanel);
@@ -173,86 +180,7 @@ public class EditTaskActivity extends AppCompatActivity {
                 categoryPanel.setVisibility(View.GONE);
                 conditionPanel.setVisibility(View.GONE);
                 taskPicturePanel.setVisibility(View.VISIBLE);
-
-                // TODO Move to another class
-                WebView googleSearchWebView = (WebView)findViewById(R.id.googleSearchWebView);
-                googleSearchWebView.setWebViewClient(new GoogleSearchWebViewClient());
-                googleSearchWebView.loadUrl("https://www.google.ru/search?q=hacker&tbm=isch");
-                this.registerForContextMenu(googleSearchWebView);
-                googleSearchWebView.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-                        WebView.HitTestResult hr = ((WebView)v).getHitTestResult();
-                        if (hr.getType() == WebView.HitTestResult.IMAGE_TYPE){
-                            Toast.makeText(EditTaskActivity.this, "IMAGE_TYPE", Toast.LENGTH_SHORT).show();
-                        };
-                        Toast.makeText(EditTaskActivity.this, "onLongClick", Toast.LENGTH_SHORT).show();
-                        BasicImageDownloader basicImageDownloader = new BasicImageDownloader(new BasicImageDownloader.OnImageLoaderListener() {
-                            @Override
-                            public void onError(BasicImageDownloader.ImageError error) {
-
-                            }
-
-                            @Override
-                            public void onProgressChange(int percent) {
-                                // TODO set progress mProgress.setProgress(percent);
-                                Toast.makeText(EditTaskActivity.this, "onProgressChange " + percent, Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onComplete(Bitmap result) {
-                                final File imageFile;
-                                try {
-                                    imageFile = InfrustructureHelper.createFileInDir(
-                                            InfrustructureHelper.PATH_TO_TASK_IMAGES_FOLDER,
-                                            "task_img", "png",
-                                            false, false
-                                    );
-                                    BasicImageDownloader.writeToDisk(imageFile, result, new BasicImageDownloader.OnBitmapSaveListener() {
-                                        @Override
-                                        public void onBitmapSaved() {
-                                            // set Task pictire name
-                                            // TODO close activity
-                                            task.setImage(imageFile.getName());
-                                            Toast.makeText(EditTaskActivity.this, "Image was saved", Toast.LENGTH_SHORT).show();
-                                        }
-
-                                        @Override
-                                        public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
-                                            Toast.makeText(EditTaskActivity.this, "Cannot save image for task ", Toast.LENGTH_SHORT).show();
-                                            Log.e(IMG_DOWNLOAD_TAG, "Cannot save image on disk");
-                                        }
-                                    }, Bitmap.CompressFormat.PNG, false);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    Toast.makeText(EditTaskActivity.this, "Cannot save image for task ", Toast.LENGTH_SHORT).show();
-                                    Log.e(IMG_DOWNLOAD_TAG, "Cannot save image on disk");
-                                }
-
-                                Toast.makeText(EditTaskActivity.this, "onComplete", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        basicImageDownloader.download(hr.getExtra(), true);
-                        return true;
-                    }
-                });
-                googleSearchWebView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(EditTaskActivity.this, "onClick", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                googleSearchWebView.setOnTouchListener(new View.OnTouchListener() {
-                    public boolean onTouch(View v, MotionEvent event) {
-                        WebView.HitTestResult hr = ((WebView)v).getHitTestResult();
-                        //if (v.getId() == R.id.web && event.getAction() == MotionEvent.ACTION_DOWN){
-                            //handler.sendEmptyMessageDelayed(CLICK_ON_WEBVIEW, 500);
-                            //Toast.makeText(EditTaskActivity.this, Integer.toString(hr.getType()), Toast.LENGTH_SHORT).show();
-                        //}
-                        return false;
-                    }
-                });
+                renderPicture();
                 break;
             default:
                 TabLayout.Tab tab = tabLayout.getTabAt(0);
@@ -285,34 +213,52 @@ public class EditTaskActivity extends AppCompatActivity {
                 return true;
             }
         };
-
-      /*  if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-            // Menu options for an image.
-            //set the header title to the image url
-            menu.setHeaderTitle(result.getExtra());
-            //menu.add(0, ID_SAVEIMAGE, 0, "Save Image").setOnMenuItemClickListener(handler);
-            //menu.add(0, ID_VIEWIMAGE, 0, "View Image").setOnMenuItemClickListener(handler);
-        } else if (result.getType() == WebView.HitTestResult.ANCHOR_TYPE ||
-                result.getType() == WebView.HitTestResult.SRC_ANCHOR_TYPE) {
-            // Menu options for a hyperlink.
-            //set the header title to the link url
-            menu.setHeaderTitle(result.getExtra());
-           // menu.add(0, ID_SAVELINK, 0, "Save Link").setOnMenuItemClickListener(handler);
-           // menu.add(0, ID_SHARELINK, 0, "Share Link").setOnMenuItemClickListener(handler);
-        }*/
     }
 
-    private class GoogleSearchWebViewClient extends WebViewClient {
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            if (url.contains("q=hacker") && url.contains("tbm=isch")) {
-                view.loadUrl(url);
-                return true;
-            } else {
-                Toast.makeText(EditTaskActivity.this, "This action is no avalibale", Toast.LENGTH_SHORT).show();
-                return true;
+    public void searchImageInInternet(View view) {
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            Intent intent = new Intent(EditTaskActivity.this, SearchPictureActivity.class);
+            Editable taskTitleEditable = editTitleField.getText();
+            if (taskTitleEditable != null) {
+                intent.putExtra("searchTerm", taskTitleEditable.toString());
             }
+            startActivityForResult(intent, GET_IMAGE_REQUEST);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == GET_IMAGE_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD);
+                task.setImage(imageFileName);
+                needToRemoveImage = true;
+            }
+        }
+    }
+
+    public void capturePicture(View view) {
+        UIHelper.addClickEffectToButton(view, this);
+    }
+
+    public void loadFromGallery(View view) {
+        UIHelper.addClickEffectToButton(view, this);
+    }
+
+    private void renderPicture() {
+        if (task != null && task.getImage() != null) {
+            taskPictureView.setAlpha(1f);
+            taskPicturePanel.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        taskPictureView.setImageBitmap(InfrustructureHelper.getTaskImage(EditTaskActivity.this.task));
+                    } catch (BrainasAppException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "Cannot load task picture from disk");
+                    }
+                }
+            });
         }
     }
 
@@ -400,7 +346,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
     private boolean validate() {
         Editable taskTitleEditable = editTitleField.getText();
-        if ((taskTitleEditable == null || taskTitleEditable.toString().trim().matches("")) && !isPictureSet()) {
+        if ((taskTitleEditable == null || taskTitleEditable.toString().trim().matches("")) && !task.haveImage()) {
             this.validationErrorMessage = "You must input title of task or add picture";
             conditionPanel.setOnClickListener(null);
             conditionPanel.setAlpha(0.5f);
@@ -413,20 +359,19 @@ public class EditTaskActivity extends AppCompatActivity {
         return true;
     }
 
-    private boolean isPictureSet() {
-        return false;
-    }
 
     private void save() {
+        needToRemoveImage = false;
         Editable taskTitleEditable = editTitleField.getText();
         if (validate()) {
-            int userId = app.getAccountsManager().getCurrentAccountId();
             String message = taskTitleEditable.toString().trim();
             if (task == null) {
                 task = new Task(userId, message);
                 task.setStatus(Task.STATUSES.WAITING);
             }
-            task.setMessage(message);
+            if (!message.equals("")) {
+                task.setMessage(message);
+            }
             tasksManager.saveTask(task);
             tasksManager.addToMappedTasks(task);
             showTaskErrorsOrWarnings(task);
@@ -435,6 +380,10 @@ public class EditTaskActivity extends AppCompatActivity {
 
     public void cancel(View view) {
         if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            if (needToRemoveImage && task.getImage() != null) {
+                // TODO remove image
+                needToRemoveImage= false;
+            }
             finish();
         }
     }

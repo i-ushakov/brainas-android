@@ -30,7 +30,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
     //static String serverUrl = "https://192.168.1.101/backend/web/connection/";
     static String serverUrl = "https://brainas.net/backend/web/connection/";
 
-    static String TAG = "SYNC";
+    static String TAG = "SYNCHRONIZATION";
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);

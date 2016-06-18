@@ -15,5 +15,6 @@
     <color name="textColorForLocationEvent">#000000</color>
     <color name="textColorForTimeEvent">#ffffff</color>
     <color name="white">#ffffff</color>
+    <color name="myOrange">#FA5858</color>
 
 </resources>

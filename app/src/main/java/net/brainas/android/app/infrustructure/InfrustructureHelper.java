@@ -98,7 +98,7 @@ public class InfrustructureHelper {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
             dateTime = dateFormat.format(cal.getTime());
         } else {
-            dateTime = cal.getTime().toString();
+            dateTime = Long.toString(cal.getTimeInMillis());
         }
         String fullFileName = fileName + "_" + dateTime + "." + ext;
 

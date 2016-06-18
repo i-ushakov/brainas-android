@@ -264,6 +264,7 @@ public class TasksManager {
         //TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(task);
         task.setId(taskId);
+        addToHeap(task);
 
         if (needToLoggingChanges) {
             //TaskChangesDbHelper taskChangesDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTasksChangesDbHelper();
@@ -312,5 +313,12 @@ public class TasksManager {
             heapTask.setStatus(dbTask.getStatus());
         }
         return heapTask;
+    }
+
+    private void addToHeap(Task task) {
+        long taskId = task.getId();
+        if(!tasksHashMap.containsKey(taskId)) {
+            tasksHashMap.put(taskId, task);
+        }
     }
 }

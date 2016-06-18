@@ -4,14 +4,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.taskcard.ConditionBlockView;
 import net.brainas.android.app.activities.taskedit.EditTaskActivity;
@@ -19,6 +22,7 @@ import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.SynchronizationManager;
 
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,6 +32,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class TaskCardActivity extends AppCompatActivity
         implements ActivationManager.ActivationObserver, SynchronizationManager.TaskSyncObserver, Task.TaskChangesObserver {
+
+    private static String TAG = "TaskCardActivity";
 
     private Toolbar toolbar;
     private Task task;
@@ -171,6 +177,9 @@ public class TaskCardActivity extends AppCompatActivity
         TextView taskMessage = (TextView)findViewById(R.id.task_message);
         taskMessage.setText(task.getMessage());
 
+        // image
+        renderTaskPicture();
+
         // description
         TextView taskDescription = (TextView)findViewById(R.id.task_description);
         taskDescription.setText(task.getDescription());
@@ -186,6 +195,24 @@ public class TaskCardActivity extends AppCompatActivity
 
         View detailedCardOfTask = findViewById (R.id.detailed_card_of_task);
         detailedCardOfTask.invalidate();
+    }
+
+    private void renderTaskPicture() {
+        final ImageView taskCardImage = (ImageView)findViewById(R.id.task_card_image);
+        if (task != null && task.getImage() != null) {
+            taskCardImage.setAlpha(1f);
+            ((View)taskCardImage.getParent()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        taskCardImage.setImageBitmap(InfrustructureHelper.getTaskImage(TaskCardActivity.this.task));
+                    } catch (BrainasAppException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "Cannot load task picture from disk");
+                    }
+                }
+            });
+        }
     }
 
     private void setTaskStatus() {

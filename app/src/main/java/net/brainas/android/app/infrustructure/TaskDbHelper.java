@@ -43,7 +43,7 @@ public class TaskDbHelper {
                     COLUMN_NAME_TASKS_USER + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_TASKS_MESSAGE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_DESCRIPTION + " TEXT" + COMMA_SEP +
-                    COLUMN_NAME_TASKS_IMAGE + " INTEGER" + COMMA_SEP +
+                    COLUMN_NAME_TASKS_IMAGE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_STATUS + " TEXT" + " )";
     private static final String DELETE_TABLE_TASKS =
             "DROP TABLE IF EXISTS " + TABLE_TASKS;
@@ -183,7 +183,7 @@ public class TaskDbHelper {
 
         Task task;
         int id;
-        String message, status, description, globalIdStr;
+        String message, status, description, globalIdStr, image;
         if (cursor.moveToFirst()) {
             do {
                 id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_ID) ));
@@ -202,6 +202,8 @@ public class TaskDbHelper {
                 task.setConditions(getConditions(task));
                 description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
+                image = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_IMAGE));
+                task.setImage(image);
                 tasks.add(task);
             } while (cursor.moveToNext());
         }
@@ -218,6 +220,7 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
+        values.put(COLUMN_NAME_TASKS_IMAGE, task.getImage());
         if (task.getStatus() != null) {
             values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
         }

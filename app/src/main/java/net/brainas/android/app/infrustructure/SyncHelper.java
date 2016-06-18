@@ -58,7 +58,7 @@ import javax.xml.transform.stream.StreamResult;
  * Created by innok on 2/5/2016.
  */
 public class SyncHelper {
-    static String TAG = "SYNC";
+    static String TAG = "SYNCHRONIZATION";
     private static final String syncDateDir = "/app_sync/sync_data";
     public static final String syncDateDirForSend = syncDateDir + "/for_send/";
 
@@ -109,14 +109,24 @@ public class SyncHelper {
 
         } catch (IOException e) {
             e.printStackTrace();
+            // TODO No Token situation
+            return null;
         } catch (KeyStoreException e) {
             e.printStackTrace();
+            // TODO No Token situation
+            return null;
         } catch (CertificateException e) {
             e.printStackTrace();
+            // TODO No Token situation
+            return null;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            // TODO No Token situation
+            return null;
         } catch (KeyManagementException e) {
             e.printStackTrace();
+            // TODO No Token situation
+            return null;
         }
 
         // parse server response
@@ -133,11 +143,13 @@ public class SyncHelper {
                 }
             } else {
                 Log.e(TAG, "The Code was sent, but Token haven't gotten! (!= 200)");
+                // TODO No Token situation
                 return null;
             }
         } catch (IOException e) {
             e.printStackTrace();
             Log.e(TAG, "The Code was sent, but Token haven't gotten! (IOException)");
+            // TODO No Token situation
             return null;
         }
 

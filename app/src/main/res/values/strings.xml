@@ -20,15 +20,20 @@
     <string name="accounts_header_not_signedin">You are not signed in to brainas app</string>
     <string name="accounts_offline_mode_warning">Offline mode!</string>
 
-    <!-- -->
+    <!-- EditTaskActivity -->
     <string name="activity_edit_title">Edit task</string>
+    <string name="activity_edit_new_task">New task</string>
 
     <!-- EditEventActivity -->
     <string name="activity_event_title">Event</string>
     <string name="activity_event_already_have_time_event">You have already a time event in this task</string>
 
+    <!-- SearchPictureActivity-->
+    <string name="activity_search_picture_title">Searching picture in Internet</string>
+
     <!-- Activation addServiceParam-->
     <string name="service_activation_name">Brainas activation service</string>
     <string name="service_synchronization_name">Brainas synchronization service</string>
+
 
 </resources>

@@ -56,30 +56,13 @@
                     android:layout_marginTop="5dp" />
             </LinearLayout>
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/taskPicturePanel">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="Not working in this version"
-                    android:id="@+id/textView1"
-                    android:textColor="#000000"
-                    android:layout_gravity="center" />
-
-                <WebView
-                    android:id="@+id/googleSearchWebView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"></WebView>
-            </LinearLayout>
+            <include layout="@layout/content_edit_task_picture_panel" />
 
         </LinearLayout>
 
-        <!-- Middle Panel (Category) -->
+
+
+    <!-- Middle Panel (Category) -->
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
