@@ -324,6 +324,15 @@ public class Task {
             }
         }
 
+        // check status
+        Task.STATUSES status = ((Task) object).getStatus();
+        if ((status == null && this.status != null) || (status != null && this.status == null)) {
+            return false;
+        }
+        if (!this.status.equals(status)) {
+            return false;
+        }
+
         return true;
     }
 
