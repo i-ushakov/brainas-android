@@ -11,6 +11,7 @@ import net.brainas.android.app.infrustructure.UserAccount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -186,7 +187,20 @@ public class TasksManager {
             if (task.getGlobalId() != 0) {
                 ((BrainasApp) BrainasApp.getAppContext()).getTasksChangesDbHelper().loggingChanges(task, accountId, "DELETED");
             }
-            task = null;
+            if(tasksHashMap.containsKey(task.getId())) {
+                tasksHashMap.remove(task.getId());
+            }
+            CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+            Iterator<Condition> iterator = conditions.iterator();
+            while (iterator.hasNext()) {
+                Condition condition =iterator.next();
+                ArrayList<Event> events = condition.getEvents();
+                Event event = events.get(0);
+                event.setParent(null);
+                events.clear();
+                condition.setParent(null);
+            }
+            conditions.clear();
             return true;
         } else {
             return false;
@@ -224,10 +238,11 @@ public class TasksManager {
     }
 
     public void deleteTaskByGlobalId(int taskGlobalId) {
-        //BrainasApp app = (BrainasApp)BrainasApp.getAppContext();
-        //TaskDbHelper taskDbHelper = app.getTaskDbHelper();
-        //TaskChangesDbHelper taskChangesDbHelper = app.getTasksChangesDbHelper();
-        long localIdOfDeletedTask = taskDbHelper.deleteTaskByGlobalId(taskGlobalId);
+        Map<String,Object> params = new HashMap<>();
+        params.put("TASK_GLOBAL_ID", taskGlobalId);
+        Task task = taskDbHelper.getTasks(params, accountId).get(0);
+        long localIdOfDeletedTask = task.getId();
+        removeTask(task);
         taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
     }
 
@@ -276,11 +291,15 @@ public class TasksManager {
     }
 
     public void saveCondition(Condition condition) {
-        this.saveTask(condition.getParent());
+        if (condition.getParent()!= null) {
+            this.saveTask(condition.getParent());
+        }
     }
 
     public void saveEvent(Event event) {
-        this.saveCondition(event.getParent());
+        if (event.getParent() != null) {
+            this.saveCondition(event.getParent());
+        }
     }
 
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
@@ -305,12 +324,12 @@ public class TasksManager {
         return mappedTasks;
     }
 
-    private Task refreshTaskObject(Task heapTask, Task dbTask) {
-        if (!heapTask.equals(dbTask)) {
-            heapTask.setMessage(dbTask.getMessage());
-            heapTask.setDescription(dbTask.getDescription());
-            heapTask.setConditions(dbTask.getConditions());
-            heapTask.setStatus(dbTask.getStatus());
+    private Task refreshTaskObject(Task heapTask, Task freshTask) {
+        if (!heapTask.equals(freshTask)) {
+            heapTask.setMessage(freshTask.getMessage());
+            heapTask.setDescription(freshTask.getDescription());
+            heapTask.setConditions(freshTask.getConditions());
+            heapTask.setStatus(freshTask.getStatus());
         }
         return heapTask;
     }
@@ -319,6 +338,8 @@ public class TasksManager {
         long taskId = task.getId();
         if(!tasksHashMap.containsKey(taskId)) {
             tasksHashMap.put(taskId, task);
+        } else {
+            refreshTaskObject(tasksHashMap.get(taskId), task);
         }
     }
 }
