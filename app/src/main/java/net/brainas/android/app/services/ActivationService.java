@@ -43,11 +43,10 @@ public class ActivationService extends Service {
 
     private Integer accountId;
 
-    private AppDbHelper appDbHelper;
+    private BrainasApp app;
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
     private TasksManager tasksManager;
-    private ServicesDbHelper servicesDbHelper;
     private LocationProvider locationProvider;
     private NotificationController notificationManager;
     private Timer timer;
@@ -58,29 +57,16 @@ public class ActivationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        appDbHelper = new AppDbHelper(this);
-        taskDbHelper = new TaskDbHelper(appDbHelper);
-        servicesDbHelper = new ServicesDbHelper(appDbHelper);
-        taskChangesDbHelper = new TaskChangesDbHelper(appDbHelper);
-        locationProvider = new LocationProvider(this);
+        app = ((BrainasApp)BrainasApp.getAppContext());
+        taskDbHelper = app.getTaskDbHelper();
+        taskChangesDbHelper = app.getTasksChangesDbHelper();
+        locationProvider = app.getLocationProvider();
         notificationManager = new NotificationController();
         this.registerReceiver(broadcastReceiver, new IntentFilter(BrainasApp.BROADCAST_ACTION_APP_VISABILITY_WAS_CHANGED));
         if (intent != null) {
             accountId = intent.getExtras().getInt("accountId");
-            JSONObject serviceParamsJSON = new JSONObject();
-            try {
-                serviceParamsJSON.put("accountId", accountId);
-                servicesDbHelper.saveServiceParams(SERVICE_NAME, serviceParamsJSON.toString());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         } else {
-            try {
-                JSONObject serviceParamsJSON = new JSONObject(servicesDbHelper.getServiceParams(SERVICE_NAME));
-                accountId = serviceParamsJSON.getInt("accountId");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            accountId = app.getLastUsedAccount().getId();
         }
         tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, accountId);
 

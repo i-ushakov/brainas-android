@@ -149,6 +149,10 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return this.locationProvider;
     }
 
+    public void setLocationProvider (LocationProvider locationProvider) {
+        this.locationProvider = locationProvider;
+    }
+
     public SynchronizationManager getSynchronizationManager() {
         return synchronizationManager;
     }

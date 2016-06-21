@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -10,20 +11,25 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.location.LocationSettingsStates;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.taskedit.EditTaskActivity;
+import net.brainas.android.app.infrustructure.LocationProvider;
 
 
 public class MainActivity extends AppCompatActivity  {
+    static public final int REQUEST_CHECK_SETTINGS = 1001;
 
     private BrainasApp app;
+    private LocationProvider locationProvider;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
     private ViewGroup massagesPanel;
     private View menuPanel;
@@ -41,6 +47,9 @@ public class MainActivity extends AppCompatActivity  {
 
         app = (BrainasApp)this.getApplication();
         app.setMainActivity(this);
+
+        locationProvider = new LocationProvider(this);
+        app.setLocationProvider(locationProvider);
 
         massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
         menuPanel = findViewById(R.id.menu_panel);
@@ -223,6 +232,17 @@ public class MainActivity extends AppCompatActivity  {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (!app.getAccountsManager().handleSignInResult(result, this) || !app.getAccountsManager().isUserSingIn()) {
                 startAccountsActivity();
+            }
+        } else if (requestCode == REQUEST_CHECK_SETTINGS) {
+            final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+            switch (resultCode) {
+                case Activity.RESULT_OK:
+                    break;
+                case Activity.RESULT_CANCELED:
+                    Toast.makeText(this,"If you not allow use wifi networks, it may lead to worse determination of your location", Toast.LENGTH_LONG);
+                    break;
+                default:
+                    break;
             }
         }
     }

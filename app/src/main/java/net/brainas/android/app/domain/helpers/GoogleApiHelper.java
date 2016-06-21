@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.EventLocation;
+import net.brainas.android.app.infrustructure.NetworkHelper;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,7 +32,9 @@ public class GoogleApiHelper {
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
         this.gpsEvent = gpsEvent;
         this.needSavingTheEvent = needSavingTheEvent;
-        new GettingAddressByLocation().execute(gpsEvent);
+        if (NetworkHelper.isNetworkActive()) {
+            new GettingAddressByLocation().execute(gpsEvent);
+        }
     }
 
     private class GettingAddressByLocation extends AsyncTask<EventLocation, Void, String> {

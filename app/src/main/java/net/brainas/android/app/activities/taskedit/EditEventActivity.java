@@ -51,10 +51,12 @@ import java.util.Calendar;
  * Created by Kit Ushakov on 28/02/2016.
  */
 public class EditEventActivity extends EditTaskActivity
-        implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
+        implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback,
+        LocationProvider.LocationChangedObserver {
 
     private static String TAG = "EditEventActivity";
     private BrainasApp app;
+    private LocationProvider locationProvider;
     private boolean editMode = false;
     private boolean initLoad = true;
 
@@ -71,6 +73,7 @@ public class EditEventActivity extends EditTaskActivity
 
     private GoogleMap googleMap;
     private Marker currentMarker;
+    private Marker userLocationMarker;
 
     private String validationMessage = "Validation of event is failed";
 
@@ -79,6 +82,8 @@ public class EditEventActivity extends EditTaskActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_event);
         app = (BrainasApp) (BrainasApp.getAppContext());
+        locationProvider = ((BrainasApp)BrainasApp.getAppContext()).getLocationProvider();
+        locationProvider.attachObserver(this);
 
         retrieveAndSetTask();
         if (task != null) {
@@ -257,14 +262,15 @@ public class EditEventActivity extends EditTaskActivity
         this.googleMap.setOnMapClickListener(EditEventActivity.this);
         this.googleMap.setOnMapLongClickListener(EditEventActivity.this);
         if (initLoad && !editMode) {
-            getCurrentUserLocationAsync();
             initLoad = false;
         }
         if (editMode && eventLocation != null) {
             LatLng location = new LatLng (eventLocation.getLat(), eventLocation.getLng());
             setMarker(location);
             moveAndZoomCamera(location);
+
         }
+        getCurrentUserLocationAsync(editMode);
     }
 
     public void saveEventHandler(View view) {
@@ -281,6 +287,7 @@ public class EditEventActivity extends EditTaskActivity
     @Override
     protected  void onDestroy() {
         super.onDestroy();
+        locationProvider.detachObserver(this);
     }
 
     private void changeLocation(LatLng location) {
@@ -300,6 +307,19 @@ public class EditEventActivity extends EditTaskActivity
                 .position(location)
                 .title("")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+    }
+
+    private void setUserLocationMarker(LatLng location) {
+        if (userLocationMarker != null ) {
+            userLocationMarker.remove();
+        }
+
+        if (googleMap != null) {
+            userLocationMarker = googleMap.addMarker(new MarkerOptions()
+                    .position(location)
+                    .title("Yout current location")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+        }
     }
 
     private void setTypeSpinner() {
@@ -388,12 +408,11 @@ public class EditEventActivity extends EditTaskActivity
         return false;
     }
 
-    private void getCurrentUserLocationAsync() {
+    private void getCurrentUserLocationAsync(final boolean editMode) {
          new AsyncTask<Void, Void, LatLng>() {
             @Override
             protected LatLng doInBackground(Void... params) {
                 LatLng latLng = null;
-                LocationProvider locationProvider = ((BrainasApp)BrainasApp.getAppContext()).getLocationProvider();
                 Location location = locationProvider.getCurrentLocation();
                 if (location != null) {
                     latLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -403,7 +422,10 @@ public class EditEventActivity extends EditTaskActivity
 
             protected void onPostExecute(LatLng latLng) {
                 if (latLng != null) {
-                    moveAndZoomCamera(latLng);
+                    setUserLocationMarker(latLng);
+                    if (!editMode) {
+                        moveAndZoomCamera(latLng);
+                    }
                 }
             }
         }.execute();
@@ -412,6 +434,11 @@ public class EditEventActivity extends EditTaskActivity
     private void moveAndZoomCamera(LatLng latLng) {
         CameraUpdate center = CameraUpdateFactory.newLatLngZoom(latLng, 13);
         googleMap.moveCamera(center);
+    }
+
+    @Override
+    public void updateAfterLocationWasChanged(Location location) {
+        setUserLocationMarker(new LatLng(location.getLatitude(), location.getLongitude()));
     }
 }
 
