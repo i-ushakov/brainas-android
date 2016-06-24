@@ -26,6 +26,7 @@ import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
 import java.util.ArrayList;
@@ -233,6 +234,7 @@ public class EditTaskActivity extends AppCompatActivity {
                 String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD);
                 task.setImage(imageFileName);
                 needToRemoveImage = true;
+                GoogleDriveManager.getInstance(app).uploadImage(InfrustructureHelper.getTaskImage(task), IMAGE_REQUEST_EXTRA_FIELD);
             }
         }
     }
@@ -251,12 +253,7 @@ public class EditTaskActivity extends AppCompatActivity {
             taskPicturePanel.post(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        taskPictureView.setImageBitmap(InfrustructureHelper.getTaskImage(EditTaskActivity.this.task));
-                    } catch (BrainasAppException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "Cannot load task picture from disk");
-                    }
+                    taskPictureView.setImageBitmap(InfrustructureHelper.getTaskImage(EditTaskActivity.this.task));
                 }
             });
         }

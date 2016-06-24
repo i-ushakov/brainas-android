@@ -17,6 +17,7 @@ import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.Drive;
 
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
@@ -31,7 +32,6 @@ import java.util.List;
 public class AccountsManager implements
         GoogleApiClient.OnConnectionFailedListener {
     private static String serverClientId = "";
-    private ProgressDialog mProgressDialog;
 
     public static final int RC_SIGN_IN = 9001;
 
@@ -44,6 +44,11 @@ public class AccountsManager implements
     private String accessCode = null;
     private List<SingInObserver> observers = new ArrayList<>();
     private boolean serverIsOffline = false;
+
+    public interface ManagePreloader {
+        void showPreloader();
+        void hidePreloader();
+    }
 
     public interface SingInObserver {
         void updateAfterSingIn(UserAccount userAccount);
@@ -61,7 +66,9 @@ public class AccountsManager implements
         app = ((BrainasApp)BrainasApp.getAppContext());
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestScopes(new Scope(Scopes.PLUS_LOGIN)) // "https://www.googleapis.com/auth/plus.login"
+                .requestScopes(new Scope(Scopes.PLUS_LOGIN))// "https://www.googleapis.com/auth/plus.login"
+                .requestScopes(Drive.SCOPE_FILE)
+                .requestScopes(Drive.SCOPE_APPFOLDER)
                 .requestServerAuthCode(app.getResources().getString(R.string.client_ID_for_web_application))
                 .build();
     }
@@ -88,7 +95,7 @@ public class AccountsManager implements
     }
 
     public boolean initialSingIn(AppCompatActivity activity) {
-        showProgressDialog(activity);
+        ((ManagePreloader)activity).showPreloader();
         buildApiClient(activity);
         if (NetworkHelper.isNetworkActive()) {
             OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(GoogleApiClients.get(activity.hashCode()));
@@ -107,18 +114,18 @@ public class AccountsManager implements
         } else {
             if (!setLastUserAccount(activity)) {
                 Toast.makeText(activity, "You must to have an internet connection for start of using Brain Assistant's app.", Toast.LENGTH_LONG).show();
-                hideProgressDialog();
+                ((ManagePreloader)activity).hidePreloader();
                 return false;
             }
         }
-        hideProgressDialog();
+        ((ManagePreloader)activity).hidePreloader();
         return true;
     }
 
     private boolean setLastUserAccount(AppCompatActivity activity) {
         userAccount = app.getLastUsedAccount();
         if (userAccount != null) {
-            hideProgressDialog();
+            ((ManagePreloader)activity).hidePreloader();
             app.setUserAccount(userAccount);
             notifyAllObserversAboutSingIn();
             //Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
@@ -136,7 +143,7 @@ public class AccountsManager implements
 
     public void switchAccount(AppCompatActivity activity) {
         if (NetworkHelper.isNetworkActive()) {
-            showProgressDialog(activity);
+            ((ManagePreloader)activity).showPreloader();
             buildApiClient(activity);
             signOut(activity);
             signIn(activity);
@@ -153,7 +160,7 @@ public class AccountsManager implements
     }
 
     public boolean handleSignInResult(GoogleSignInResult result, AppCompatActivity activity) {
-        hideProgressDialog();
+        ((ManagePreloader)activity).hidePreloader();
         Log.d("TEST", "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
@@ -231,6 +238,7 @@ public class AccountsManager implements
             mGoogleApiClient = new GoogleApiClient.Builder(activity)
                         .enableAutoManage(activity /* FragmentActivity */, this /* OnConnectionFailedListener */)
                         .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                        .addApi(Drive.API)
                         .build();
             GoogleApiClients.put(activity.hashCode(), mGoogleApiClient);
         }
@@ -271,22 +279,6 @@ public class AccountsManager implements
     private void notifyAllObserversAboutSingOut() {
         for (SingInObserver observer : observers) {
             observer.updateAfterSingOut();
-        }
-    }
-
-    private void showProgressDialog(AppCompatActivity activity) {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(activity);
-            mProgressDialog.setMessage(activity.getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-        }
-
-        mProgressDialog.show();
-    }
-
-    private void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.hide();
         }
     }
 }

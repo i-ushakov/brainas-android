@@ -204,12 +204,7 @@ public class TaskCardActivity extends AppCompatActivity
             ((View)taskCardImage.getParent()).post(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        taskCardImage.setImageBitmap(InfrustructureHelper.getTaskImage(TaskCardActivity.this.task));
-                    } catch (BrainasAppException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "Cannot load task picture from disk");
-                    }
+                    taskCardImage.setImageBitmap(InfrustructureHelper.getTaskImage(TaskCardActivity.this.task));
                 }
             });
         }

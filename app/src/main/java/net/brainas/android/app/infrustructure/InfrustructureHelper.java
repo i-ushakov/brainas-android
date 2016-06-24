@@ -49,7 +49,7 @@ public class InfrustructureHelper {
 
     static private  String TAG = "InfrustructureHelper";
 
-    static public Bitmap getTaskImage(Task task) throws BrainasAppException {
+    static public Bitmap getTaskImage(Task task)  {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
         /*File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getImage() + "/");
         if(parentDir == null) {
