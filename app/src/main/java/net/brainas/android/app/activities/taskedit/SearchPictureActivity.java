@@ -154,6 +154,7 @@ public class SearchPictureActivity extends AppCompatActivity {
                         Intent data = new Intent();
                         data.putExtra(EditTaskActivity.IMAGE_REQUEST_EXTRA_FIELD, imageFile.getName());
                         setResult(RESULT_OK,data);
+                        progressDialog.hide();
                         SearchPictureActivity.this.finish();
                     }
 
@@ -180,5 +181,13 @@ public class SearchPictureActivity extends AppCompatActivity {
         progressDialog.setProgress(0);
         progressDialog.setMax(100);
         progressDialog.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 }

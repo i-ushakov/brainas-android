@@ -1,6 +1,7 @@
 package net.brainas.android.app.activities;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -25,7 +26,7 @@ import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 import net.brainas.android.app.infrustructure.LocationProvider;
 
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity  implements AccountsManager.ManagePreloader{
     static public final int REQUEST_CHECK_SETTINGS = 1001;
 
     private BrainasApp app;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity  {
     private View menuPanel;
     private ImageView slideButton;
     private ImageView addTaskButton;
+    private ProgressDialog mProgressDialog;
 
     public enum ActivePanel {
         MESSAGES, GENERAL
@@ -100,6 +102,30 @@ public class MainActivity extends AppCompatActivity  {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showPreloader( ) {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(this.getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    public void hidePreloader() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
     }
 
     private void setOnTouchListenerForSlideButton() {

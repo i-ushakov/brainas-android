@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,18 +19,18 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 
 /**
  * Created by innok on 12/7/2015.
  */
-public class AccountsActivity extends AppCompatActivity {
+public class AccountsActivity extends AppCompatActivity implements AccountsManager.ManagePreloader {
 
     private Toolbar toolbar;
     private BrainasApp app;
     private AccountsManager accountsManager;
     private UserAccount userAccount;
+    private ProgressDialog mProgressDialog;
 
 
     private TextView accountNameValue;
@@ -121,6 +122,30 @@ public class AccountsActivity extends AppCompatActivity {
                 Toast.makeText(AccountsActivity.this, "You must sign in to Brain Assistant's app to continue.", Toast.LENGTH_LONG).show();
                 renderContent();
             }
+        }
+    }
+
+    public void showPreloader( ) {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(this.getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    public void hidePreloader() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
         }
     }
 
