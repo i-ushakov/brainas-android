@@ -1,7 +1,6 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -125,13 +124,13 @@ public class GoogleDriveGetParams implements GoogleDriveManager.CurrentTask {
             JSONObject currentParams = null;
             try {
                 currentParams = new JSONObject(result);
-                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(BrainasApp.getAppContext());
+                SharedPreferences sharedPref = ((BrainasApp)BrainasApp.getAppContext()).getAppPreferences();
                 SharedPreferences.Editor editor = sharedPref.edit();
 
                 Iterator<?> keys = currentParams.keys();
                 while(keys.hasNext()) {
                     String key = (String)keys.next();
-                    if (currentParams.get(key) instanceof JSONObject) {
+                    if (currentParams.get(key) instanceof String) {
                         editor.putString(key, currentParams.get(key).toString());
                     }
                 }

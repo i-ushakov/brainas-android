@@ -24,7 +24,7 @@ import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.GoogleDriveManager;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class EditTaskActivity extends AppCompatActivity {
 
-    static public String IMAGE_REQUEST_EXTRA_FIELD = "image_name";
+    static public String IMAGE_REQUEST_EXTRA_FIELD_NAME = "image_name";
 
     static private String TAG ="EditTaskActivity";
     static private int GET_IMAGE_REQUEST = 1001;
@@ -229,10 +229,10 @@ public class EditTaskActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == GET_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK) {
-                String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD);
-                task.setImage(imageFileName);
+                String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD_NAME);
+                task.setPicture(imageFileName);
                 needToRemoveImage = true;
-                GoogleDriveManager.getInstance(app).uploadImage(InfrustructureHelper.getTaskImage(task), IMAGE_REQUEST_EXTRA_FIELD);
+                GoogleDriveManager.getInstance(app).uploadPicture(InfrustructureHelper.getTaskImage(task), task.getPicture());
             }
         }
     }

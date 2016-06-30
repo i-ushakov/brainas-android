@@ -203,7 +203,7 @@ public class TaskDbHelper {
                 description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
                 image = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_IMAGE));
-                task.setImage(image);
+                task.setPicture(image);
                 tasks.add(task);
             } while (cursor.moveToNext());
         }

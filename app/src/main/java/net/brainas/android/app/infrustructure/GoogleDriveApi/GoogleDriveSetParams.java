@@ -1,6 +1,5 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
-import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -13,14 +12,14 @@ import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveGetParams;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

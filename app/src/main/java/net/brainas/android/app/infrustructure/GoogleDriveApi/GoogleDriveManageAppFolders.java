@@ -1,15 +1,9 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
-import android.content.Context;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.DriveId;
-import com.google.android.gms.drive.Metadata;
-import com.google.android.gms.drive.widget.DataBufferAdapter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,7 +54,7 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
             Log.i(GOOGLE_DRIVE_TAG, "Project folder was created with driveId = " + driveId);
             GoogleDriveSetParams googleDriveSetParams = new GoogleDriveSetParams(mGoogleApiClient);
             HashMap<String, String> paramsHash = new HashMap<String ,String >();
-            paramsHash.put(GoogleDriveParamsNames.PARAM_NAME.PROJECT_FOLDER_DRIVE_ID.toString(), driveId.toString());
+            paramsHash.put(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(), driveId.toString());
             googleDriveSetParams.setParamsHash(paramsHash);
             googleDriveSetParams.execute();
             createPicturesFolder(driveId);
@@ -74,7 +68,7 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
             Log.i(GOOGLE_DRIVE_TAG, "Pictures folder was created with driveId = " + driveId);
             GoogleDriveSetParams googleDriveSetParams = new GoogleDriveSetParams(mGoogleApiClient);
             HashMap<String, String> paramsHash = new HashMap<String ,String >();
-            paramsHash.put(GoogleDriveParamsNames.PARAM_NAME.PICTURE_FOLDER_DRIVE_ID.toString(), driveId.toString());
+            paramsHash.put(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(), driveId.toString());
             googleDriveSetParams.setParamsHash(paramsHash);
             googleDriveSetParams.execute();
         }
@@ -91,14 +85,14 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         @Override
         public void onGettingParamsSuccess(JSONObject currentParams, DriveId settinsJsonDriverId) {
             Log.i(GOOGLE_DRIVE_TAG, "Successfully got settings.json");
-            if (currentParams.has(GoogleDriveParamsNames.PARAM_NAME.PROJECT_FOLDER_DRIVE_ID.toString())) {
+            if (currentParams.has(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name())) {
                 // TODO check if exist
-                if (currentParams.has(GoogleDriveParamsNames.PARAM_NAME.PICTURE_FOLDER_DRIVE_ID.toString())) {
+                if (currentParams.has(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name())) {
                     // TODO check if exist
-                    Log.i(GOOGLE_DRIVE_TAG, "All projects folders are OK");
+                    Log.i(GOOGLE_DRIVE_TAG, "All project folders are OK");
                 } else {
                     try {
-                        DriveId projectFolderDriveId = DriveId.decodeFromString(currentParams.getString(GoogleDriveParamsNames.PARAM_NAME.PROJECT_FOLDER_DRIVE_ID.toString()));
+                        DriveId projectFolderDriveId = DriveId.decodeFromString(currentParams.getString(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name()));
                         createPicturesFolder(projectFolderDriveId);
                     } catch (JSONException e) {
                         e.printStackTrace();

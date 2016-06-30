@@ -24,6 +24,11 @@ import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.infrustructure.UserAccountDbHelper;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
@@ -219,6 +224,17 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
             }
         }
         return false;
+    }
+
+    public JSONObject getParamsFromPref(String[] requesedParams) throws JSONException {
+        JSONObject retrievedParams = new JSONObject();
+        SharedPreferences preferences = getAppPreferences();
+        String paramValue;
+        for (String requesedParam : requesedParams) {
+            paramValue = preferences.getString(requesedParam,null);
+            retrievedParams.put(requesedParam, paramValue);
+        }
+        return retrievedParams;
     }
 
     private void saveLastUsedAccountInPref() {

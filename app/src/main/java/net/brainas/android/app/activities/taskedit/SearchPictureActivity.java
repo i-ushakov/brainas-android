@@ -12,10 +12,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.BasicImageDownloader;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
@@ -152,7 +149,7 @@ public class SearchPictureActivity extends AppCompatActivity {
                         notifyAllObservers();
                         progressDialog.hide();
                         Intent data = new Intent();
-                        data.putExtra(EditTaskActivity.IMAGE_REQUEST_EXTRA_FIELD, imageFile.getName());
+                        data.putExtra(EditTaskActivity.IMAGE_REQUEST_EXTRA_FIELD_NAME, imageFile.getName());
                         setResult(RESULT_OK,data);
                         progressDialog.hide();
                         SearchPictureActivity.this.finish();

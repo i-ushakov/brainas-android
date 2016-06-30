@@ -160,10 +160,6 @@ public class Task {
         return status;
     }
 
-    public void setImage(String image) {
-        this.picture = image;
-    }
-
     public String getPicture() {
         return this.picture;
     }

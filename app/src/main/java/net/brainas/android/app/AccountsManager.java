@@ -1,6 +1,5 @@
 package net.brainas.android.app;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -19,7 +18,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 
-import net.brainas.android.app.infrustructure.GoogleDriveManager;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 

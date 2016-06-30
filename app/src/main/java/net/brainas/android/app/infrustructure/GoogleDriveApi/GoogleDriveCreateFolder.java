@@ -1,12 +1,7 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
@@ -14,9 +9,7 @@ import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 
 /**
  * Created by innok on 6/22/2016.
