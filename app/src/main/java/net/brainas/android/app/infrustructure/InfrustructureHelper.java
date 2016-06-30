@@ -2,22 +2,14 @@ package net.brainas.android.app.infrustructure;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.models.Condition;
-import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.Task;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -29,17 +21,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by innok on 11/11/2015.
@@ -51,7 +39,7 @@ public class InfrustructureHelper {
 
     static public Bitmap getTaskImage(Task task)  {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-        /*File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getImage() + "/");
+        /*File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getPicture() + "/");
         if(parentDir == null) {
             throw new BrainasAppException("Wrong directory with image for task with id = " + task.getId());
         }
@@ -59,7 +47,7 @@ public class InfrustructureHelper {
         if(fileList == null) {
             throw new BrainasAppException("No image for task with id = " + task.getId());
         }*/
-        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getImage() + "/");
+        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getPicture() + "/");
         Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
         return bmp;
     }
