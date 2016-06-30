@@ -78,13 +78,13 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
 
         @Override
         public void onJSONSettingIsAbsent() {
-            Log.i(GOOGLE_DRIVE_TAG, "We havn't settings.json in appFolder");
+            Log.i(GOOGLE_DRIVE_TAG, "We havn't ba_settings.json in appFolder");
             createProjectFolder();
         }
 
         @Override
         public void onGettingParamsSuccess(JSONObject currentParams, DriveId settinsJsonDriverId) {
-            Log.i(GOOGLE_DRIVE_TAG, "Successfully got settings.json");
+            Log.i(GOOGLE_DRIVE_TAG, "Successfully got ba_settings.json");
             if (currentParams.has(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name())) {
                 // TODO check if exist
                 if (currentParams.has(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name())) {

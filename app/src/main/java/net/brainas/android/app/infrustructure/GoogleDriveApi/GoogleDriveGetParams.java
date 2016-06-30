@@ -53,7 +53,7 @@ public class GoogleDriveGetParams implements GoogleDriveManager.CurrentTask {
         Log.i(GOOGLE_DRIVE_TAG, "Let's execute " + this.getClass());
         Query query = new Query.Builder()
                 .addFilter(Filters.eq(SearchableField.MIME_TYPE, "text/json"))
-                .addFilter(Filters.eq(SearchableField.TITLE, "settings.json"))
+                .addFilter(Filters.eq(SearchableField.TITLE, GoogleDriveManager.SETTINGS_JSON_FILE_NAME))
                 .build();
         Drive.DriveApi.getAppFolder(mGoogleApiClient).queryChildren(mGoogleApiClient, query)
                 .setResultCallback(onSettingsJsonFileLoaded);
@@ -64,16 +64,16 @@ public class GoogleDriveGetParams implements GoogleDriveManager.CurrentTask {
                 @Override
                 public void onResult(DriveApi.MetadataBufferResult result) {
                     if (!result.getStatus().isSuccess()) {
-                        Log.i(GOOGLE_DRIVE_TAG, "Problem with getting settings.json");
+                        Log.i(GOOGLE_DRIVE_TAG, "Problem with getting ba_settings.json");
                         return;
                     }
                     if (result.getMetadataBuffer().getCount() > 0) {
                         settingsJsonDriveId = result.getMetadataBuffer().get(0).getDriveId();
                         new RetrieveSettingJsonContentsAsyncTask().execute(settingsJsonDriveId);
-                        Log.i(GOOGLE_DRIVE_TAG, "Successfully got settings.json");
+                        Log.i(GOOGLE_DRIVE_TAG, "Successfully got ba_settings.json");
                     } else {
                         callback.onJSONSettingIsAbsent();
-                        Log.i(GOOGLE_DRIVE_TAG, "We havn't settings.json in appFolder");
+                        Log.i(GOOGLE_DRIVE_TAG, "We havn't ba_settings.json in appFolder");
                     }
                 }
             };

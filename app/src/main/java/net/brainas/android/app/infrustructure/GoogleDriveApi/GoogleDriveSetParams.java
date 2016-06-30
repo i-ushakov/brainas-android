@@ -62,19 +62,25 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
         googleDriveGetParams.execute();
     }
 
-    private void saveSettingsParams(JSONObject currentParams, DriveId settingsJsonDriveId) {
+    private void saveSettingsParams(JSONObject retrievedParams, DriveId settingsJsonDriveId) {
+        JSONObject newParams;
+        if (retrievedParams != null) {
+            newParams = retrievedParams;
+        } else {
+            newParams = new JSONObject();
+        }
         this.settingsJsonDriveId = settingsJsonDriveId;
         Iterator it = paramsHash.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             System.out.println(pair.getKey() + " = " + pair.getValue());
             try {
-                currentParams.put(pair.getKey().toString(), pair.getValue().toString());
+                newParams.put(pair.getKey().toString(), pair.getValue().toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
-            newParams = currentParams;
+            newParams = retrievedParams;
 
             // create new contents resource
             Drive.DriveApi.newDriveContents(mGoogleApiClient)
@@ -87,7 +93,7 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                 @Override
                 public void onResult(DriveApi.DriveContentsResult result) {
                     if (!result.getStatus().isSuccess()) {
-                        Log.i(GOOGLE_DRIVE_TAG, "Error while trying to create new settings.json contents");
+                        Log.i(GOOGLE_DRIVE_TAG, "Error while trying to create new ba_settings.json contents");
                         return;
                     }
 
@@ -101,7 +107,7 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                         printWriter.close();
 
                         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                                .setTitle("settings.json")
+                                .setTitle(GoogleDriveManager.SETTINGS_JSON_FILE_NAME)
                                 .setMimeType("text/json")
                                 .build();
 
@@ -118,10 +124,10 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                 @Override
                 public void onResult(DriveFolder.DriveFileResult result) {
                     if (!result.getStatus().isSuccess()) {
-                        Log.i(GOOGLE_DRIVE_TAG, "Error while trying to create the settings.json");
+                        Log.i(GOOGLE_DRIVE_TAG, "Error while trying to create the ba_settings.json");
                         return;
                     }
-                    Log.i(GOOGLE_DRIVE_TAG, "Created a settings.json in App Folder: "
+                    Log.i(GOOGLE_DRIVE_TAG, "Created a ba_settings.json in App Folder: "
                             + result.getDriveFile().getDriveId());
                 }
             };
@@ -131,10 +137,10 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                 @Override
                 public void onResult(DriveApi.DriveContentsResult result) {
                     if (!result.getStatus().isSuccess()) {
-                        Log.i(GOOGLE_DRIVE_TAG, "Cannot open settings.json");
+                        Log.i(GOOGLE_DRIVE_TAG, "Cannot open ba_settings.json");
                         return;
                     }
-                    Log.i(GOOGLE_DRIVE_TAG, "The settings.json successful opened");
+                    Log.i(GOOGLE_DRIVE_TAG, "The ba_settings.json successful opened");
                     DriveContents contents = result.getDriveContents();
                     OutputStream outputStream = contents.getOutputStream();
                     PrintWriter printWriter = new PrintWriter(outputStream);

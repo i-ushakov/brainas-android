@@ -28,6 +28,7 @@ public class GoogleDriveManager implements
         GoogleApiClient.OnConnectionFailedListener {
 
     static public String GOOGLE_DRIVE_TAG = "GOOGLE_DRIVE";
+    static public String SETTINGS_JSON_FILE_NAME = "ba_settings.json";
     static public String PROJECT_FOLDER_NAME = "Brain Assistant Project";
     static public String PICTURES_FOLDER_NAME = "Pictures";
 
