@@ -19,6 +19,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 
+import net.brainas.android.app.infrustructure.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 
@@ -34,6 +35,7 @@ public class AccountsManager implements
     private static String serverClientId = "";
 
     public static final int RC_SIGN_IN = 9001;
+    public static final String AUTH_TAG = "AUTH";
 
 
     private BrainasApp app;
@@ -127,11 +129,17 @@ public class AccountsManager implements
         if (userAccount != null) {
             ((ManagePreloader)activity).hidePreloader();
             app.setUserAccount(userAccount);
-            notifyAllObserversAboutSingIn();
+            onUserSingedIn(activity);
             //Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
             return true;
         }
         return false;
+    }
+
+    private void onUserSingedIn(AppCompatActivity activity) {
+        Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
+        GoogleDriveManager.getInstance(activity).manageAppFolders();
+        notifyAllObserversAboutSingIn();
     }
 
     private boolean doesLastUserHaveTheToken() {
@@ -174,7 +182,7 @@ public class AccountsManager implements
             saveUserAccount(userAccount);
             app.setUserAccount(userAccount);
             saveUserAccount();
-            notifyAllObserversAboutSingIn();
+            onUserSingedIn(activity);
             Toast.makeText(activity, "You are signed in as " + personName, Toast.LENGTH_LONG).show();
             return true;
         } else {
@@ -197,7 +205,7 @@ public class AccountsManager implements
         }
     }
 
-    public boolean isUserHvaeToken() {
+    public boolean isUserHaveToken() {
         updateUserFromDb();
         if (userAccount != null && userAccount.getAccessToken() != null) {
             return true;
