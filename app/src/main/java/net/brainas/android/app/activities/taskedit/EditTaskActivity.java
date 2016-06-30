@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.Menu;
@@ -20,7 +19,6 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
@@ -248,7 +246,7 @@ public class EditTaskActivity extends AppCompatActivity {
     }
 
     private void renderPicture() {
-        if (task != null && task.getImage() != null) {
+        if (task != null && task.getPicture() != null) {
             taskPictureView.setAlpha(1f);
             taskPicturePanel.post(new Runnable() {
                 @Override
@@ -377,7 +375,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
     public void cancel(View view) {
         if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
-            if (needToRemoveImage && task.getImage() != null) {
+            if (needToRemoveImage && task.getPicture() != null) {
                 // TODO remove image
                 needToRemoveImage= false;
             }

@@ -47,6 +47,11 @@ public class TaskHelper {
         descriptionEl.setTextContent(task.getDescription());
         taskEl.appendChild(descriptionEl);
 
+        // image
+        Element pictureEl = doc.createElement("picture");
+        pictureEl.setTextContent(task.getPicture());
+        taskEl.appendChild(pictureEl);
+
         // conditions
         CopyOnWriteArrayList<Condition> conditions = task.getConditions();
         Element conditionsEl = doc.createElement("conditions");

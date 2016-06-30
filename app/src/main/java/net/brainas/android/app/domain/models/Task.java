@@ -3,10 +3,6 @@ package net.brainas.android.app.domain.models;
 import android.content.Context;
 import android.content.res.Resources;
 
-import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.domain.helpers.ActivationManager;
-import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
-import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.services.ActivationService;
 
 import java.util.ArrayList;
@@ -25,7 +21,7 @@ public class Task {
     private String description = null;
     private boolean haveImage = false;
     private STATUSES status = null;
-    private String image = null;
+    private String picture = null;
     private CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<TaskChangesObserver> observers = new CopyOnWriteArrayList<TaskChangesObserver>();
     private Object lock = new Object();
@@ -119,12 +115,12 @@ public class Task {
         return description;
     }
 
-    public void setImage(boolean haveImage) {
-        this.haveImage = haveImage;
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
     public boolean haveImage() {
-        if (image != null) { // TODO check File
+        if (picture != null) { // TODO check File
             return true;
         }
         return false;
@@ -165,11 +161,11 @@ public class Task {
     }
 
     public void setImage(String image) {
-        this.image = image;
+        this.picture = image;
     }
 
-    public String getImage() {
-        return this.image;
+    public String getPicture() {
+        return this.picture;
     }
 
     public HashMap<String, String> getWarnings() {
@@ -306,6 +302,17 @@ public class Task {
         }
         if (objectDescription!=null) {
             if (!objectDescription.equals(this.description)) {
+                return false;
+            }
+        }
+
+        // check pictures
+        String objectPicture = task.getPicture();
+        if ((objectPicture == null && this.picture != null) || (objectPicture != null && this.picture == null)) {
+            return false;
+        }
+        if (objectPicture != null) {
+            if (!objectPicture.equals(this.picture)) {
                 return false;
             }
         }

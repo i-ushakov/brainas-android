@@ -220,7 +220,7 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
-        values.put(COLUMN_NAME_TASKS_IMAGE, task.getImage());
+        values.put(COLUMN_NAME_TASKS_IMAGE, task.getPicture());
         if (task.getStatus() != null) {
             values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
         }

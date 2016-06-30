@@ -111,7 +111,7 @@ public class TasksManager {
         tasks = objectsMapping(tasks);
         /* TODO */
         //Task task1 = new Task(1,1,"test1");
-        //task1.setImage(true);
+        //task1.setPicture(true);
         //tasksHashMap.add(task1);
         //tasksHashMap.add(new Task(2, 2, "test2"));
         //tasksHashMap.add(new Task(3, 3, "test3 big big big so big test3 big big big so big1 1234 1234")); //60
@@ -329,6 +329,7 @@ public class TasksManager {
             heapTask.setMessage(freshTask.getMessage());
             heapTask.setDescription(freshTask.getDescription());
             heapTask.setConditions(freshTask.getConditions());
+            heapTask.setPicture(freshTask.getPicture());
             heapTask.setStatus(freshTask.getStatus());
         }
         return heapTask;

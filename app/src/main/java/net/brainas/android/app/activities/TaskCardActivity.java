@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,7 +13,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.brainas.android.app.BrainasApp;
-import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.views.taskcard.ConditionBlockView;
 import net.brainas.android.app.activities.taskedit.EditTaskActivity;
@@ -199,7 +197,7 @@ public class TaskCardActivity extends AppCompatActivity
 
     private void renderTaskPicture() {
         final ImageView taskCardImage = (ImageView)findViewById(R.id.task_card_image);
-        if (task != null && task.getImage() != null) {
+        if (task != null && task.getPicture() != null) {
             taskCardImage.setAlpha(1f);
             ((View)taskCardImage.getParent()).post(new Runnable() {
                 @Override
