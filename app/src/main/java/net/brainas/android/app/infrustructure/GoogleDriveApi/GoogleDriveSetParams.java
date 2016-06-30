@@ -98,7 +98,7 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                     }
 
                     if (settingsJsonDriveId != null) {
-                        settingsJsonDriveId.asDriveFile().open(mGoogleApiClient, DriveFile.MODE_READ_WRITE, null)
+                        settingsJsonDriveId.asDriveFile().open(mGoogleApiClient, DriveFile.MODE_WRITE_ONLY, null)
                                 .setResultCallback(settingsFileOpenedCallback);
                     } else {
                         OutputStream outputStream = result.getDriveContents().getOutputStream();
