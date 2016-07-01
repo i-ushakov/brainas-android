@@ -30,9 +30,7 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
     private  Bitmap bitmap;
     private String imageName;
 
-    public GoogleDriveUploadTaskPicture(GoogleApiClient mGoogleApiClient) {
-        this.mGoogleApiClient = mGoogleApiClient;
-    }
+    public GoogleDriveUploadTaskPicture() {}
 
     public void setBitmap(Bitmap bitmap) {
         this.bitmap = bitmap;
@@ -45,7 +43,9 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
     }
 
     @Override
-    public void execute() {
+    public void execute(final GoogleApiClient mGoogleApiClient) {
+        this.mGoogleApiClient = mGoogleApiClient;
+
         if (bitmap == null || imageName == null || picturesFolderDriveId == null) {
             Log.i(GOOGLE_DRIVE_TAG, "Cannot upload image, not enough data!");
             return;

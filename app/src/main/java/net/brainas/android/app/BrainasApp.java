@@ -28,6 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
@@ -195,6 +197,15 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return preferences;
     }
 
+    public SharedPreferences getUserPreferences() {
+        if (userAccount.getAccountName() != null) {
+            SharedPreferences preferences = getSharedPreferences(userAccount.getAccountName(), 0);
+            return preferences;
+        } else {
+            return null;
+        }
+    }
+
     public AccountsManager getAccountsManager() {
         return this.accountsManager;
     }
@@ -226,16 +237,39 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return false;
     }
 
-    public JSONObject getParamsFromPref(String[] requesedParams) throws JSONException {
-        JSONObject retrievedParams = new JSONObject();
-        SharedPreferences preferences = getAppPreferences();
-        String paramValue;
-        for (String requesedParam : requesedParams) {
-            paramValue = preferences.getString(requesedParam,null);
-            retrievedParams.put(requesedParam, paramValue);
+    public void saveParamsInPrefs(JSONObject params) throws JSONException {
+        SharedPreferences userPrefs = getUserPreferences();
+        if (userPrefs == null) {
+            return;
         }
-        return retrievedParams;
+        SharedPreferences.Editor editor = userPrefs.edit();
+
+        Iterator<?> keys = params.keys();
+        while(keys.hasNext()) {
+            String key = (String)keys.next();
+            if (params.get(key) instanceof String) {
+                editor.putString(key, params.get(key).toString());
+            }
+        }
+        editor.commit();
     }
+
+    public JSONObject getParamsFromUserPrefs(String[] requesedParams) throws JSONException {
+        JSONObject retrievedParams = new JSONObject();
+
+        SharedPreferences userPreferences = getUserPreferences();
+        if (userPreferences != null) {
+            String paramValue;
+            for (String requesedParam : requesedParams) {
+                paramValue = userPreferences.getString(requesedParam, null);
+                retrievedParams.put(requesedParam, paramValue);
+            }
+            return retrievedParams;
+        } else {
+            return null;
+        }
+    }
+
 
     private void saveLastUsedAccountInPref() {
         SharedPreferences preferences = getAppPreferences();

@@ -19,7 +19,8 @@ public class GoogleDriveCreateFolder implements GoogleDriveManager.CurrentTask {
     static public String GOOGLE_DRIVE_TAG = "GOOGLE_DRIVE";
 
     public interface OnFolderCreatedCallbak {
-        public void onFolderCreated(DriveId driveId);
+        void onFolderCreated(DriveId driveId);
+        void onFolderWorkDone();
     }
 
     private GoogleApiClient mGoogleApiClient;
@@ -29,7 +30,6 @@ public class GoogleDriveCreateFolder implements GoogleDriveManager.CurrentTask {
 
     public GoogleDriveCreateFolder(GoogleApiClient mGoogleApiClient) {
         this.mGoogleApiClient = mGoogleApiClient;
-        Log.i(GOOGLE_DRIVE_TAG, this.getClass() + " class is created");
 
     }
 
@@ -41,17 +41,19 @@ public class GoogleDriveCreateFolder implements GoogleDriveManager.CurrentTask {
         this.callback = callback;
     }
 
-    public void execute() {
+    public void execute(GoogleApiClient googleApiClient) {
+        this.mGoogleApiClient = googleApiClient;
+
         Log.i(GOOGLE_DRIVE_TAG, "Execute " + this.getClass());
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
                 .setTitle(folderName).build();
         if (parentDriveId != null) {
             DriveFolder folder = parentDriveId.asDriveFolder();
             folder.createFolder(
-                    mGoogleApiClient, changeSet).setResultCallback(onFolderCallback);
+                    googleApiClient, changeSet).setResultCallback(onFolderCallback);
         } else {
-            Drive.DriveApi.getRootFolder(mGoogleApiClient).createFolder(
-                    mGoogleApiClient, changeSet).setResultCallback(onFolderCallback);
+            Drive.DriveApi.getRootFolder(googleApiClient).createFolder(
+                    googleApiClient, changeSet).setResultCallback(onFolderCallback);
         }
     }
 
@@ -64,10 +66,12 @@ public class GoogleDriveCreateFolder implements GoogleDriveManager.CurrentTask {
         public void onResult(DriveFolder.DriveFolderResult result) {
             if (!result.getStatus().isSuccess()) {
                 Log.i(GOOGLE_DRIVE_TAG, "Error while trying to create the folder");
+                callback.onFolderWorkDone();
                 return;
             }
             if (callback != null) {
                 callback.onFolderCreated(result.getDriveFolder().getDriveId());
+                callback.onFolderWorkDone();
             }
             Log.i(GOOGLE_DRIVE_TAG, "Created a folder: " + result.getDriveFolder().getDriveId());
         }

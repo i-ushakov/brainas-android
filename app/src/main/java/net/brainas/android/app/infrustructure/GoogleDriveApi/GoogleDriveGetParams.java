@@ -1,6 +1,5 @@
 package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -22,7 +21,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Iterator;
 
 /**
  * Created by innok on 6/29/2016.
@@ -39,17 +37,15 @@ public class GoogleDriveGetParams implements GoogleDriveManager.CurrentTask {
         public void onGettingParamsSuccess(JSONObject currentParams, DriveId settingsJsonDriveId);
     }
 
-    public GoogleDriveGetParams(GoogleApiClient mGoogleApiClient) {
-        this.mGoogleApiClient = mGoogleApiClient;
-        Log.i(GOOGLE_DRIVE_TAG, this.getClass() + " class is created");
-    }
+    public GoogleDriveGetParams() {}
 
     public void setOnDownloadedCallback(GettingParamsHandler callback) {
         this.callback = callback;
     }
 
     @Override
-    public void execute() {
+    public void execute(GoogleApiClient googleApiClient) {
+        this.mGoogleApiClient = googleApiClient;
         Log.i(GOOGLE_DRIVE_TAG, "Let's execute " + this.getClass());
         Query query = new Query.Builder()
                 .addFilter(Filters.eq(SearchableField.MIME_TYPE, "text/json"))
@@ -120,24 +116,14 @@ public class GoogleDriveGetParams implements GoogleDriveManager.CurrentTask {
                 Log.i(GOOGLE_DRIVE_TAG, "Error while reading from the file");
                 return;
             }
-            Log.i(GOOGLE_DRIVE_TAG, "setting.json contents: " + result);
+            Log.i(GOOGLE_DRIVE_TAG, "ba_setting.json contents: " + result);
             JSONObject currentParams = null;
             try {
                 currentParams = new JSONObject(result);
-                SharedPreferences sharedPref = ((BrainasApp)BrainasApp.getAppContext()).getAppPreferences();
-                SharedPreferences.Editor editor = sharedPref.edit();
-
-                Iterator<?> keys = currentParams.keys();
-                while(keys.hasNext()) {
-                    String key = (String)keys.next();
-                    if (currentParams.get(key) instanceof String) {
-                        editor.putString(key, currentParams.get(key).toString());
-                    }
-                }
-                editor.commit();
+                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInPrefs(currentParams);
                 callback.onGettingParamsSuccess(currentParams, settingsJsonDriveId);
             } catch (JSONException e) {
-                Log.i(GOOGLE_DRIVE_TAG, "Cannot parse setting.json");
+                Log.i(GOOGLE_DRIVE_TAG, "Cannot parse ba_setting.json");
                 e.printStackTrace();
             }
         }

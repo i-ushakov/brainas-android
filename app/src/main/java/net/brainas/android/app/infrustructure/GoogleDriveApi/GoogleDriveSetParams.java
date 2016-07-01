@@ -12,8 +12,7 @@ import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveGetParams;
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
+import net.brainas.android.app.BrainasApp;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,13 +31,10 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
     protected GoogleApiClient mGoogleApiClient;
 
     HashMap<String, String> paramsHash = new HashMap<>();
-    JSONObject newParams = new JSONObject();
+    JSONObject paramsForSave;
     DriveId settingsJsonDriveId;
 
-    public GoogleDriveSetParams(GoogleApiClient mGoogleApiClient) {
-        this.mGoogleApiClient = mGoogleApiClient;
-        Log.i(GOOGLE_DRIVE_TAG, this.getClass() + " class is created");
-    }
+    public GoogleDriveSetParams () {}
 
     public void setParamsHash(HashMap<String, String>  paramsHash) {
         this.paramsHash = paramsHash;
@@ -55,19 +51,19 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
     }
 
     @Override
-    public void execute() {
+    public void execute(GoogleApiClient googleApiClient) {
+        this.mGoogleApiClient = googleApiClient;
         Log.i(GOOGLE_DRIVE_TAG, "Let's execute " + this.getClass());
-        GoogleDriveGetParams googleDriveGetParams = new GoogleDriveGetParams(mGoogleApiClient);
+        GoogleDriveGetParams googleDriveGetParams = new GoogleDriveGetParams();
         googleDriveGetParams.setOnDownloadedCallback(this);
-        googleDriveGetParams.execute();
+        googleDriveGetParams.execute(mGoogleApiClient);
     }
 
     private void saveSettingsParams(JSONObject retrievedParams, DriveId settingsJsonDriveId) {
-        JSONObject newParams;
         if (retrievedParams != null) {
-            newParams = retrievedParams;
+            paramsForSave = retrievedParams;
         } else {
-            newParams = new JSONObject();
+            paramsForSave = new JSONObject();
         }
         this.settingsJsonDriveId = settingsJsonDriveId;
         Iterator it = paramsHash.entrySet().iterator();
@@ -75,17 +71,23 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
             Map.Entry pair = (Map.Entry)it.next();
             System.out.println(pair.getKey() + " = " + pair.getValue());
             try {
-                newParams.put(pair.getKey().toString(), pair.getValue().toString());
+                paramsForSave.put(pair.getKey().toString(), pair.getValue().toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-            newParams = retrievedParams;
-
-            // create new contents resource
-            Drive.DriveApi.newDriveContents(mGoogleApiClient)
-                    .setResultCallback(driveContentsCallback);
         }
+
+        try {
+            ((BrainasApp)BrainasApp.getAppContext()).saveParamsInPrefs(paramsForSave);
+        } catch (JSONException e) {
+            Log.i(GOOGLE_DRIVE_TAG, "Cannot save settings params: " + paramsForSave + " in pref");
+            e.printStackTrace();
+        }
+
+
+        // create new contents resource
+        Drive.DriveApi.newDriveContents(mGoogleApiClient)
+                .setResultCallback(driveContentsCallback);
     }
 
     final private ResultCallback<DriveApi.DriveContentsResult> driveContentsCallback =
@@ -103,7 +105,7 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                     } else {
                         OutputStream outputStream = result.getDriveContents().getOutputStream();
                         PrintWriter printWriter = new PrintWriter(outputStream);
-                        printWriter.print(newParams.toString());
+                        printWriter.print(paramsForSave.toString());
                         printWriter.close();
 
                         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
@@ -141,11 +143,38 @@ public class GoogleDriveSetParams implements GoogleDriveGetParams.GettingParamsH
                         return;
                     }
                     Log.i(GOOGLE_DRIVE_TAG, "The ba_settings.json successful opened");
-                    DriveContents contents = result.getDriveContents();
-                    OutputStream outputStream = contents.getOutputStream();
-                    PrintWriter printWriter = new PrintWriter(outputStream);
-                    printWriter.print(newParams.toString());
-                    printWriter.close();
+                    DriveContents driveContents = result.getDriveContents();
+                    new EditContentsAsyncTask().execute(driveContents);
                 }
             };
+
+    private class EditContentsAsyncTask extends GoogleApiClientAsyncTask<DriveContents, Void, Boolean> {
+
+        public EditContentsAsyncTask() {
+            super(mGoogleApiClient);
+        }
+
+        @Override
+        protected Boolean doInBackgroundConnected(DriveContents... args) {
+            DriveContents driveContents = args[0];
+            OutputStream outputStream = driveContents.getOutputStream();
+            PrintWriter printWriter = new PrintWriter(outputStream);
+            printWriter.print(paramsForSave.toString());
+            printWriter.close();
+            com.google.android.gms.common.api.Status status =
+                    driveContents.commit(mGoogleApiClient, null).await();
+            return status.getStatus().isSuccess();
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (!result) {
+                Log.i(GOOGLE_DRIVE_TAG, "Error while editing ba_settings.json");
+                return;
+            }
+
+            Log.i(GOOGLE_DRIVE_TAG, "Successfully edited ba_settings.json. It's content now: " + paramsForSave);
+        }
+    }
+
 }

@@ -40,7 +40,7 @@ public class GoogleDriveManager implements
     private static GoogleDriveManager instance = null;
 
     public interface CurrentTask {
-        public void execute();
+        public void execute(GoogleApiClient mGoogleApiClient);
     }
 
     private ArrayList<CurrentTask> currentTaskQueue = new ArrayList<>();
@@ -55,6 +55,14 @@ public class GoogleDriveManager implements
         return instance;
     }
 
+    public void disconnect() {
+         if (mGoogleApiClient != null) {
+             mGoogleApiClient.disconnect();
+             Log.i(GOOGLE_DRIVE_TAG, "Disconnect mGoogleApiClient ... ");
+         }
+        mGoogleApiClient = null;
+    }
+
     private GoogleDriveManager(Context context) {
         this.context = context;
         if (mGoogleApiClient == null) {
@@ -67,7 +75,6 @@ public class GoogleDriveManager implements
                     .build();
         }
         mGoogleApiClient.connect();
-
     }
 
     private void initGoogleApiClient() {
@@ -81,6 +88,7 @@ public class GoogleDriveManager implements
                     .build();
         }
         mGoogleApiClient.connect();
+        Log.i(GOOGLE_DRIVE_TAG, "Try to connect mGoogleApiClient ...");
     }
 
     @Override
@@ -89,7 +97,7 @@ public class GoogleDriveManager implements
         while (it.hasNext()) {
             CurrentTask currentTask = it.next();
             if (currentTask != null) {
-                currentTask.execute();
+                currentTask.execute(mGoogleApiClient);
                 Log.i(GOOGLE_DRIVE_TAG, "Execute task from currentTaskQueue: " + currentTask.getClass().getName());
                 it.remove();
             }
@@ -118,9 +126,9 @@ public class GoogleDriveManager implements
     }
 
     public void manageAppFolders() {
-        GoogleDriveManageAppFolders googleDriveManageAppFolders = new GoogleDriveManageAppFolders(mGoogleApiClient);
-        if (mGoogleApiClient.isConnected()) {
-            googleDriveManageAppFolders.execute();
+        GoogleDriveManageAppFolders googleDriveManageAppFolders = new GoogleDriveManageAppFolders();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            googleDriveManageAppFolders.execute(mGoogleApiClient);
         } else {
             currentTaskQueue.add(googleDriveManageAppFolders);
             Log.i(GOOGLE_DRIVE_TAG, "Added task to currentTaskQueue: " + googleDriveManageAppFolders.getClass().getName());
@@ -129,12 +137,12 @@ public class GoogleDriveManager implements
     }
 
     public void uploadPicture(Bitmap bitmap, String imageName) {
-        GoogleDriveUploadTaskPicture googleDriveUploadTaskPicture = new GoogleDriveUploadTaskPicture(mGoogleApiClient);
+        GoogleDriveUploadTaskPicture googleDriveUploadTaskPicture = new GoogleDriveUploadTaskPicture();
         googleDriveUploadTaskPicture.setBitmap(bitmap);
         googleDriveUploadTaskPicture.setImageName(imageName);
         String[] reqestedParams = {GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name()};
         try {
-            JSONObject retrievedParams = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromPref(reqestedParams);
+            JSONObject retrievedParams = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromUserPrefs(reqestedParams);
             DriveId picturesFolderDriveId = DriveId.decodeFromString(retrievedParams.getString(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name()));
             googleDriveUploadTaskPicture.setPicturesFolderDriveId(picturesFolderDriveId);
         } catch (JSONException e) {
@@ -143,8 +151,8 @@ public class GoogleDriveManager implements
             return;
         }
 
-        if (mGoogleApiClient.isConnected()) {
-            googleDriveUploadTaskPicture.execute();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            googleDriveUploadTaskPicture.execute(mGoogleApiClient);
         } else {
             currentTaskQueue.add(googleDriveUploadTaskPicture);
             Log.i(GOOGLE_DRIVE_TAG, "Added task to currentTaskQueue: " + googleDriveUploadTaskPicture.getClass().getName());

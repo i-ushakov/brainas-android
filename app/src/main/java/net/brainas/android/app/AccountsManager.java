@@ -128,17 +128,24 @@ public class AccountsManager implements
         if (userAccount != null) {
             ((ManagePreloader)activity).hidePreloader();
             app.setUserAccount(userAccount);
-            onUserSingedIn(activity);
+            userSingedIn(activity);
             //Toast.makeText(activity, "You are signed in OFFLINE as " + userAccount.getPersonName(), Toast.LENGTH_LONG).show();
             return true;
         }
         return false;
     }
 
-    private void onUserSingedIn(AppCompatActivity activity) {
+    private void userSingedIn(AppCompatActivity activity) {
         Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
         GoogleDriveManager.getInstance(activity).manageAppFolders();
         notifyAllObserversAboutSingIn();
+    }
+
+    private void userSingedOut(AppCompatActivity activity) {
+        userAccount.setAccessCode(null);
+        app.setUserAccount(null);
+        GoogleDriveManager.getInstance(activity).disconnect();
+        notifyAllObserversAboutSingOut();
     }
 
     private boolean doesLastUserHaveTheToken() {
@@ -181,14 +188,12 @@ public class AccountsManager implements
             saveUserAccount(userAccount);
             app.setUserAccount(userAccount);
             saveUserAccount();
-            onUserSingedIn(activity);
+            userSingedIn(activity);
             Toast.makeText(activity, "You are signed in as " + personName, Toast.LENGTH_LONG).show();
             return true;
         } else {
             if(userAccount != null) {
-                userAccount.setAccessCode(null);
-                app.setUserAccount(null);
-                notifyAllObserversAboutSingOut();
+                userSingedOut(activity);
             }
             Toast.makeText(activity, "You must sign in to Brain Assistant's app to continue.", Toast.LENGTH_LONG).show();
             return false;
@@ -264,15 +269,13 @@ public class AccountsManager implements
         return false;
     }
 
-    private void signOut(AppCompatActivity activity) {
+    private void signOut(final AppCompatActivity activity) {
         buildApiClient(activity);
         Auth.GoogleSignInApi.signOut(GoogleApiClients.get(activity.hashCode())).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        userAccount.setAccessCode(null);
-                        userAccount = null;
-                        notifyAllObserversAboutSingOut();
+                        userSingedOut(activity);
                     }
                 });
     }
