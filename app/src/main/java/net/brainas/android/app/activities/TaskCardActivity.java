@@ -202,7 +202,7 @@ public class TaskCardActivity extends AppCompatActivity
             ((View)taskCardImage.getParent()).post(new Runnable() {
                 @Override
                 public void run() {
-                    taskCardImage.setImageBitmap(InfrustructureHelper.getTaskImage(TaskCardActivity.this.task));
+                    taskCardImage.setImageBitmap(InfrustructureHelper.getTaskPicture(TaskCardActivity.this.task.getPicture().getName()));
                 }
             });
         }

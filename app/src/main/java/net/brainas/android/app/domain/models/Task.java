@@ -21,7 +21,7 @@ public class Task {
     private String description = null;
     private boolean haveImage = false;
     private STATUSES status = null;
-    private String picture = null;
+    private Image picture;
     private CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<TaskChangesObserver> observers = new CopyOnWriteArrayList<TaskChangesObserver>();
     private Object lock = new Object();
@@ -115,10 +115,6 @@ public class Task {
         return description;
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
-    }
-
     public boolean haveImage() {
         if (picture != null) { // TODO check File
             return true;
@@ -160,9 +156,14 @@ public class Task {
         return status;
     }
 
-    public String getPicture() {
+    public Image getPicture() {
         return this.picture;
     }
+
+    public void setPicture(Image picture) {
+        this.picture = picture;
+    }
+
 
     public HashMap<String, String> getWarnings() {
         return warnings;
@@ -303,7 +304,7 @@ public class Task {
         }
 
         // check pictures
-        String objectPicture = task.getPicture();
+        Image objectPicture = task.getPicture();
         if ((objectPicture == null && this.picture != null) || (objectPicture != null && this.picture == null)) {
             return false;
         }

@@ -11,7 +11,7 @@
     android:orientation="vertical"
     android:background="#CEECF5">
 
-    <!-- Notice about how to choose picture -->
+    <!-- Notice about how to choose pictureName -->
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"

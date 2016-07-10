@@ -7,11 +7,14 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.events.CompletionEvent;
+import com.google.android.gms.drive.events.DriveEventService;
 
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
+import net.brainas.android.app.domain.models.Image;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,32 +29,36 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
     protected GoogleApiClient mGoogleApiClient;
     private DriveId picturesFolderDriveId;
 
+    private Image image;
+    private  Bitmap pictureBitmap;
+    private String pictureName, pictureGoogleDriveId;
 
-    private  Bitmap bitmap;
-    private String imageName;
 
     public GoogleDriveUploadTaskPicture() {}
 
-    public void setBitmap(Bitmap bitmap) {
-        this.bitmap = bitmap;
-    }
-    public void setImageName(String imageName) {
-        this.imageName = imageName;
-    }
     public void setPicturesFolderDriveId(DriveId picturesFolderDriveId) {
         this.picturesFolderDriveId = picturesFolderDriveId;
+    }
+    public void setImage(Image image) {
+        this.image = image;
     }
 
     @Override
     public void execute(final GoogleApiClient mGoogleApiClient) {
         this.mGoogleApiClient = mGoogleApiClient;
 
-        if (bitmap == null || imageName == null || picturesFolderDriveId == null) {
+        if (image == null) {
             Log.i(GOOGLE_DRIVE_TAG, "Cannot upload image, not enough data!");
             return;
         }
-        Log.i(GOOGLE_DRIVE_TAG, "Try to upload image with name " + imageName);
-        final Bitmap image = bitmap;
+        pictureName = image.getName();
+        pictureBitmap = image.getBitmap();
+        if (pictureBitmap == null || pictureName == null || picturesFolderDriveId == null) {
+            Log.i(GOOGLE_DRIVE_TAG, "Cannot upload image, not enough data!");
+            return;
+        }
+        Log.i(GOOGLE_DRIVE_TAG, "Try to upload image with name " + pictureName);
+        final Bitmap image = pictureBitmap;
 
         Drive.DriveApi.newDriveContents(mGoogleApiClient)
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
@@ -71,7 +78,7 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
                         }
                         DriveFolder folder = picturesFolderDriveId.asDriveFolder();
                         MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
-                                .setMimeType("image/png").setTitle(imageName).build();
+                                .setMimeType("image/png").setTitle(pictureName).build();
                         // Create an intent for the file chooser, and start it.
 
                         folder.createFile(mGoogleApiClient, metadataChangeSet, result.getDriveContents())
@@ -92,8 +99,11 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
                         Log.e(GOOGLE_DRIVE_TAG, "Error while trying to create the picture in picture folder");
                         return;
                     }
+                    DriveId driverId = result.getDriveFile().getDriveId();
                     Log.i(GOOGLE_DRIVE_TAG, "Created a picture in Pictures Folder: "
-                            + result.getDriveFile().getDriveId());
+                            + driverId);
+                    image.setGoogleDriveId(driverId);
                 }
             };
+
 }

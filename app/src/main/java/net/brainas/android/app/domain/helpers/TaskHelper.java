@@ -47,10 +47,19 @@ public class TaskHelper {
         descriptionEl.setTextContent(task.getDescription());
         taskEl.appendChild(descriptionEl);
 
-        // image
-        Element pictureEl = doc.createElement("picture");
-        pictureEl.setTextContent(task.getPicture());
-        taskEl.appendChild(pictureEl);
+        // picture
+        if (task.getPicture() != null) {
+            Element pictureEl = doc.createElement("picture");
+            Element pictureNameEl = doc.createElement("fileName");
+            pictureNameEl.setTextContent(task.getPicture().getName());
+            pictureEl.appendChild(pictureNameEl);
+            if (task.getPicture().getDriveId() != null) {
+                Element pictureDriveIddEl = doc.createElement("driveId");
+                pictureDriveIddEl.setTextContent(task.getPicture().getDriveId().toString());
+                pictureEl.appendChild(pictureDriveIddEl);
+            }
+            taskEl.appendChild(pictureEl);
+        }
 
         // conditions
         CopyOnWriteArrayList<Condition> conditions = task.getConditions();

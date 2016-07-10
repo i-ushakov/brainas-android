@@ -1,6 +1,7 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +24,7 @@ import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
+import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
@@ -230,9 +232,11 @@ public class EditTaskActivity extends AppCompatActivity {
         if (requestCode == GET_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD_NAME);
-                task.setPicture(imageFileName);
+                Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(imageFileName);
+                Image picture = new Image(imageFileName, imageBitmap);
+                task.setPicture(picture);
                 needToRemoveImage = true;
-                GoogleDriveManager.getInstance(app).uploadPicture(InfrustructureHelper.getTaskImage(task), task.getPicture());
+                GoogleDriveManager.getInstance(app).uploadPicture(picture);
             }
         }
     }
@@ -251,7 +255,7 @@ public class EditTaskActivity extends AppCompatActivity {
             taskPicturePanel.post(new Runnable() {
                 @Override
                 public void run() {
-                    taskPictureView.setImageBitmap(InfrustructureHelper.getTaskImage(EditTaskActivity.this.task));
+                    taskPictureView.setImageBitmap(InfrustructureHelper.getTaskPicture(EditTaskActivity.this.task.getPicture().getName()));
                 }
             });
         }

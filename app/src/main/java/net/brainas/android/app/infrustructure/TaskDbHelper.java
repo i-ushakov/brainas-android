@@ -3,12 +3,16 @@ package net.brainas.android.app.infrustructure;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+
+import com.google.android.gms.drive.DriveId;
 
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
+import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
 
 import java.util.ArrayList;
@@ -34,7 +38,8 @@ public class TaskDbHelper {
     public static final String COLUMN_NAME_TASKS_USER = "user";
     public static final String COLUMN_NAME_TASKS_MESSAGE = "message";
     public static final String COLUMN_NAME_TASKS_DESCRIPTION = "description";
-    public static final String COLUMN_NAME_TASKS_IMAGE = "image";
+    public static final String COLUMN_NAME_TASKS_PICTURE_NAME = "picture_name";
+    public static final String COLUMN_NAME_TASKS_PICTURE_ID = "picture_id";
     public static final String COLUMN_NAME_TASKS_STATUS = "status";
     private static final String CREATE_TABLE_TASKS =
             "CREATE TABLE " + TABLE_TASKS + " (" +
@@ -43,7 +48,8 @@ public class TaskDbHelper {
                     COLUMN_NAME_TASKS_USER + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_TASKS_MESSAGE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_DESCRIPTION + " TEXT" + COMMA_SEP +
-                    COLUMN_NAME_TASKS_IMAGE + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_TASKS_PICTURE_NAME + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_TASKS_PICTURE_ID + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_STATUS + " TEXT" + " )";
     private static final String DELETE_TABLE_TASKS =
             "DROP TABLE IF EXISTS " + TABLE_TASKS;
@@ -92,15 +98,14 @@ public class TaskDbHelper {
             "DROP TABLE IF EXISTS " + TABLE_EVENT_TYPES;
 
 
-
-
     private static final String[] projection = {
             COLUMN_NAME_TASKS_ID,
             COLUMN_NAME_TASKS_GLOBAL_ID,
             COLUMN_NAME_TASKS_USER,
             COLUMN_NAME_TASKS_MESSAGE,
             COLUMN_NAME_TASKS_DESCRIPTION,
-            COLUMN_NAME_TASKS_IMAGE,
+            COLUMN_NAME_TASKS_PICTURE_NAME,
+            COLUMN_NAME_TASKS_PICTURE_ID,
             COLUMN_NAME_TASKS_STATUS
     };
 
@@ -183,7 +188,9 @@ public class TaskDbHelper {
 
         Task task;
         int id;
-        String message, status, description, globalIdStr, image;
+        String message, status, description, globalIdStr;
+        String pictureName, pictureGoogleDriveIdStr;
+        Image picture;
         if (cursor.moveToFirst()) {
             do {
                 id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_ID) ));
@@ -202,8 +209,17 @@ public class TaskDbHelper {
                 task.setConditions(getConditions(task));
                 description = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_DESCRIPTION));
                 task.setDescription(description);
-                image = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_IMAGE));
-                task.setPicture(image);
+                pictureName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_NAME));
+                if (pictureName != null) {
+                    Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(pictureName);
+                    picture = new Image(pictureName, pictureBitmap);
+                    pictureGoogleDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_ID));
+                    if (pictureGoogleDriveIdStr != null) {
+                        DriveId pictureGoogleDriveId = DriveId.decodeFromString(pictureGoogleDriveIdStr);
+                        picture.setGoogleDriveId(pictureGoogleDriveId);
+                    }
+                    task.setPicture(picture);
+                }
                 tasks.add(task);
             } while (cursor.moveToNext());
         }
@@ -220,7 +236,12 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_USER, task.getAccountId());
         values.put(COLUMN_NAME_TASKS_MESSAGE, task.getMessage());
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
-        values.put(COLUMN_NAME_TASKS_IMAGE, task.getPicture());
+        if (task.getPicture() != null) {
+            values.put(COLUMN_NAME_TASKS_PICTURE_NAME, task.getPicture().getName());
+            if (task.getPicture().getDriveId() !=null) {
+                values.put(COLUMN_NAME_TASKS_PICTURE_ID, task.getPicture().getDriveId().toString());
+            }
+        }
         if (task.getStatus() != null) {
             values.put(COLUMN_NAME_TASKS_STATUS, task.getStatus().toString());
         }

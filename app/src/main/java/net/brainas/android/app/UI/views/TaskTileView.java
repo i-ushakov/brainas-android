@@ -1,26 +1,20 @@
 package net.brainas.android.app.UI.views;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
 import net.brainas.android.app.activities.TaskCardActivity;
-import net.brainas.android.app.activities.TasksActivity;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
@@ -101,7 +95,7 @@ public class TaskTileView extends RelativeLayout implements View.OnClickListener
         //layoutParams.gravity= Gravity.CENTER;
         layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
         taskImageView.setLayoutParams(layoutParams);
-        taskImageView.setImageBitmap(InfrustructureHelper.getTaskImage(this.task));
+        taskImageView.setImageBitmap(this.task.getPicture().getBitmap());
         ((ViewGroup)taskMessageView.getParent()).removeView(taskMessageView);
     }
 

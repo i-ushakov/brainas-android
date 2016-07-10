@@ -37,17 +37,9 @@ public class InfrustructureHelper {
 
     static private  String TAG = "InfrustructureHelper";
 
-    static public Bitmap getTaskImage(Task task)  {
+    static public Bitmap getTaskPicture(String pictureName)  {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-        /*File parentDir = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getPicture() + "/");
-        if(parentDir == null) {
-            throw new BrainasAppException("Wrong directory with image for task with id = " + task.getId());
-        }
-        List<File> fileList = InfrustructureHelper.getListOfFiles(parentDir);
-        if(fileList == null) {
-            throw new BrainasAppException("No image for task with id = " + task.getId());
-        }*/
-        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + task.getPicture() + "/");
+        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + pictureName + "/");
         Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
         return bmp;
     }
