@@ -4,7 +4,12 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.DriveId;
-import com.google.android.gms.drive.Metadata;
+
+import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager.SettingsParamNames;
+import net.brainas.android.app.infrustructure.SyncSettingsWithServerTask;
+import net.brainas.android.app.infrustructure.SynchronizationManager;
+import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,18 +22,23 @@ import java.util.HashMap;
 public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTask {
     static public String GOOGLE_DRIVE_TAG = "GOOGLE_DRIVE";
     protected GoogleApiClient mGoogleApiClient;
+    BrainasApp app;
+    private String accessToken;
 
     private HashMap<String,String> settingsParamsForSave = new HashMap<String,String>();
 
-    public GoogleDriveManageAppFolders() {}
+    public GoogleDriveManageAppFolders() {
+        app = ((BrainasApp)BrainasApp.getAppContext());
+    }
 
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
     @Override
     public void execute(GoogleApiClient googleApiClient) {
         this.mGoogleApiClient = googleApiClient;
-        Log.i(GOOGLE_DRIVE_TAG, "Execute " + this.getClass());
-        GoogleDriveGetParams googleDriveGetParams = new GoogleDriveGetParams();
-        googleDriveGetParams.setOnDownloadedCallback(new OnGetParamsCallback());
-        googleDriveGetParams.execute(mGoogleApiClient);
+        JSONObject foldersIds = GoogleDriveManager.getInstance(app).getFoldersIds();
+        new CheckProjectFoldersAsyncTask().execute(foldersIds);
     }
 
     private void createProjectFolder() {
@@ -65,14 +75,13 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         @Override
         public void onFolderCreated(DriveId driveId) {
             Log.i(GOOGLE_DRIVE_TAG, "Project folder was created with driveId = " + driveId);
-            settingsParamsForSave.put(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(), driveId.toString());
+            app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(), driveId.toString());
+            app.removeParamFromUserPref(SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name());
             createPicturesFolder(driveId);
         }
 
         @Override
-        public void onFolderWorkDone() {
-
-        }
+        public void onFolderWorkDone() {}
     }
 
     private class OnPicturesFolderCallback implements GoogleDriveCreateFolder.OnFolderCreatedCallbak {
@@ -80,84 +89,60 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         @Override
         public void onFolderCreated(DriveId driveId) {
             Log.i(GOOGLE_DRIVE_TAG, "Pictures folder was created with driveId = " + driveId);
-            settingsParamsForSave.put(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(), driveId.toString());
+            app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(), driveId.toString());
+            app.removeParamFromUserPref(SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name());
+            new SyncSettingsWithServerTask(SynchronizationService.accessToken, null).execute();
         }
 
         @Override
-        public void onFolderWorkDone() {
-            GoogleDriveSetParams googleDriveSetParams = new GoogleDriveSetParams();
-            googleDriveSetParams.setParamsHash(settingsParamsForSave);
-            googleDriveSetParams.execute(mGoogleApiClient);
-        }
+        public void onFolderWorkDone() {}
     }
 
-    private class OnGetParamsCallback implements GoogleDriveGetParams.GettingParamsHandler {
+    final private class CheckProjectFoldersAsyncTask
+            extends android.os.AsyncTask<JSONObject, Void, Void> {
+
 
         @Override
-        public void onJSONSettingIsAbsent() {
-            Log.i(GOOGLE_DRIVE_TAG, "We havn't ba_settings.json in appFolder");
-            createProjectFolder();
-        }
+        protected Void doInBackground(JSONObject... params) {
+            JSONObject settingsParams = params[0];
+            String projectFolderDriveIdParam = GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name();
+            String projectFolderResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
+            String pictureFolderDriveIdParam = SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name();
+            String pictureFolderResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
 
-        @Override
-        public void onGettingParamsSuccess(JSONObject currentParams, DriveId settinsJsonDriverId) {
-            Log.i(GOOGLE_DRIVE_TAG, "Successfully got ba_settings.json");
-            new CheckProjectFoldersAsyncTask().execute(currentParams);
-
-        }
-
-
-        final private class CheckProjectFoldersAsyncTask
-                extends android.os.AsyncTask<JSONObject, Void, Void> {
-
-
-            @Override
-            protected Void doInBackground(JSONObject... params) {
-                JSONObject currentParams = params[0];
-                if (currentParams.has(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name())) {
-                    if (checkFolderExists(currentParams, GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name())) {
-                        if (currentParams.has(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name())) {
-                            if (checkFolderExists(currentParams,GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name())) {
-                                Log.i(GOOGLE_DRIVE_TAG, "All project folders are OK");
-                            } else {
-                                createPicturesFolder(currentParams);
+            if (settingsParams.has(projectFolderDriveIdParam)) {
+                DriveId projectFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExists(settingsParams, projectFolderDriveIdParam);
+                if (projectFolderDriveId != null) {
+                    if (projectFolderDriveId.getResourceId() != null) {
+                        app.saveParamsInUserPrefs(projectFolderResourceIdParam, projectFolderDriveId.getResourceId());
+                    }
+                    if (settingsParams.has(pictureFolderDriveIdParam)) {
+                        DriveId pictureFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExists(settingsParams, pictureFolderDriveIdParam);
+                        if (pictureFolderDriveId != null) {
+                            if (pictureFolderDriveId.getResourceId() != null) {
+                                app.saveParamsInUserPrefs(pictureFolderResourceIdParam, pictureFolderDriveId.getResourceId());
                             }
+                            Log.i(GOOGLE_DRIVE_TAG, "All project folders are OK");
+                            Log.i(GOOGLE_DRIVE_TAG, "projectFolderResourceId = " + projectFolderDriveId.getResourceId());
+                            Log.i(GOOGLE_DRIVE_TAG, "pictureFolderResourceId = " + pictureFolderDriveId.getResourceId());
                         } else {
-                            createPicturesFolder(currentParams);
+                            createPicturesFolder(settingsParams);
                         }
+                    } else {
+                        createPicturesFolder(settingsParams);
                     }
                 } else {
                     createProjectFolder();
                 }
-                return null;
+            } else {
+                createProjectFolder();
             }
-
-            @Override
-            protected void onPostExecute(Void param) {
-                // Nothing TODO
-            }
+            return null;
         }
 
-
-        private boolean checkFolderExists(JSONObject currentParams, String paramName) {
-            try {
-                String projectFolderDriveIdStr = currentParams.getString(paramName);
-                DriveId projectFolderDriveId = DriveId.decodeFromString(projectFolderDriveIdStr);
-                Metadata metadata = projectFolderDriveId.asDriveFolder().getMetadata(mGoogleApiClient).await().getMetadata();
-
-                if (metadata != null) {
-                    if (metadata.isTrashed()) {
-                        projectFolderDriveId.asDriveFolder().untrash(mGoogleApiClient).await();
-                    }
-                    //metadata.getTitle();
-                } else {
-                    return false;
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return false;
-            }
-            return true;
+        @Override
+        protected void onPostExecute(Void param) {
+            // Nothing TODO
         }
     }
 }

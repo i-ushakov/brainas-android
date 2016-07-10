@@ -137,7 +137,7 @@ public class AccountsManager implements
 
     private void userSingedIn(AppCompatActivity activity) {
         Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
-        GoogleDriveManager.getInstance(activity).manageAppFolders();
+        //GoogleDriveManager.getInstance(activity).manageAppFolders();
         notifyAllObserversAboutSingIn();
     }
 

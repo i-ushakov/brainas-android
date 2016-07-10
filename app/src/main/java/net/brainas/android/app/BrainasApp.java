@@ -198,12 +198,24 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public SharedPreferences getUserPreferences() {
-        if (userAccount.getAccountName() != null) {
-            SharedPreferences preferences = getSharedPreferences(userAccount.getAccountName(), 0);
-            return preferences;
-        } else {
-            return null;
+        return  getUserPreferences(null);
+    }
+
+    public SharedPreferences getUserPreferences(String userName) {
+        if (userName == null) {
+            if (accountsManager.getUserAccount() != null) {
+                userName = accountsManager.getUserAccount().getAccountName();
+            } else if (getLastUsedAccount() != null) {
+                userName = getLastUsedAccount().getAccountName();
+            }
+            if (userName != null) {
+                SharedPreferences preferences = getSharedPreferences(userName, 0);
+                return preferences;
+            } else {
+                return null;
+            }
         }
+        return null;
     }
 
     public AccountsManager getAccountsManager() {
@@ -237,7 +249,17 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         return false;
     }
 
-    public void saveParamsInPrefs(JSONObject params) throws JSONException {
+    public void saveParamsInUserPrefs(String name, String value) {
+        JSONObject params = new JSONObject();
+        try {
+            params.put(name, value);
+            saveParamsInUserPrefs(params);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveParamsInUserPrefs(JSONObject params) throws JSONException {
         SharedPreferences userPrefs = getUserPreferences();
         if (userPrefs == null) {
             return;
@@ -251,6 +273,16 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
                 editor.putString(key, params.get(key).toString());
             }
         }
+        editor.commit();
+    }
+
+    public void removeParamFromUserPref(String key) {
+        SharedPreferences userPrefs = getUserPreferences();
+        if (userPrefs == null) {
+            return;
+        }
+        SharedPreferences.Editor editor = userPrefs.edit();
+        editor.remove(key);
         editor.commit();
     }
 

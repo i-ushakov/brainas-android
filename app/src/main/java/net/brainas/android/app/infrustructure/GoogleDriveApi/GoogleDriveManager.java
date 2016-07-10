@@ -1,7 +1,7 @@
 package net.brainas.android.app.infrustructure.GoogleDriveApi;
 
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,8 +11,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.Metadata;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.domain.models.Image;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,9 +34,11 @@ public class GoogleDriveManager implements
     static public String PROJECT_FOLDER_NAME = "Brain Assistant Project";
     static public String PICTURES_FOLDER_NAME = "Pictures";
 
-    public enum SettingsParamNames{
+    public enum SettingsParamNames {
         PROJECT_FOLDER_DRIVE_ID,
-        PICTURE_FOLDER_DRIVE_ID
+        PROJECT_FOLDER_RESOURCE_ID,
+        PICTURE_FOLDER_DRIVE_ID,
+        PICTURE_FOLDER_RESOURCE_ID
     }
 
     private static GoogleDriveManager instance = null;
@@ -136,10 +140,9 @@ public class GoogleDriveManager implements
         }
     }
 
-    public void uploadPicture(Bitmap bitmap, String imageName) {
+    public void uploadPicture(Image image) {
         GoogleDriveUploadTaskPicture googleDriveUploadTaskPicture = new GoogleDriveUploadTaskPicture();
-        googleDriveUploadTaskPicture.setBitmap(bitmap);
-        googleDriveUploadTaskPicture.setImageName(imageName);
+        googleDriveUploadTaskPicture.setImage(image);
         String[] reqestedParams = {GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name()};
         try {
             JSONObject retrievedParams = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromUserPrefs(reqestedParams);
@@ -157,6 +160,78 @@ public class GoogleDriveManager implements
             currentTaskQueue.add(googleDriveUploadTaskPicture);
             Log.i(GOOGLE_DRIVE_TAG, "Added task to currentTaskQueue: " + googleDriveUploadTaskPicture.getClass().getName());
             initGoogleApiClient();
+        }
+    }
+
+    public void downloadPicture(Image image) {
+        // TODO Download picture from google drive
+    }
+
+    public DriveId checkFolderExists(DriveId driveId, String paramName) {
+        JSONObject currentParams = new JSONObject();
+        try {
+            currentParams.put(paramName, driveId.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return checkFolderExists(currentParams, paramName);
+    }
+
+    public DriveId checkFolderExists(JSONObject currentParams, String paramName) {
+        try {
+            String projectFolderDriveIdStr = currentParams.getString(paramName);
+            DriveId projectFolderDriveId = DriveId.decodeFromString(projectFolderDriveIdStr);
+            Metadata metadata = projectFolderDriveId.asDriveFolder().getMetadata(mGoogleApiClient).await().getMetadata();
+
+            if (metadata != null && metadata.getDriveId().getResourceId() != null) {
+                if (metadata.isTrashed()) {
+                    projectFolderDriveId.asDriveFolder().untrash(mGoogleApiClient).await();
+                }
+                //metadata.getTitle();
+            } else {
+                return null;
+            }
+            return metadata.getDriveId();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public JSONObject getFoldersIds() {
+        JSONObject foldersIds = new JSONObject();
+
+        String [] params = {
+                GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(),
+                GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name(),
+                GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(),
+                GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name()
+        };
+        try {
+            foldersIds = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromUserPrefs(params);
+            ckeckFolderIds(foldersIds,
+                    GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(),
+                    GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name());
+            ckeckFolderIds(foldersIds,
+                    GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(),
+                    GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return foldersIds;
+    }
+
+    private void ckeckFolderIds(JSONObject foldersIds, String driveIdParamName, String resourceIdParamName) {
+        try {
+            if (foldersIds.has(driveIdParamName) && !foldersIds.has(resourceIdParamName)) {
+                String resourceId = checkFolderExists(DriveId.decodeFromString(foldersIds.getString(driveIdParamName)), driveIdParamName).getResourceId();
+                foldersIds.put(resourceIdParamName, resourceId);
+                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(foldersIds);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 }

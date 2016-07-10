@@ -17,9 +17,11 @@ import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.AuthAsyncTask;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
+import net.brainas.android.app.infrustructure.SyncSettingsWithServerTask;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.TasksSyncAsyncTask;
@@ -120,18 +122,20 @@ public class SynchronizationService extends Service {
         AuthAsyncTask authAsyncTask = new AuthAsyncTask();
         authAsyncTask.setListener(new AuthAsyncTask.AuthAsyncTaskListener() {
             @Override
-            public void onComplete(String accessToken, Exception e) {
-                if (accessToken != null) {
+            public void onComplete(String result, Exception e) {
+                if (result != null) {
+                    String accessToken = result;
                     SynchronizationService.accessToken = accessToken;
                     userAccount.setAccessToken(accessToken);
                     accountManager.saveUserAccount(userAccount);
                     startSynchronization();
                     Log.i(TAG, "We have gotten accessToken = " + accessToken + " from server by accessCode");
-                } else {
-                    notifyAboutServiceMustBeStopped();
-                    Log.i(TAG, "We still not have accessToken; synchronization was stopped");
                     return;
                 }
+
+                notifyAboutServiceMustBeStopped();
+                Log.i(TAG, "We still not have accessToken; synchronization was stopped");
+                return;
             }
         });
 
@@ -145,6 +149,17 @@ public class SynchronizationService extends Service {
     }
 
     private void startSynchronization() {
+        new SyncSettingsWithServerTask(accessToken, new SyncSettingsWithServerTask.Callback() {
+            @Override
+            public void onSyncSuccess() {
+                GoogleDriveManager.getInstance(app).manageAppFolders();
+            }
+
+            @Override
+            public void onSyncFailed() {
+
+            }
+        }).execute();
         final Handler handler = new Handler();
         TimerTask syncTask = new TimerTask() {
             public void run() {
