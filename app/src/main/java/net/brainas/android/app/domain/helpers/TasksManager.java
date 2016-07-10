@@ -1,13 +1,9 @@
 package net.brainas.android.app.domain.helpers;
 
-import android.content.Context;
-
-import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
-import net.brainas.android.app.infrustructure.UserAccount;
 
 import java.util.ArrayList;
 import java.util.HashMap;

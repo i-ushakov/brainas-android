@@ -1,9 +1,14 @@
 package net.brainas.android.app.infrustructure;
 
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.support.v4.util.Pair;
 
+import com.google.android.gms.drive.DriveId;
+
 import net.brainas.android.app.AccountsManager;
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
@@ -11,7 +16,10 @@ import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
+import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManageAppFolders;
+import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
@@ -86,12 +94,12 @@ public class SyncHelper {
     }
 
     public static String sendAuthRequest(String accessCode) {
-        String token = null;
+        String response = null;
 
         HttpsURLConnection connection = null;
 
         try {
-            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "fetch-access-token");
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "authenticate-user");
 
             DataOutputStream request = new DataOutputStream(
                     connection.getOutputStream());
@@ -136,10 +144,10 @@ public class SyncHelper {
                 InputStreamReader isReader = new InputStreamReader(stream);
                 BufferedReader br = new BufferedReader(isReader);
                 String line;
-                token = "";
+                response = "";
                 while ((line = br.readLine()) != null) {
                     System.out.println(line);
-                    token += line;
+                    response += line;
                 }
             } else {
                 Log.e(TAG, "The Code was sent, but Token haven't gotten! (!= 200)");
@@ -153,10 +161,10 @@ public class SyncHelper {
             return null;
         }
 
-        if (token.equals("null")) {
+        if (response.equals("null")) {
             return null;
         }
-        return token;
+        return response;
     }
 
     public static String sendSyncRequest(File allChangesInXML)  {
@@ -313,6 +321,10 @@ public class SyncHelper {
                 changedTaskEl.appendChild(changeEl);
                 changedTasksEl.appendChild(changedTaskEl);
             }
+
+        //Element foldersDriveIdsEl = doc.createElement("foldersIds");
+        //foldersDriveIdsEl.setTextContent(GoogleDriveManager.getInstance(BrainasApp.getAppContext()).getFoldersIds().toString());
+        //root.appendChild(foldersDriveIdsEl);
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         StringWriter writer = new StringWriter();
@@ -619,6 +631,28 @@ public class SyncHelper {
                 task.setMessage(message);
             }
             task.setDescription(description);
+
+            // Picture
+            Element pictureEl = (Element)taskEl.getElementsByTagName("picture").item(0);
+            if (pictureEl != null) {
+                Element pictureNameEl = (Element)pictureEl.getElementsByTagName("name").item(0);
+                if (pictureNameEl != null) {
+                    Image currentPicture = task.getPicture();
+                    if (currentPicture == null || !currentPicture.getName().equals(pictureNameEl.toString()) || currentPicture.getBitmap() == null) {
+                        Image picture = new Image(pictureNameEl.toString());
+                        Element pictureDriveIdEl = (Element)pictureEl.getElementsByTagName("driveId").item(0);
+                        if (pictureDriveIdEl != null) {
+                            picture.setGoogleDriveId(DriveId.decodeFromString(pictureDriveIdEl.toString()));
+                        }
+                        task.setPicture(picture);
+                        Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(task.getPicture().getName());
+                        if (pictureBitmap == null) {
+                            GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture);
+                        }
+                    }
+                }
+            }
+
             Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
             if (statusEl != null) {
                 task.setStatus(statusEl.getTextContent());
