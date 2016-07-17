@@ -1,4 +1,4 @@
-package net.brainas.android.app.infrustructure.GoogleDriveApi;
+package net.brainas.android.app.infrustructure.googleDriveApi;
 
 import android.util.Log;
 
@@ -8,8 +8,6 @@ import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
-
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
 
 /**
  * Created by innok on 6/22/2016.

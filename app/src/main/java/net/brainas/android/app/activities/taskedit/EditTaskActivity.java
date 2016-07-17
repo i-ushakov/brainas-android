@@ -26,7 +26,7 @@ import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
+import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
 import java.util.ArrayList;
