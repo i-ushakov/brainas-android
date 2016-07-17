@@ -10,6 +10,7 @@ import com.google.android.gms.drive.DriveId;
 public class Image {
     private String name;
     private DriveId googleDriveId;
+    private String fileId;
     private Bitmap bitmap;
 
     public Image(String name) {
@@ -29,12 +30,24 @@ public class Image {
         return googleDriveId;
     }
 
-    public void setGoogleDriveId(DriveId googleDriveId) {
+    public void setDriveId(DriveId googleDriveId) {
         this.googleDriveId = googleDriveId;
+    }
+
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
+    }
+
+    public String getFileId() {
+        return this.fileId;
     }
 
     public Bitmap getBitmap() {
         return bitmap;
+    }
+
+    public void onDownloadCompleted() {
+        // TODO notify all listeners
     }
 
     @Override
@@ -58,8 +71,10 @@ public class Image {
         if ((objectGoogleDriveId == null && this.googleDriveId != null) || (objectGoogleDriveId != null && this.googleDriveId == null)) {
             return false;
         }
-        if (!image.getDriveId().equals(this.googleDriveId)) {
-            return false;
+        if (objectGoogleDriveId != null) {
+            if (!objectGoogleDriveId.equals(this.googleDriveId)) {
+                return false;
+            }
         }
 
         // check bitmap
@@ -67,8 +82,10 @@ public class Image {
         if ((objectBitmap == null && this.bitmap != null) || (objectBitmap != null && this.bitmap == null)) {
             return false;
         }
-        if (!image.getDriveId().equals(this.googleDriveId)) {
-            return false;
+        if (objectBitmap != null) {
+            if (!objectBitmap.equals(this.bitmap)) {
+                return false;
+            }
         }
 
         return true;

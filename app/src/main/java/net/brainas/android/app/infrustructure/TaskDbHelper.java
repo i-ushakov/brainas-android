@@ -39,7 +39,8 @@ public class TaskDbHelper {
     public static final String COLUMN_NAME_TASKS_MESSAGE = "message";
     public static final String COLUMN_NAME_TASKS_DESCRIPTION = "description";
     public static final String COLUMN_NAME_TASKS_PICTURE_NAME = "picture_name";
-    public static final String COLUMN_NAME_TASKS_PICTURE_ID = "picture_id";
+    public static final String COLUMN_NAME_TASKS_PICTURE_DRIVE_ID = "picture_drive_id";
+    public static final String COLUMN_NAME_TASKS_PICTURE_FILE_ID = "picture_file_id";
     public static final String COLUMN_NAME_TASKS_STATUS = "status";
     private static final String CREATE_TABLE_TASKS =
             "CREATE TABLE " + TABLE_TASKS + " (" +
@@ -49,7 +50,8 @@ public class TaskDbHelper {
                     COLUMN_NAME_TASKS_MESSAGE + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_DESCRIPTION + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_PICTURE_NAME + " TEXT" + COMMA_SEP +
-                    COLUMN_NAME_TASKS_PICTURE_ID + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_TASKS_PICTURE_DRIVE_ID + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_TASKS_PICTURE_FILE_ID + " TEXT" + COMMA_SEP +
                     COLUMN_NAME_TASKS_STATUS + " TEXT" + " )";
     private static final String DELETE_TABLE_TASKS =
             "DROP TABLE IF EXISTS " + TABLE_TASKS;
@@ -105,7 +107,8 @@ public class TaskDbHelper {
             COLUMN_NAME_TASKS_MESSAGE,
             COLUMN_NAME_TASKS_DESCRIPTION,
             COLUMN_NAME_TASKS_PICTURE_NAME,
-            COLUMN_NAME_TASKS_PICTURE_ID,
+            COLUMN_NAME_TASKS_PICTURE_DRIVE_ID,
+            COLUMN_NAME_TASKS_PICTURE_FILE_ID,
             COLUMN_NAME_TASKS_STATUS
     };
 
@@ -189,7 +192,7 @@ public class TaskDbHelper {
         Task task;
         int id;
         String message, status, description, globalIdStr;
-        String pictureName, pictureGoogleDriveIdStr;
+        String pictureName, pictureDriveIdStr;
         Image picture;
         if (cursor.moveToFirst()) {
             do {
@@ -213,10 +216,14 @@ public class TaskDbHelper {
                 if (pictureName != null) {
                     Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(pictureName);
                     picture = new Image(pictureName, pictureBitmap);
-                    pictureGoogleDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_ID));
-                    if (pictureGoogleDriveIdStr != null) {
-                        DriveId pictureGoogleDriveId = DriveId.decodeFromString(pictureGoogleDriveIdStr);
-                        picture.setGoogleDriveId(pictureGoogleDriveId);
+                    pictureDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID));
+                    if (pictureDriveIdStr != null) {
+                        DriveId pictureGoogleDriveId = DriveId.decodeFromString(pictureDriveIdStr);
+                        picture.setDriveId(pictureGoogleDriveId);
+                    }
+                    String pictureFileId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_FILE_ID));
+                    if (pictureFileId != null) {
+                        picture.setFileId(pictureFileId);
                     }
                     task.setPicture(picture);
                 }
@@ -238,8 +245,11 @@ public class TaskDbHelper {
         values.put(COLUMN_NAME_TASKS_GLOBAL_ID, task.getGlobalId());
         if (task.getPicture() != null) {
             values.put(COLUMN_NAME_TASKS_PICTURE_NAME, task.getPicture().getName());
-            if (task.getPicture().getDriveId() !=null) {
-                values.put(COLUMN_NAME_TASKS_PICTURE_ID, task.getPicture().getDriveId().toString());
+            if (task.getPicture().getDriveId() != null) {
+                values.put(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID, task.getPicture().getDriveId().toString());
+            }
+            if (task.getPicture().getFileId() != null) {
+                values.put(COLUMN_NAME_TASKS_PICTURE_FILE_ID, task.getPicture().getFileId());
             }
         }
         if (task.getStatus() != null) {

@@ -1,4 +1,4 @@
-package net.brainas.android.app.infrustructure.GoogleDriveApi;
+package net.brainas.android.app.infrustructure.googleDriveApi;
 
 import android.graphics.Bitmap;
 import android.util.Log;
@@ -7,12 +7,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
-import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
-import com.google.android.gms.drive.events.CompletionEvent;
-import com.google.android.gms.drive.events.DriveEventService;
 
 import net.brainas.android.app.domain.models.Image;
 
@@ -102,7 +99,7 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
                     DriveId driverId = result.getDriveFile().getDriveId();
                     Log.i(GOOGLE_DRIVE_TAG, "Created a picture in Pictures Folder: "
                             + driverId);
-                    image.setGoogleDriveId(driverId);
+                    image.setDriveId(driverId);
                 }
             };
 

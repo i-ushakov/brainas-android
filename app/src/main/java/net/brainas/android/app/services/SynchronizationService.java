@@ -17,7 +17,7 @@ import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.AuthAsyncTask;
-import net.brainas.android.app.infrustructure.GoogleDriveApi.GoogleDriveManager;
+import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
@@ -26,6 +26,7 @@ import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.TasksSyncAsyncTask;
 import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 
 import org.json.JSONException;
 
@@ -248,10 +249,20 @@ public class SynchronizationService extends Service {
             return;
         }
 
-        syncHelper.handleResponseFromServer(response);
-
-        // notify about updates
-        notifyAboutSyncronization();
+        HandleServerResponseTask handleServerResponseTask = new HandleServerResponseTask();
+        handleServerResponseTask.setAccountManager(accountManager);
+        handleServerResponseTask.setUserAccount(userAccount);
+        handleServerResponseTask.setTaskManager(tasksManager);
+        handleServerResponseTask.setTaskDbHelper(taskDbHelper);
+        handleServerResponseTask.setTaskChangesDbHelper(taskChangesDbHelper);
+        handleServerResponseTask.setListener(new HandleServerResponseTask.HandleServerResponseListener() {
+            @Override
+            public void onComplete(String jsonString, Exception e) {
+                // notify about updates
+                notifyAboutSyncronization();
+            }
+        });
+        handleServerResponseTask.execute(response);
     }
 
     private void notifyAboutSyncronization() {

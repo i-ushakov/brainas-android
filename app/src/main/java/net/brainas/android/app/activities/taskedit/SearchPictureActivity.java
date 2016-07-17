@@ -140,7 +140,7 @@ public class SearchPictureActivity extends AppCompatActivity {
             try {
                 imageFile = InfrustructureHelper.createFileInDir(
                         InfrustructureHelper.PATH_TO_TASK_IMAGES_FOLDER,
-                        "task_img", "png",
+                        "task_picture", "png",
                         false, false
                 );
                 BasicImageDownloader.writeToDisk(imageFile, result, new BasicImageDownloader.OnBitmapSaveListener() {

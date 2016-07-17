@@ -90,6 +90,13 @@ public class InfrustructureHelper {
         return file;
     }
 
+    public static File creteFileForGivenName(String dir, String fileName) {
+        File file;
+        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
+        file = new File(dataDir + dir +  fileName);
+        return file;
+    }
+
     public static HttpsURLConnection createHttpMultipartConn(String url) throws
             IOException,
             KeyStoreException,

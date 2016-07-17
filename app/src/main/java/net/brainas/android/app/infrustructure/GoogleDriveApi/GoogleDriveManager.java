@@ -1,7 +1,6 @@
-package net.brainas.android.app.infrustructure.GoogleDriveApi;
+package net.brainas.android.app.infrustructure.googleDriveApi;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,7 +8,9 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.Metadata;
 
@@ -164,7 +165,16 @@ public class GoogleDriveManager implements
     }
 
     public void downloadPicture(Image image) {
-        // TODO Download picture from google drive
+        GoogleDriveDownloadImage googleDriveDownloadImage = new GoogleDriveDownloadImage();
+        googleDriveDownloadImage.setImage(image);
+
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            googleDriveDownloadImage.execute(mGoogleApiClient);
+        } else {
+            currentTaskQueue.add(googleDriveDownloadImage);
+            Log.i(GOOGLE_DRIVE_TAG, "Added task to currentTaskQueue: " + googleDriveDownloadImage.getClass().getName());
+            initGoogleApiClient();
+        }
     }
 
     public DriveId checkFolderExists(DriveId driveId, String paramName) {
@@ -208,6 +218,7 @@ public class GoogleDriveManager implements
                 GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(),
                 GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name()
         };
+
         try {
             foldersIds = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromUserPrefs(params);
             ckeckFolderIds(foldersIds,
@@ -221,6 +232,18 @@ public class GoogleDriveManager implements
         }
 
         return foldersIds;
+    }
+
+    public DriveId fetchDriveIdByResourceId(String resurceId, ResultCallback<DriveApi.DriveIdResult> idCallback) {
+        DriveId driveId = null;
+        if (idCallback == null) {
+            driveId =
+                    Drive.DriveApi.fetchDriveId(mGoogleApiClient, resurceId).await().getDriveId();
+        } else {
+            Drive.DriveApi.fetchDriveId(mGoogleApiClient, resurceId)
+                    .setResultCallback(idCallback);
+        }
+        return driveId;
     }
 
     private void ckeckFolderIds(JSONObject foldersIds, String driveIdParamName, String resourceIdParamName) {
