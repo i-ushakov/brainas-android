@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.domain.models.Task;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,17 +32,46 @@ import javax.net.ssl.TrustManagerFactory;
  * Created by innok on 11/11/2015.
  */
 public class InfrustructureHelper {
-    static public String PATH_TO_TASK_IMAGES_FOLDER = "/app_images/task_images/";
+
+    static public final String PATH_TO_SYNC_DATE_FOLDER = "app_sync/sync_data/";
+    public static final String PATH_TO_SEND_FOLDER = PATH_TO_SYNC_DATE_FOLDER + "for_send/";
+    static public String PATH_TO_TASK_IMAGES_FOLDER = "app_images/task_images/";
 
     static private  String TAG = "InfrustructureHelper";
 
+    static public String getPathToImageFolder() {
+        UserAccount currentUserAccount = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount();
+        if (currentUserAccount == null) {
+            return null;
+        }
+
+        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
+        String pathToPictureFolder = dataDir + currentUserAccount.getId() + "/" + PATH_TO_TASK_IMAGES_FOLDER ;
+        return pathToPictureFolder;
+    }
+
+    static public String getPathToSendDir() {
+        UserAccount currentUserAccount = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount();
+        if (currentUserAccount == null) {
+            return null;
+        }
+        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
+        String pathToSendDir = dataDir + currentUserAccount.getId() + "/" + PATH_TO_SEND_FOLDER;
+        return pathToSendDir;
+    }
+
     static public Bitmap getTaskPicture(String pictureName)  {
-        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-        File imageFile = new File(dataDir + PATH_TO_TASK_IMAGES_FOLDER + pictureName + "/");
+        String pathToPictureFolder = getPathToImageFolder();
+        File imageFile = new File(pathToPictureFolder + pictureName);
         Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
         return bmp;
     }
 
+
+    static  public List<File> getListOfPictures() {
+        String pathToPictureFolder = getPathToImageFolder();
+        return getListOfFiles(new File(pathToPictureFolder));
+    }
 
     static public List<File> getListOfFiles(File parentDir) {
         ArrayList<File> inFiles = new ArrayList<File>();
@@ -70,8 +98,6 @@ public class InfrustructureHelper {
     public static File createFileInDir(String dir, String fileName, String ext, boolean formatDate, boolean createFile) throws IOException {
         File file;
 
-        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-
         String dateTime;
         Calendar cal = Calendar.getInstance();
         if (formatDate) {
@@ -82,7 +108,7 @@ public class InfrustructureHelper {
         }
         String fullFileName = fileName + "_" + dateTime + "." + ext;
 
-        file = new File(dataDir + dir +  fullFileName);
+        file = new File(dir +  fullFileName);
         file.getParentFile().mkdirs();
         if (createFile) {
             file.createNewFile();
@@ -92,8 +118,7 @@ public class InfrustructureHelper {
 
     public static File creteFileForGivenName(String dir, String fileName) {
         File file;
-        String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir;
-        file = new File(dataDir + dir +  fileName);
+        file = new File(dir +  fileName);
         return file;
     }
 

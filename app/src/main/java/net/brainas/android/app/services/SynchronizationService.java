@@ -210,7 +210,7 @@ public class SynchronizationService extends Service {
         // Retrieve all changes from database and prepare for sending in the form of XML-file
         try {
             allChangesInXML = syncHelper.getAllChangesInXML(accountId);
-            allChangesInXMLFile = InfrustructureHelper.createFileInDir(SyncHelper.syncDateDirForSend, "all_changes", "xml");
+            allChangesInXMLFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(), "all_changes", "xml");
             final File allChangesInXMLFileFinal = allChangesInXMLFile;
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
             Log.i(TAG, allChangesInXMLFile.getName() + " was created");

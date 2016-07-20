@@ -12,8 +12,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
-import net.brainas.android.app.infrustructure.BasicImageDownloader;
+import net.brainas.android.app.infrustructure.images.BasicImageDownloader;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
 import java.io.File;
@@ -139,7 +140,7 @@ public class SearchPictureActivity extends AppCompatActivity {
             final File imageFile;
             try {
                 imageFile = InfrustructureHelper.createFileInDir(
-                        InfrustructureHelper.PATH_TO_TASK_IMAGES_FOLDER,
+                        InfrustructureHelper.getPathToImageFolder(),
                         "task_picture", "png",
                         false, false
                 );
