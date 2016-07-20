@@ -21,7 +21,7 @@ import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
-import net.brainas.android.app.infrustructure.SynchronizationManager;
+import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 

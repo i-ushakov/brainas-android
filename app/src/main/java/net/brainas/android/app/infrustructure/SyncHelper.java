@@ -7,6 +7,7 @@ import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;

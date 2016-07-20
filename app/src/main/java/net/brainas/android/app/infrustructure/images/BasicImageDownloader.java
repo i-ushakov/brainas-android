@@ -1,4 +1,4 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.images;
 
 /**
  * Created by innok on 6/13/2016.

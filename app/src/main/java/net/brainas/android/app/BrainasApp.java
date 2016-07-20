@@ -18,7 +18,7 @@ import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.LocationProvider;
-import net.brainas.android.app.infrustructure.SynchronizationManager;
+import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
@@ -27,9 +27,7 @@ import net.brainas.android.app.infrustructure.UserAccountDbHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.

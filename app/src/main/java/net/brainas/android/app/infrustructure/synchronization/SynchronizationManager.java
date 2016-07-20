@@ -1,4 +1,4 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.synchronization;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.util.Log;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.services.SynchronizationService;
 
 import java.util.ArrayList;
@@ -27,8 +28,8 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    //static String serverUrl = "https://192.168.1.101/backend/web/connection/";
-    static String serverUrl = "https://brainas.net/backend/web/connection/";
+    // public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
+    public static String serverUrl = "https://brainas.net/backend/web/connection/";
 
     static String TAG = "SYNCHRONIZATION";
 

@@ -19,7 +19,7 @@ import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
-import net.brainas.android.app.infrustructure.SynchronizationManager;
+import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;

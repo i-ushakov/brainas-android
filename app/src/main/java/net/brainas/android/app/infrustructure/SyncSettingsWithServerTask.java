@@ -7,6 +7,7 @@ import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
+import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
