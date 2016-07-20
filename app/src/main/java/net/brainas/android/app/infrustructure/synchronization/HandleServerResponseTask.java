@@ -189,6 +189,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
     @Override
     protected void onPostExecute(Void result) {
         super.onPostExecute(result);
+        mListener.onComplete(null, null);
 
     }
 

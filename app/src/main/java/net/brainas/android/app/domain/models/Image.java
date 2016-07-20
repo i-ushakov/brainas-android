@@ -3,6 +3,7 @@ package net.brainas.android.app.domain.models;
 import android.graphics.Bitmap;
 
 import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.nearby.bootstrap.request.DisableTargetRequest;
 
 /**
  * Created by innok on 7/5/2016.
@@ -40,6 +41,10 @@ public class Image {
 
     public String getFileId() {
         return this.fileId;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 
     public Bitmap getBitmap() {

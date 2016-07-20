@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Result;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveFile;
@@ -15,8 +14,9 @@ import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.Image;
-import net.brainas.android.app.infrustructure.BasicImageDownloader;
+import net.brainas.android.app.infrustructure.images.BasicImageDownloader;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
 import java.io.File;
@@ -79,9 +79,10 @@ public class GoogleDriveDownloadImage implements GoogleDriveManager.CurrentTask 
 
         InputStream is = driveContentsResult.getDriveContents().getInputStream();
         Bitmap bitmap = BitmapFactory.decodeStream(is);
+        image.setBitmap(bitmap);
 
         File imageFile = InfrustructureHelper.creteFileForGivenName(
-                InfrustructureHelper.PATH_TO_TASK_IMAGES_FOLDER,
+                InfrustructureHelper.getPathToImageFolder(),
                 fileName);
         BasicImageDownloader.writeToDisk(imageFile, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
             @Override
