@@ -21,6 +21,7 @@ import com.google.android.gms.drive.Drive;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.infrustructure.images.CleanUnusedImages;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,6 +140,7 @@ public class AccountsManager implements
         Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
         //GoogleDriveManager.getInstance(activity).manageAppFolders();
         notifyAllObserversAboutSingIn();
+        new CleanUnusedImages().setTaskDbHelper(app.getTasksManager()).execute();
     }
 
     private void userSingedOut(AppCompatActivity activity) {
