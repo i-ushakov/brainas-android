@@ -164,9 +164,10 @@ public class GoogleDriveManager implements
         }
     }
 
-    public void downloadPicture(Image image) {
+    public void downloadPicture(Image image, int accuntId) {
         GoogleDriveDownloadImage googleDriveDownloadImage = new GoogleDriveDownloadImage();
         googleDriveDownloadImage.setImage(image);
+        googleDriveDownloadImage.setAccountId(accuntId);
 
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             googleDriveDownloadImage.execute(mGoogleApiClient);

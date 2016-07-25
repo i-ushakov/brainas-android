@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
@@ -39,37 +40,28 @@ public class InfrustructureHelper {
 
     static private  String TAG = "InfrustructureHelper";
 
-    static public String getPathToImageFolder() {
-        UserAccount currentUserAccount = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount();
-        if (currentUserAccount == null) {
-            return null;
-        }
-
+    static public String getPathToImageFolder(int accountId) {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
-        String pathToPictureFolder = dataDir + currentUserAccount.getId() + "/" + PATH_TO_TASK_IMAGES_FOLDER ;
+        String pathToPictureFolder = dataDir + accountId + "/" + PATH_TO_TASK_IMAGES_FOLDER ;
         return pathToPictureFolder;
     }
 
-    static public String getPathToSendDir() {
-        UserAccount currentUserAccount = ((BrainasApp)BrainasApp.getAppContext()).getUserAccount();
-        if (currentUserAccount == null) {
-            return null;
-        }
+    static public String getPathToSendDir(int accountId) {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
-        String pathToSendDir = dataDir + currentUserAccount.getId() + "/" + PATH_TO_SEND_FOLDER;
+        String pathToSendDir = dataDir + accountId + "/" + PATH_TO_SEND_FOLDER;
         return pathToSendDir;
     }
 
-    static public Bitmap getTaskPicture(String pictureName)  {
-        String pathToPictureFolder = getPathToImageFolder();
+    static public Bitmap getTaskPicture(String pictureName, int accountId)  {
+        String pathToPictureFolder = getPathToImageFolder(accountId);
         File imageFile = new File(pathToPictureFolder + pictureName);
         Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
         return bmp;
     }
 
 
-    static  public List<File> getListOfPictures() {
-        String pathToPictureFolder = getPathToImageFolder();
+    static  public List<File> getListOfPictures(int accountId) {
+        String pathToPictureFolder = getPathToImageFolder(accountId);
         return getListOfFiles(new File(pathToPictureFolder));
     }
 

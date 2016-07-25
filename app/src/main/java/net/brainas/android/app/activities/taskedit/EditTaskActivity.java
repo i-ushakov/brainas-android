@@ -232,7 +232,7 @@ public class EditTaskActivity extends AppCompatActivity {
         if (requestCode == GET_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD_NAME);
-                Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(imageFileName);
+                Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(imageFileName, app.getAccountsManager().getCurrentAccountId());
                 Image picture = new Image(imageFileName, imageBitmap);
                 task.setPicture(picture);
                 needToRemoveImage = true;
@@ -255,7 +255,9 @@ public class EditTaskActivity extends AppCompatActivity {
             taskPicturePanel.post(new Runnable() {
                 @Override
                 public void run() {
-                    taskPictureView.setImageBitmap(InfrustructureHelper.getTaskPicture(EditTaskActivity.this.task.getPicture().getName()));
+                    taskPictureView.setImageBitmap(InfrustructureHelper.getTaskPicture(
+                            EditTaskActivity.this.task.getPicture().getName(),
+                            app.getAccountsManager().getCurrentAccountId()));
                 }
             });
         }

@@ -35,12 +35,17 @@ public class GoogleDriveDownloadImage implements GoogleDriveManager.CurrentTask 
     private Image image;
     private  Bitmap pictureBitmap;
     private String pictureName, pictureGoogleDriveId;
+    private int accountId;
 
 
     public GoogleDriveDownloadImage() {}
 
     public void setImage(Image image) {
         this.image = image;
+    }
+
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
     @Override
@@ -82,7 +87,7 @@ public class GoogleDriveDownloadImage implements GoogleDriveManager.CurrentTask 
         image.setBitmap(bitmap);
 
         File imageFile = InfrustructureHelper.creteFileForGivenName(
-                InfrustructureHelper.getPathToImageFolder(),
+                InfrustructureHelper.getPathToImageFolder(accountId),
                 fileName);
         BasicImageDownloader.writeToDisk(imageFile, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
             @Override

@@ -214,7 +214,7 @@ public class TaskDbHelper {
                 task.setDescription(description);
                 pictureName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_NAME));
                 if (pictureName != null) {
-                    Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(pictureName);
+                    Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(pictureName, accountId);
                     picture = new Image(pictureName, pictureBitmap);
                     pictureDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID));
                     if (pictureDriveIdStr != null) {

@@ -140,7 +140,7 @@ public class SearchPictureActivity extends AppCompatActivity {
             final File imageFile;
             try {
                 imageFile = InfrustructureHelper.createFileInDir(
-                        InfrustructureHelper.getPathToImageFolder(),
+                        InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
                         "task_picture", "png",
                         false, false
                 );

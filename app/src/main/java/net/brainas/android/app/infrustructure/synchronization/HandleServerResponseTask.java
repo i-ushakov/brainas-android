@@ -48,7 +48,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
     private HandleServerResponseListener mListener = null;
 
-    private AccountsManager accountsManager;
     private UserAccount userAccount;
     private TasksManager tasksManager;
     private TaskDbHelper taskDbHelper;
@@ -61,10 +60,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
     public HandleServerResponseTask setListener(HandleServerResponseListener listener) {
         this.mListener = listener;
         return this;
-    }
-
-    public void setAccountManager(AccountsManager accountsManager) {
-        this.accountsManager = accountsManager;
     }
 
     public void setUserAccount(UserAccount userAccount) {
@@ -118,7 +113,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                 if ((String) syncDate.get("accessToken") != null) {
                     SynchronizationService.accessToken = (String) syncDate.get("accessToken");
                     userAccount.setAccessToken(SynchronizationService.accessToken);
-                    accountsManager.saveUserAccount(userAccount);
+                    AccountsManager.saveUserAccount(userAccount);
                     Log.v(SYNC_TAG, "Access token was gotten :" + SynchronizationService.accessToken);
                 }
             } catch (JSONException e) {
@@ -371,7 +366,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                         task.setPicture(picture);
                         //Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(task.getPicture().getName());
                         //if (pictureBitmap == null) {
-                        GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture);
+                        GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture, userAccount.getId());
                         //}
                     }
                 }

@@ -18,9 +18,15 @@ import java.util.List;
 public class CleanUnusedImages extends AsyncTask<Void, Void, Void> {
     public static String CLEAN_IMAGE_BOT_TAG = "CLEAN_IMAGE_TASK";
     TasksManager tasksManager;
+    int accountId;
 
-    public CleanUnusedImages setTaskDbHelper(TasksManager taskDbHelper) {
-        this.tasksManager = taskDbHelper;
+    public CleanUnusedImages setTasksManager(TasksManager tasksManager) {
+        this.tasksManager = tasksManager;
+        return this;
+    }
+
+    public CleanUnusedImages setAccountId(int accountId) {
+        this.accountId = accountId;
         return this;
     }
 
@@ -36,7 +42,7 @@ public class CleanUnusedImages extends AsyncTask<Void, Void, Void> {
             allPicturesNames.add(task.getPicture().getName());
         }
 
-        List<File> files = InfrustructureHelper.getListOfPictures();
+        List<File> files = InfrustructureHelper.getListOfPictures(tasksManager.getAccpuntId());
 
         if (files == null) {
             return null;

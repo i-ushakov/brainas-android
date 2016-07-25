@@ -58,7 +58,6 @@ public class SynchronizationService extends Service {
     public static Integer accountId = null;
 
     public BrainasApp app;
-    public AccountsManager accountManager;
     public static  UserAccount userAccount;
 
     private final ScheduledExecutorService scheduler =
@@ -88,7 +87,7 @@ public class SynchronizationService extends Service {
         }
 
         tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, userAccount.getId());
-        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper, taskDbHelper, userAccount, accountManager);
+        syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper);
 
         if (accessCode != null && NetworkHelper.isNetworkActive()) {
             fetchTokenAndStartSync();
@@ -110,7 +109,6 @@ public class SynchronizationService extends Service {
         app = ((BrainasApp)BrainasApp.getAppContext());
         taskDbHelper = app.getTaskDbHelper();
         taskChangesDbHelper = app.getTasksChangesDbHelper();
-        accountManager = app.getAccountsManager();
     }
 
     private void setUserSyncParams(UserAccount userAccount) {
@@ -128,7 +126,7 @@ public class SynchronizationService extends Service {
                     String accessToken = result;
                     SynchronizationService.accessToken = accessToken;
                     userAccount.setAccessToken(accessToken);
-                    accountManager.saveUserAccount(userAccount);
+                    AccountsManager.saveUserAccount(userAccount);
                     startSynchronization();
                     Log.i(TAG, "We have gotten accessToken = " + accessToken + " from server by accessCode");
                     return;
@@ -146,7 +144,7 @@ public class SynchronizationService extends Service {
             authAsyncTask.execute(accessCode);
         }
         userAccount.setAccessCode(null);
-        accountManager.saveUserAccount(userAccount);
+        AccountsManager.saveUserAccount(userAccount);
     }
 
     private void startSynchronization() {
@@ -210,7 +208,7 @@ public class SynchronizationService extends Service {
         // Retrieve all changes from database and prepare for sending in the form of XML-file
         try {
             allChangesInXML = syncHelper.getAllChangesInXML(accountId);
-            allChangesInXMLFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(), "all_changes", "xml");
+            allChangesInXMLFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(accountId), "all_changes", "xml");
             final File allChangesInXMLFileFinal = allChangesInXMLFile;
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
             Log.i(TAG, allChangesInXMLFile.getName() + " was created");
@@ -250,7 +248,6 @@ public class SynchronizationService extends Service {
         }
 
         HandleServerResponseTask handleServerResponseTask = new HandleServerResponseTask();
-        handleServerResponseTask.setAccountManager(accountManager);
         handleServerResponseTask.setUserAccount(userAccount);
         handleServerResponseTask.setTaskManager(tasksManager);
         handleServerResponseTask.setTaskDbHelper(taskDbHelper);
@@ -275,7 +272,7 @@ public class SynchronizationService extends Service {
     private void notifyAboutServiceMustBeStopped() {
         userAccount.setAccessCode(null);
         userAccount.setAccessToken(null);
-        accountManager.saveUserAccount(userAccount);
+        AccountsManager.saveUserAccount(userAccount);
         Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED);
         sendBroadcast(intent);
         Log.i(TAG, "Something went wrong, for example we couldn't exchange code on token, so service must be stopped");
