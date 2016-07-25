@@ -81,7 +81,7 @@ public class AccountsManager implements
         return userAccount;
     }
 
-    public boolean saveUserAccount(UserAccount userAccount) {
+    static public boolean saveUserAccount(UserAccount userAccount) {
         BrainasApp app = ((BrainasApp)(BrainasApp.getAppContext()));
         if (app.getUserAccountDbHelper().saveUserAccount(userAccount) != 0) {
             return true;
@@ -140,7 +140,7 @@ public class AccountsManager implements
         Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
         //GoogleDriveManager.getInstance(activity).manageAppFolders();
         notifyAllObserversAboutSingIn();
-        new CleanUnusedImages().setTaskDbHelper(app.getTasksManager()).execute();
+        new CleanUnusedImages().setTasksManager(app.getTasksManager()).setAccountId(userAccount.getId()).execute();
     }
 
     private void userSingedOut(AppCompatActivity activity) {

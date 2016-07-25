@@ -56,22 +56,11 @@ public class SyncHelper {
 
     private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
-    private TaskDbHelper taskDbHelper;
-    private AccountsManager accountsManager;
-    private UserAccount userAccount;
-    private int accountId;
 
     public SyncHelper (TasksManager tasksManager,
-                       TaskChangesDbHelper taskChangesDbHelper,
-                       TaskDbHelper taskDbHelper,
-                       UserAccount userAccount,
-                       AccountsManager accountsManager) {
+                       TaskChangesDbHelper taskChangesDbHelper) {
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
-        this.taskDbHelper = taskDbHelper;
-        this.userAccount = userAccount;
-        this.accountId =  userAccount.getId();
-        this.accountsManager = accountsManager;
     }
 
     public static String sendAuthRequest(String accessCode) {

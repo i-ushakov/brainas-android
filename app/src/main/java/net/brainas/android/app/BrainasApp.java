@@ -174,10 +174,6 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         }
     }
 
-    public UserAccount getUserAccount() {
-        return userAccount;
-    }
-
     public UserAccount getLastUsedAccount() {
         UserAccount userAccount = null;
         SharedPreferences preferences = getAppPreferences();

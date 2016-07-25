@@ -298,6 +298,10 @@ public class TasksManager {
         }
     }
 
+    public int getAccpuntId() {
+        return this.accountId;
+    }
+
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
         long taskId;
