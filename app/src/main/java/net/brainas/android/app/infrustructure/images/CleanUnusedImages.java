@@ -39,7 +39,9 @@ public class CleanUnusedImages extends AsyncTask<Void, Void, Void> {
         ArrayList<Task> allTasks = tasksManager.getAllTasks();
         ArrayList<String> allPicturesNames = new ArrayList<>();
         for (Task task : allTasks) {
-            allPicturesNames.add(task.getPicture().getName());
+            if (task.getPicture() != null) {
+                allPicturesNames.add(task.getPicture().getName());
+            }
         }
 
         List<File> files = InfrustructureHelper.getListOfPictures(tasksManager.getAccpuntId());
