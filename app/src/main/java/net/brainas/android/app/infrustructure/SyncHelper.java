@@ -3,7 +3,6 @@ package net.brainas.android.app.infrustructure;
 import android.util.Log;
 import android.support.v4.util.Pair;
 
-import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
@@ -150,14 +149,13 @@ public class SyncHelper {
 
             request.writeBytes("--" + boundary + lineEnd);
 
-            if (SynchronizationService.initSyncTime != null) {
+            if (SynchronizationService.lastSyncTime != null) {
                 // set initSync param
-                String initSync = "true";
-                request.writeBytes("Content-Disposition: form-data; name=\"initSyncTime\"" + lineEnd);
+                request.writeBytes("Content-Disposition: form-data; name=\"lastSyncTime\"" + lineEnd);
                 request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
-                request.writeBytes("Content-Length: " + SynchronizationService.initSyncTime.length() + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.lastSyncTime.length() + lineEnd);
                 request.writeBytes(lineEnd);
-                request.writeBytes(SynchronizationService.initSyncTime);
+                request.writeBytes(SynchronizationService.lastSyncTime);
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
             }

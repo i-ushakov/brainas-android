@@ -247,7 +247,7 @@ public class SyncHelperTest {
     @Test
     public void retrieveTimeOfInitialSyncTates() {
         String actualInitSyncTime = syncHelper.retrieveTimeOfInitialSync(xmlDocumentFromServer);
-        assertEquals("InitSyncTime is wrong", actualInitSyncTime, "27-04-2016 11:00:23");
+        assertEquals("LastSyncTime is wrong", actualInitSyncTime, "27-04-2016 11:00:23");
     }
 
     @Test
@@ -453,7 +453,7 @@ public class SyncHelperTest {
                             "</synchronizedEvent>" +
                         "</synchronizedEvents>" +
                     "</synchronizedObjects>" +
-                    "<initSyncTime>" + expectedInitSyncTime + "</initSyncTime>" +
+                    "<lastSyncTime>" + expectedInitSyncTime + "</lastSyncTime>" +
                     "<accessToken>" + expectedAccessToken + "</accessToken>" +
                 "</syncResponse>";
 
@@ -520,7 +520,7 @@ public class SyncHelperTest {
                     "</synchronizedEvent>" +
                 "</synchronizedEvents>" +
                 "</synchronizedObjects>" +
-                "<initSyncTime>2016-05-09 11:04:59</initSyncTime>" +
+                "<lastSyncTime>2016-05-09 11:04:59</lastSyncTime>" +
                 "<accessToken>{\"access_token\":\"ya29.CjndAmGQy7PP9Ku1XDysVz7gYBnzltRqFG_h69ot_GAMSdIxH56vMI-GlSJxpNq-JzjWVVwFSPpWxi4\",\"token_type\":\"Bearer\",\"expires_in\":3593,\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjVmZWIxNGI5MjhiZjdjODc5ZjcwOGIxNWU3OTZmYTk2NzFkZWRiZDcifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdF9oYXNoIjoiWE1jNnJxTmdacWRFcW5TTE1hVEVYQSIsImF1ZCI6IjkyNTcwNTgxMTMyMC1jZW5icWcxZmU1amI4MDQxMTZvZWZsNzhzYmlzaG5nYS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjExNzQzMDE0MDk4NjA1ODg2ODM5OCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhenAiOiI5MjU3MDU4MTEzMjAtY2VuYnFnMWZlNWpiODA0MTE2b2VmbDc4c2Jpc2huZ2EuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJlbWFpbCI6ImtpdHVzaGFrb2ZmQGdtYWlsLmNvbSIsImlhdCI6MTQ2Mjc5MTg5OSwiZXhwIjoxNDYyNzk1NDk5LCJuYW1lIjoiS2l0IFVzaGFrb3YiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDQuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1nM0dYNFctUXFKSS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFCQS9DbmtyeE4xUzJ3MC9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiS2l0IiwiZmFtaWx5X25hbWUiOiJVc2hha292IiwibG9jYWxlIjoiZW4ifQ.gl5blgXCUvmUAtqGh4jaCasVdHjuoDOO9VtDR8Xq8HUjg5ksIaztgQR5Rg7NPJXPjvg7-nZBfUwCBSICQ5cfODlcMcRCVsqaX43fT4Y13Wa40ZnzHmg0mN2YFeuVW5A8ZSyWX-Folkd5IpXV0ETxndxklAmiyYsYpTv4DuZLCClMf0EQBHhUWopR-8fgVxLPKf1sVn5CghXtEskmK4s0h-6Kt2UMnK5y5JuZpxF5NEX-yM1VjVEIh6T_o1XldQKyjBJbzBQ4OOJVq9DOh5O_aydrppATWoFWwJCh9F4RRYb6NhPOoWLHhm0a7BEN6zaDRqW1VdxZgsoHf_Qia69ERw\",\"created\":1462791899,\"refresh_token\":\"1\\/-k_L3G2sWGkcTIrzc67TuzgxFwThzUhGCGSGymJeSPA\"}</accessToken></syncResponse>\n";
 
         when(accountsManager.saveUserAccount(any(UserAccount.class))).thenReturn(true);

@@ -51,7 +51,7 @@ public class SynchronizationService extends Service {
     public static final String SERVICE_NAME = "synchronization";
     public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
-    public static String initSyncTime = null;
+    public static String lastSyncTime = null;
     public static String accessToken = null;
     public static String accessCode = null;
     public static String accountName = null;
@@ -196,7 +196,7 @@ public class SynchronizationService extends Service {
         if (syncThreadHandle != null) {
             syncThreadHandle.cancel(true);
         }
-        initSyncTime = null;
+        lastSyncTime = null;
         accessToken = null;
         accessCode = null;
     }

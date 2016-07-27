@@ -109,7 +109,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                 synchronizedObjects = (JSONObject)syncDate.get("synchronizedObjects");
                 deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
                 updatedTasksFromServer = (ArrayList<Task>)syncDate.get("updatedTasks");
-                SynchronizationService.initSyncTime = (String) syncDate.get("initSyncTime");
+                SynchronizationService.lastSyncTime = (String) syncDate.get("lastSyncTime");
                 if ((String) syncDate.get("accessToken") != null) {
                     SynchronizationService.accessToken = (String) syncDate.get("accessToken");
                     userAccount.setAccessToken(SynchronizationService.accessToken);
@@ -200,7 +200,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         syncDate.put("synchronizedObjects", retriveSynchronizedObjects(responseXmlDocument));
 
-        syncDate.put("initSyncTime", retrieveTimeOfInitialSync(responseXmlDocument));
+        syncDate.put("lastSyncTime", retrieveTimeOfLastSync(responseXmlDocument));
         syncDate.put("accessToken", retrieveAccessToken(responseXmlDocument));
 
         updatedTasks = retrieveAndSaveTasksFromServer(responseXmlDocument);
@@ -277,14 +277,14 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
      * @param xmlDocument - xml got from server
      * @return accessToken
      */
-    public String retrieveTimeOfInitialSync(Document xmlDocument) {
-        String initSyncTime;
-        Element initSyncTimeEl = (Element)xmlDocument.getElementsByTagName("initSyncTime").item(0);
-        if (initSyncTimeEl != null) {
-            initSyncTime = initSyncTimeEl.getTextContent();
-            return initSyncTime;
+    public String retrieveTimeOfLastSync(Document xmlDocument) {
+        String lastSyncTime;
+        Element lastSyncTimeEl= (Element)xmlDocument.getElementsByTagName("lastSyncTime").item(0);
+        if (lastSyncTimeEl != null) {
+            lastSyncTime = lastSyncTimeEl.getTextContent();
+            return lastSyncTime;
         } else {
-            Log.v(SYNC_TAG, "We have a problem, we can't get a initSyncTime from server");
+            Log.v(SYNC_TAG, "We have a problem, we can't get a lastSyncTime from server");
             return null;
         }
     }
