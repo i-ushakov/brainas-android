@@ -112,7 +112,7 @@ public class SyncSettingsWithServerTask extends AsyncTask<String, String, String
             }
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e(SYNCHRONIZATION_TAG, "The Code was sent, but Token haven't gotten! (IOException)");
+            Log.e(SYNCHRONIZATION_TAG, "The Settings was sent, but cannot handle the response");
             // TODO No Token situation
             return null;
         }
