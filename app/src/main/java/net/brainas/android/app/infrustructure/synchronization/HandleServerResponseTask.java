@@ -4,8 +4,6 @@ import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
-import com.google.android.gms.drive.DriveId;
-
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.Utils;
@@ -352,16 +350,12 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                     Image currentPicture = task.getPicture();
                     if (currentPicture == null || !currentPicture.getName().equals(pictureNameEl.getTextContent()) || currentPicture.getBitmap() == null) {
                         Image picture = new Image(pictureNameEl.getTextContent());
-                        Element pictureDriveIdEl = (Element)pictureEl.getElementsByTagName("driveId").item(0);
-                        if (pictureDriveIdEl != null && pictureDriveIdEl.getTextContent() != null) {
-                            picture.setDriveId(DriveId.decodeFromString(pictureDriveIdEl.getTextContent()));
-                        }
                         Element pictureFileIdEl = (Element)pictureEl.getElementsByTagName("fileId").item(0);
                         if (pictureFileIdEl != null && pictureFileIdEl.getTextContent() != null) {
-                            picture.setFileId(pictureFileIdEl.getTextContent());
+                            picture.setResourceId(pictureFileIdEl.getTextContent());
                         }
-                        if (picture.getDriveId() == null && picture.getFileId() != null) {
-                            picture.setDriveId(GoogleDriveManager.getInstance(BrainasApp.getAppContext()).fetchDriveIdByResourceId(picture.getFileId(), null));
+                        if (picture.getDriveId() == null && picture.getResourceId() != null) {
+                            picture.setDriveId(GoogleDriveManager.getInstance(BrainasApp.getAppContext()).fetchDriveIdByResourceId(picture.getResourceId(), null));
                         }
                         task.setPicture(picture);
                         //Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(task.getPicture().getName());

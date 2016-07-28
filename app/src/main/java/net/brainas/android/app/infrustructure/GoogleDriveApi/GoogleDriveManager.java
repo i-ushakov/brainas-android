@@ -250,9 +250,14 @@ public class GoogleDriveManager implements
     private void ckeckFolderIds(JSONObject foldersIds, String driveIdParamName, String resourceIdParamName) {
         try {
             if (foldersIds.has(driveIdParamName) && !foldersIds.has(resourceIdParamName)) {
-                String resourceId = checkFolderExists(DriveId.decodeFromString(foldersIds.getString(driveIdParamName)), driveIdParamName).getResourceId();
-                foldersIds.put(resourceIdParamName, resourceId);
-                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(foldersIds);
+                DriveId folderDriveId = checkFolderExists(DriveId.decodeFromString(foldersIds.getString(driveIdParamName)), driveIdParamName);
+                if (folderDriveId != null) {
+                    String resourceId = folderDriveId.getResourceId();
+                    foldersIds.put(resourceIdParamName, resourceId);
+                    ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(foldersIds);
+                    Log.i(GOOGLE_DRIVE_TAG, "Cannot retrive driveId for folder by resource id");
+                }
+
             }
         } catch (JSONException e) {
             e.printStackTrace();

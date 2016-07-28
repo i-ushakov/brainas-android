@@ -223,7 +223,7 @@ public class TaskDbHelper {
                     }
                     String pictureFileId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_FILE_ID));
                     if (pictureFileId != null) {
-                        picture.setFileId(pictureFileId);
+                        picture.setResourceId(pictureFileId);
                     }
                     task.setPicture(picture);
                 }
@@ -248,8 +248,8 @@ public class TaskDbHelper {
             if (task.getPicture().getDriveId() != null) {
                 values.put(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID, task.getPicture().getDriveId().toString());
             }
-            if (task.getPicture().getFileId() != null) {
-                values.put(COLUMN_NAME_TASKS_PICTURE_FILE_ID, task.getPicture().getFileId());
+            if (task.getPicture().getResourceId() != null) {
+                values.put(COLUMN_NAME_TASKS_PICTURE_FILE_ID, task.getPicture().getResourceId());
             }
         }
         if (task.getStatus() != null) {

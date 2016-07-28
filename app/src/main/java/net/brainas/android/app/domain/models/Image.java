@@ -35,11 +35,11 @@ public class Image {
         this.googleDriveId = googleDriveId;
     }
 
-    public void setFileId(String fileId) {
+    public void setResourceId(String fileId) {
         this.fileId = fileId;
     }
 
-    public String getFileId() {
+    public String getResourceId() {
         return this.fileId;
     }
 

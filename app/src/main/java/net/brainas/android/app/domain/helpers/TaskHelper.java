@@ -53,10 +53,10 @@ public class TaskHelper {
             Element pictureNameEl = doc.createElement("fileName");
             pictureNameEl.setTextContent(task.getPicture().getName());
             pictureEl.appendChild(pictureNameEl);
-            if (task.getPicture().getDriveId() != null) {
-                Element pictureDriveIddEl = doc.createElement("driveId");
-                pictureDriveIddEl.setTextContent(task.getPicture().getDriveId().toString());
-                pictureEl.appendChild(pictureDriveIddEl);
+            if (task.getPicture().getResourceId() != null) {
+                Element pictureResourceIdEl = doc.createElement("resourceId");
+                pictureResourceIdEl.setTextContent(task.getPicture().getDriveId().toString());
+                pictureEl.appendChild(pictureResourceIdEl);
             }
             taskEl.appendChild(pictureEl);
         }
