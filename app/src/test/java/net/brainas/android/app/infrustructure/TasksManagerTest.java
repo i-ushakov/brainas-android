@@ -129,7 +129,7 @@ public class TasksManagerTest {
         MockitoAnnotations.initMocks(this);
         tasksManager = new TasksManager(taskDbHelper, taskChangesDbHelper, 1);
         when(userAccount.getId()).thenReturn(1);
-        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, userAccount, accountsManager);
+        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper);
     }
 
     @Test
