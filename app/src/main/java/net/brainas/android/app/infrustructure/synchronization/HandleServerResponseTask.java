@@ -350,9 +350,9 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                     Image currentPicture = task.getPicture();
                     if (currentPicture == null || !currentPicture.getName().equals(pictureNameEl.getTextContent()) || currentPicture.getBitmap() == null) {
                         Image picture = new Image(pictureNameEl.getTextContent());
-                        Element pictureFileIdEl = (Element)pictureEl.getElementsByTagName("fileId").item(0);
-                        if (pictureFileIdEl != null && pictureFileIdEl.getTextContent() != null) {
-                            picture.setResourceId(pictureFileIdEl.getTextContent());
+                        Element pictureResourceIdEl = (Element)pictureEl.getElementsByTagName("resourceId").item(0);
+                        if (pictureResourceIdEl != null && pictureResourceIdEl.getTextContent() != null) {
+                            picture.setResourceId(pictureResourceIdEl.getTextContent());
                         }
                         if (picture.getDriveId() == null && picture.getResourceId() != null) {
                             picture.setDriveId(GoogleDriveManager.getInstance(BrainasApp.getAppContext()).fetchDriveIdByResourceId(picture.getResourceId(), null));
