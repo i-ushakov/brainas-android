@@ -9,6 +9,7 @@ import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,6 +101,7 @@ public class SyncHelperTest {
     private static long event7SynchronizedFromServerGlobalId = 701;
 
     SyncHelper syncHelper;
+    HandleServerResponseTask handleServerResponseTask;
 
 
     @Mock
@@ -133,7 +135,8 @@ public class SyncHelperTest {
         MockitoAnnotations.initMocks(this);
         when(accountsManager.getUserAccount()).thenReturn(userAccount);
         when(userAccount.getId()).thenReturn(1);
-        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper, taskDbHelper, userAccount, accountsManager);
+        syncHelper = new SyncHelper(tasksManager,taskChangesDbHelper);
+        handleServerResponseTask = new HandleServerResponseTask();
     }
 
     @Test
@@ -218,7 +221,7 @@ public class SyncHelperTest {
         when(tasksManager.getTaskByLocalId(3)).thenReturn(task3);
         when(tasksManager.getTaskByLocalId(4)).thenReturn(null);
 
-        JSONObject synchronizedObjects = syncHelper.retriveSynchronizedObjects(xmlDocumentFromServer);
+        JSONObject synchronizedObjects = handleServerResponseTask.retriveSynchronizedObjects(xmlDocumentFromServer); // HandlerServerResponseTask.class
         try {
             ArrayList<Pair<Long,Long>> actualSynchronizedTasks = (ArrayList<Pair<Long,Long>>)synchronizedObjects.get("synchronizedTasks");
             ArrayList<Pair<Long,Long>> actualSynchronizedConditions = (ArrayList<Pair<Long,Long>>)synchronizedObjects.get("synchronizedConditions");
@@ -246,7 +249,7 @@ public class SyncHelperTest {
 
     @Test
     public void retrieveTimeOfInitialSyncTates() {
-        String actualInitSyncTime = syncHelper.retrieveTimeOfInitialSync(xmlDocumentFromServer);
+        String actualInitSyncTime = handleServerResponseTask.retrieveTimeOfLastSync(xmlDocumentFromServer);
         assertEquals("LastSyncTime is wrong", actualInitSyncTime, "27-04-2016 11:00:23");
     }
 
@@ -259,7 +262,7 @@ public class SyncHelperTest {
         when(task.getId()).thenReturn(1l);
 
         when(taskChangesDbHelper.getTimeOfLastChanges(anyLong())).thenReturn("2016-04-20 11:20:30");
-        boolean isRelevantChanges = syncHelper.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
+        boolean isRelevantChanges = handleServerResponseTask.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
         boolean expected = true;
         assertEquals("Problem with detect time relevance of changes", expected, isRelevantChanges);
     }
@@ -273,7 +276,7 @@ public class SyncHelperTest {
         when(task.getId()).thenReturn(1l);
 
         when(taskChangesDbHelper.getTimeOfLastChanges(anyLong())).thenReturn("2016-04-20 11:24:33");
-        boolean isRelevantChanges = syncHelper.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
+        boolean isRelevantChanges = handleServerResponseTask.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
         boolean expected = false;
         assertEquals("Problem with detect time relevance of changes", expected, isRelevantChanges);
     }
@@ -287,7 +290,7 @@ public class SyncHelperTest {
         when(task.getId()).thenReturn(1l);
 
         when(taskChangesDbHelper.getTimeOfLastChanges(anyLong())).thenReturn("2016-04-20 11:24:33");
-        boolean isRelevantChanges = syncHelper.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
+        boolean isRelevantChanges = handleServerResponseTask.checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges);
         boolean expected = false;
         assertEquals("Problem with detect time relevance of changes", expected, isRelevantChanges);
     }
@@ -295,14 +298,14 @@ public class SyncHelperTest {
     @Test
     public void retrieveAccessTokenTest() {
         String expectedAccessToken = "aCcE-ss_TokeN";
-        String accessToken = syncHelper.retrieveAccessToken(xmlDocumentFromServer);
+        String accessToken = handleServerResponseTask.retrieveAccessToken(xmlDocumentFromServer);
         assertEquals("The access token is not the one that was expected", expectedAccessToken, accessToken);
     }
 
     @Test
     public void retrieveAndSaveTasksFromServerTest () {
         int accountId = 1;
-        ArrayList<Task> updatedTasks = syncHelper.retrieveAndSaveTasksFromServer(xmlDocumentFromServer);
+        ArrayList<Task> updatedTasks = handleServerResponseTask.retrieveAndSaveTasksFromServer(xmlDocumentFromServer);
 
         // create expected Task1
         ArrayList<Task> expected = new ArrayList<>();
@@ -364,7 +367,7 @@ public class SyncHelperTest {
 
             // tagName
             String tagName = "deletedTask";
-            ArrayList<Integer> deletedTasks = syncHelper.retrieveDeletedTasksFromServer(xmlDocument, tagName);
+            ArrayList<Integer> deletedTasks = handleServerResponseTask.retrieveDeletedTasksFromServer(xmlDocument, tagName);
 
             ArrayList<Integer> expected = new ArrayList<Integer>();
             expected.add(11);
@@ -524,7 +527,7 @@ public class SyncHelperTest {
                 "<accessToken>{\"access_token\":\"ya29.CjndAmGQy7PP9Ku1XDysVz7gYBnzltRqFG_h69ot_GAMSdIxH56vMI-GlSJxpNq-JzjWVVwFSPpWxi4\",\"token_type\":\"Bearer\",\"expires_in\":3593,\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjVmZWIxNGI5MjhiZjdjODc5ZjcwOGIxNWU3OTZmYTk2NzFkZWRiZDcifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdF9oYXNoIjoiWE1jNnJxTmdacWRFcW5TTE1hVEVYQSIsImF1ZCI6IjkyNTcwNTgxMTMyMC1jZW5icWcxZmU1amI4MDQxMTZvZWZsNzhzYmlzaG5nYS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjExNzQzMDE0MDk4NjA1ODg2ODM5OCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhenAiOiI5MjU3MDU4MTEzMjAtY2VuYnFnMWZlNWpiODA0MTE2b2VmbDc4c2Jpc2huZ2EuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJlbWFpbCI6ImtpdHVzaGFrb2ZmQGdtYWlsLmNvbSIsImlhdCI6MTQ2Mjc5MTg5OSwiZXhwIjoxNDYyNzk1NDk5LCJuYW1lIjoiS2l0IFVzaGFrb3YiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDQuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1nM0dYNFctUXFKSS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFCQS9DbmtyeE4xUzJ3MC9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiS2l0IiwiZmFtaWx5X25hbWUiOiJVc2hha292IiwibG9jYWxlIjoiZW4ifQ.gl5blgXCUvmUAtqGh4jaCasVdHjuoDOO9VtDR8Xq8HUjg5ksIaztgQR5Rg7NPJXPjvg7-nZBfUwCBSICQ5cfODlcMcRCVsqaX43fT4Y13Wa40ZnzHmg0mN2YFeuVW5A8ZSyWX-Folkd5IpXV0ETxndxklAmiyYsYpTv4DuZLCClMf0EQBHhUWopR-8fgVxLPKf1sVn5CghXtEskmK4s0h-6Kt2UMnK5y5JuZpxF5NEX-yM1VjVEIh6T_o1XldQKyjBJbzBQ4OOJVq9DOh5O_aydrppATWoFWwJCh9F4RRYb6NhPOoWLHhm0a7BEN6zaDRqW1VdxZgsoHf_Qia69ERw\",\"created\":1462791899,\"refresh_token\":\"1\\/-k_L3G2sWGkcTIrzc67TuzgxFwThzUhGCGSGymJeSPA\"}</accessToken></syncResponse>\n";
 
         when(accountsManager.saveUserAccount(any(UserAccount.class))).thenReturn(true);
-        syncHelper.handleResponseFromServer(response);
+        //syncHelper.handleResponseFromServer(response);
 
         verify(tasksManager, times(3)).saveTask(any(Task.class));
         verify(tasksManager, times(2)).deleteTaskByGlobalId(anyInt());
