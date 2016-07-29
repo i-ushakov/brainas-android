@@ -82,7 +82,7 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         public void onFolderCreated(DriveId driveId) {
             Log.i(GOOGLE_DRIVE_TAG, "Project folder was created with driveId = " + driveId);
             app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(), driveId.toString());
-            app.removeParamFromUserPref(SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name());
+            app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name(), driveId.getResourceId());
             createPicturesFolder(driveId);
         }
 
@@ -96,7 +96,7 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         public void onFolderCreated(DriveId driveId) {
             Log.i(GOOGLE_DRIVE_TAG, "Pictures folder was created with driveId = " + driveId);
             app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(), driveId.toString());
-            app.removeParamFromUserPref(SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name());
+            app.saveParamsInUserPrefs(GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name(), driveId.getResourceId());
             new SyncSettingsWithServerTask(SynchronizationService.accessToken, null).execute();
         }
 
