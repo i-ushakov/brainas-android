@@ -178,36 +178,18 @@ public class GoogleDriveManager implements
         }
     }
 
-    public DriveId checkFolderExists(DriveId driveId, String paramName) {
-        JSONObject currentParams = new JSONObject();
-        try {
-            currentParams.put(paramName, driveId.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return checkFolderExists(currentParams, paramName);
-    }
+    public DriveId checkFolderExistsByDriverId(DriveId folderDriveId) {// TODO# Refactor to checkByDriveId - precisely
+        Metadata metadata = folderDriveId.asDriveFolder().getMetadata(mGoogleApiClient).await().getMetadata();
 
-    public DriveId checkFolderExists(JSONObject currentParams, String paramName) {
-        try {
-            String projectFolderDriveIdStr = currentParams.getString(paramName);
-            DriveId projectFolderDriveId = DriveId.decodeFromString(projectFolderDriveIdStr);
-            Metadata metadata = projectFolderDriveId.asDriveFolder().getMetadata(mGoogleApiClient).await().getMetadata();
-
-            if (metadata != null && metadata.getDriveId().getResourceId() != null) {
-                if (metadata.isTrashed()) {
-                    projectFolderDriveId.asDriveFolder().untrash(mGoogleApiClient).await();
-                }
-                //metadata.getTitle();
-            } else {
-                return null;
+        if (metadata != null && metadata.getDriveId().getResourceId() != null) {
+            if (metadata.isTrashed()) {
+                folderDriveId.asDriveFolder().untrash(mGoogleApiClient).await();
             }
-            return metadata.getDriveId();
-        } catch (JSONException e) {
-            e.printStackTrace();
+            //metadata.getTitle();
+        } else {
             return null;
         }
+        return metadata.getDriveId();
     }
 
     public JSONObject getFoldersIds() {
@@ -222,10 +204,10 @@ public class GoogleDriveManager implements
 
         try {
             foldersIds = ((BrainasApp)BrainasApp.getAppContext()).getParamsFromUserPrefs(params);
-            ckeckFolderIds(foldersIds,
+            ckeckFolderIdsIntegraty(foldersIds,
                     GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name(),
                     GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name());
-            ckeckFolderIds(foldersIds,
+            ckeckFolderIdsIntegraty(foldersIds,
                     GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name(),
                     GoogleDriveManager.SettingsParamNames.PICTURE_FOLDER_RESOURCE_ID.name());
         } catch (JSONException e) {
@@ -233,6 +215,35 @@ public class GoogleDriveManager implements
         }
 
         return foldersIds;
+    }
+
+    private void ckeckFolderIdsIntegraty(JSONObject foldersIds, String driveIdParamName, String resourceIdParamName) {
+        try {
+            if (foldersIds.has(driveIdParamName) && !foldersIds.has(resourceIdParamName)) {
+                String resourceId = getResourceIdByDriverId(DriveId.decodeFromString(foldersIds.getString(driveIdParamName)));
+                foldersIds.put(resourceIdParamName, resourceId);
+                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(resourceIdParamName, resourceId);
+                Log.i(GOOGLE_DRIVE_TAG, "Successfully got resource_id:" + resourceId  + "by drive_id for " + resourceIdParamName);
+
+            } else if (!foldersIds.has(driveIdParamName) && foldersIds.has(resourceIdParamName)) {
+                DriveId driveId = fetchDriveIdByResourceId(foldersIds.getString(resourceIdParamName), null);
+                foldersIds.put(driveIdParamName, driveId.toString());
+                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(driveIdParamName, driveId.toString());
+                Log.i(GOOGLE_DRIVE_TAG, "Successfully got drive_id:" + driveId.toString()  + "by resource_id for " + resourceIdParamName);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getResourceIdByDriverId(DriveId driveId) {
+        DriveId folderDriveId = checkFolderExistsByDriverId(driveId);
+        if (folderDriveId != null) {
+            String resourceId = folderDriveId.getResourceId();
+            return resourceId;
+        } else {
+            return null;
+        }
     }
 
     public DriveId fetchDriveIdByResourceId(String resurceId, ResultCallback<DriveApi.DriveIdResult> idCallback) {
@@ -247,20 +258,4 @@ public class GoogleDriveManager implements
         return driveId;
     }
 
-    private void ckeckFolderIds(JSONObject foldersIds, String driveIdParamName, String resourceIdParamName) {
-        try {
-            if (foldersIds.has(driveIdParamName) && !foldersIds.has(resourceIdParamName)) {
-                DriveId folderDriveId = checkFolderExists(DriveId.decodeFromString(foldersIds.getString(driveIdParamName)), driveIdParamName);
-                if (folderDriveId != null) {
-                    String resourceId = folderDriveId.getResourceId();
-                    foldersIds.put(resourceIdParamName, resourceId);
-                    ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(foldersIds);
-                    Log.i(GOOGLE_DRIVE_TAG, "Cannot retrive driveId for folder by resource id");
-                }
-
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
 }

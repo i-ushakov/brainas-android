@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
@@ -110,41 +111,28 @@ public class GoogleDriveManageAppFolders implements GoogleDriveManager.CurrentTa
         @Override
         protected Void doInBackground(JSONObject... params) {
             JSONObject foldersIds = GoogleDriveManager.getInstance(app).getFoldersIds();
-            String projectFolderDriveIdParam = GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name();
-            String projectFolderResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
-            String pictureFolderDriveIdParam = SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name();
-            String pictureFolderResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
-            if (foldersIds.has(projectFolderResourceIdParam) && !foldersIds.has(projectFolderDriveIdParam)) {
-                try {
-                    DriveId driveId = GoogleDriveManager.getInstance(app).fetchDriveIdByResourceId(foldersIds.getString(projectFolderResourceIdParam), null);
-                    app.saveParamsInUserPrefs(projectFolderDriveIdParam, driveId.toString());
-                    foldersIds = GoogleDriveManager.getInstance(app).getFoldersIds();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (foldersIds.has(pictureFolderResourceIdParam) && !foldersIds.has(pictureFolderDriveIdParam)) {
-                try {
-                    DriveId driveId = GoogleDriveManager.getInstance(app).fetchDriveIdByResourceId(foldersIds.getString(pictureFolderResourceIdParam), null);
-                    app.saveParamsInUserPrefs(pictureFolderDriveIdParam, driveId.toString());
-                    foldersIds = GoogleDriveManager.getInstance(app).getFoldersIds();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
+            String projDriveIdParam = GoogleDriveManager.SettingsParamNames.PROJECT_FOLDER_DRIVE_ID.name();
+            String projResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
+            String picDriveIdParam = SettingsParamNames.PICTURE_FOLDER_DRIVE_ID.name();
+            String picResourceIdParam = SettingsParamNames.PROJECT_FOLDER_RESOURCE_ID.name();
 
-            if (foldersIds.has(projectFolderDriveIdParam)) {
-                DriveId projectFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExists(foldersIds, projectFolderDriveIdParam);
+            if (foldersIds.has(projDriveIdParam)) {
+                DriveId projectFolderDriveId = null;
+                try {
+                    projectFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExistsByDriverId(
+                            DriveId.decodeFromString(foldersIds.getString(projDriveIdParam)));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 if (projectFolderDriveId != null) {
-                    if (projectFolderDriveId.getResourceId() != null) {
-                        app.saveParamsInUserPrefs(projectFolderResourceIdParam, projectFolderDriveId.getResourceId());
-                    }
-                    if (foldersIds.has(pictureFolderDriveIdParam)) {
-                        DriveId pictureFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExists(foldersIds, pictureFolderDriveIdParam);
+                    if (foldersIds.has(picDriveIdParam)) {
+                        DriveId pictureFolderDriveId = null;
+                        try {
+                            pictureFolderDriveId = GoogleDriveManager.getInstance(app.getApplicationContext()).checkFolderExistsByDriverId(DriveId.decodeFromString(foldersIds.getString(picDriveIdParam)));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                         if (pictureFolderDriveId != null) {
-                            if (pictureFolderDriveId.getResourceId() != null) {
-                                app.saveParamsInUserPrefs(pictureFolderResourceIdParam, pictureFolderDriveId.getResourceId());
-                            }
                             Log.i(GOOGLE_DRIVE_TAG, "All project folders are OK");
                             Log.i(GOOGLE_DRIVE_TAG, "projectFolderResourceId = " + projectFolderDriveId.getResourceId());
                             Log.i(GOOGLE_DRIVE_TAG, "pictureFolderResourceId = " + pictureFolderDriveId.getResourceId());
