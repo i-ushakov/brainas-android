@@ -227,9 +227,13 @@ public class GoogleDriveManager implements
 
             } else if (!foldersIds.has(driveIdParamName) && foldersIds.has(resourceIdParamName)) {
                 DriveId driveId = fetchDriveIdByResourceId(foldersIds.getString(resourceIdParamName), null);
-                foldersIds.put(driveIdParamName, driveId.toString());
-                ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(driveIdParamName, driveId.toString());
-                Log.i(GOOGLE_DRIVE_TAG, "Successfully got drive_id:" + driveId.toString()  + "by resource_id for " + resourceIdParamName);
+                if (driveId != null) { // sometimes can be null... why? (i think it's a Google fault:)
+                    foldersIds.put(driveIdParamName, driveId.toString());
+                    ((BrainasApp)BrainasApp.getAppContext()).saveParamsInUserPrefs(driveIdParamName, driveId.toString());
+                    Log.i(GOOGLE_DRIVE_TAG, "Successfully got drive_id:" + driveId.toString()  + "by resource_id for " + resourceIdParamName);
+                } else {
+                    Log.i(GOOGLE_DRIVE_TAG, "Failed to get drive_id by resource_id for " + resourceIdParamName);
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
