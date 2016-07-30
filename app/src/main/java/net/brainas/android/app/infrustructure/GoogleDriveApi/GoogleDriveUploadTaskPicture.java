@@ -28,7 +28,7 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
 
     private Image image;
     private  Bitmap pictureBitmap;
-    private String pictureName, pictureGoogleDriveId;
+    private String pictureName;
 
 
     public GoogleDriveUploadTaskPicture() {}
@@ -100,6 +100,8 @@ public class GoogleDriveUploadTaskPicture implements GoogleDriveManager.CurrentT
                     Log.i(GOOGLE_DRIVE_TAG, "Created a picture in Pictures Folder: "
                             + driverId);
                     image.setDriveId(driverId);
+                    image.setResourceId(driverId.getResourceId());
+                    image.onDownloadCompleted();
                 }
             };
 

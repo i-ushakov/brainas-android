@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.nearby.bootstrap.request.DisableTargetRequest;
 
+import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * Created by innok on 7/5/2016.
  */
@@ -13,6 +16,7 @@ public class Image {
     private DriveId googleDriveId;
     private String fileId;
     private Bitmap bitmap;
+    private CopyOnWriteArrayList<ImageDownloadedObserver> observers = new CopyOnWriteArrayList<ImageDownloadedObserver>();
 
     public Image(String name) {
         this.name = name;
@@ -21,6 +25,18 @@ public class Image {
     public Image(String name, Bitmap bitmap) {
         this.name = name;
         this.bitmap = bitmap;
+    }
+
+    public interface ImageDownloadedObserver {
+        void onImageDownloadCompleted();
+    }
+
+    public void attachObserver(ImageDownloadedObserver observer){
+        observers.add(observer);
+    }
+
+    public void detachObserver(ImageDownloadedObserver observer){
+        observers.remove(observer);
     }
 
     public String getName() {
@@ -52,7 +68,11 @@ public class Image {
     }
 
     public void onDownloadCompleted() {
-        // TODO notify all listeners
+        Iterator<ImageDownloadedObserver> it = observers.listIterator();
+        while (it.hasNext()) {
+            ImageDownloadedObserver observer = it.next();
+            observer.onImageDownloadCompleted();
+        }
     }
 
     @Override

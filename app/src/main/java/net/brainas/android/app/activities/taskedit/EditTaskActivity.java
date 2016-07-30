@@ -236,6 +236,12 @@ public class EditTaskActivity extends AppCompatActivity {
                 Image picture = new Image(imageFileName, imageBitmap);
                 task.setPicture(picture);
                 needToRemoveImage = true;
+                picture.attachObserver(new Image.ImageDownloadedObserver() {
+                    @Override
+                    public void onImageDownloadCompleted() {
+                        tasksManager.saveTask(task, false, false);
+                    }
+                });
                 GoogleDriveManager.getInstance(app).uploadPicture(picture);
             }
         }

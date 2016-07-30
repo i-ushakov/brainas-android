@@ -130,7 +130,14 @@ public class SyncSettingsWithServerTask extends AsyncTask<String, String, String
             Log.i(SYNCHRONIZATION_TAG, "Error while sync params with server");
             return;
         }
-        Log.i(SYNCHRONIZATION_TAG, "server params: " + result);
+        if (result.equals("[]")) {
+            Log.i(SYNCHRONIZATION_TAG, "server params are empty");
+            if (callback != null) {
+                callback.onSyncSuccess();
+            }
+        } else {
+            Log.i(SYNCHRONIZATION_TAG, "server params: " + result);
+        }
         JSONObject settings = null;
         try {
             settings = new JSONObject(result);
