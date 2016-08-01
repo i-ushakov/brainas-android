@@ -124,7 +124,7 @@ public class TaskChangesDbHelper {
         for (int i=0; i<tasksIds.length; i++)
             tasksIdsInStr[i] = tasksIds[i] != null ? tasksIds[i].toString() : null;
 
-        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + "IN (" + makePlaceholders(tasksIds.length) + ")";
+        String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " IN (" + makePlaceholders(tasksIds.length) + ")";
         String[] selectionArgs = tasksIdsInStr;
 
         ContentValues values = new ContentValues();
