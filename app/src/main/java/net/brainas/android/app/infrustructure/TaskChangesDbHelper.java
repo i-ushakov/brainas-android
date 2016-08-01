@@ -94,10 +94,10 @@ public class TaskChangesDbHelper {
         Integer statusOfChange = getCurrentStatus(task.getId());
         if (statusOfChange == null || statusOfChange == ALREADY_SYNCHRONIZED) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + NEED_FOR_SYNC);
+            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + " with status: " + NEED_FOR_SYNC);
         } else if(statusOfChange == SENDING) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, WAS_CHANGED_WHILE_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + SENDING);
+            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + " with status: " + WAS_CHANGED_WHILE_SYNC);
         }
 
         int nRowsEffected = db.update(
