@@ -233,18 +233,10 @@ public class SyncHelper {
         return response;
     }
 
-    /**
-     *  Getting all changes that still isn't synchronized with the server in format of XML-String
-     *
-     * @param accountId - user account id
-     * @return allChangesInXML - string with all changes that must be synchronized with
-     */
-    public String getAllChangesInXML(int accountId)
+    public String getAllChangesInXML(HashMap<Long, Pair<String,String>> tasksChanges)
             throws IOException, JSONException, ParserConfigurationException, TransformerException {
 
         String allChangesInXML;
-
-        HashMap<Long, android.support.v4.util.Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangedTasks(accountId);
 
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element root = doc.createElement("changes");
