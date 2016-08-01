@@ -1,5 +1,7 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.util.Log;
+
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
@@ -16,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Created by Kit Ushakov on 11/9/2015.
  */
 public class TasksManager {
+    private static String TASK_MANAGER_TAG = "TASK_MANAGER";
 
     private BrainasApp app;
     private TaskDbHelper taskDbHelper;
@@ -236,10 +239,14 @@ public class TasksManager {
     public void deleteTaskByGlobalId(int taskGlobalId) {
         Map<String,Object> params = new HashMap<>();
         params.put("TASK_GLOBAL_ID", taskGlobalId);
-        Task task = taskDbHelper.getTasks(params, accountId).get(0);
-        long localIdOfDeletedTask = task.getId();
-        removeTask(task);
-        taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
+        List<Task> tasks = taskDbHelper.getTasks(params, accountId);
+        if (tasks.size() > 0) {
+            Task task = taskDbHelper.getTasks(params, accountId).get(0);
+            long localIdOfDeletedTask = task.getId();
+            removeTask(task);
+            taskChangesDbHelper.deleteTaskChangesById(localIdOfDeletedTask);
+            Log.i(TASK_MANAGER_TAG, "Task with loacal id " + localIdOfDeletedTask + "was removed by request from server for task with global id " + taskGlobalId);
+        }
     }
 
     public Event retriveEventFromTaskById(Task task, long eventId) {
