@@ -91,13 +91,13 @@ public class TaskChangesDbHelper {
         values.put(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID, task.getGlobalId());
         values.put(COLUMN_NAME_TASKS_CHANGES_STATUS, status);
         values.put(COLUMN_NAME_TASKS_CHANGES_DATETIME, Utils.getDateTimeGMT());
-        int statusOfChange = getCurrentStatus(task.getId());
-        if (statusOfChange == SENDING) {
-            values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, WAS_CHANGED_WHILE_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + WAS_CHANGED_WHILE_SYNC);
-        } else if (statusOfChange == ALREADY_SYNCHRONIZED) {
+        Integer statusOfChange = getCurrentStatus(task.getId());
+        if (statusOfChange == null || statusOfChange == ALREADY_SYNCHRONIZED) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
             Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + NEED_FOR_SYNC);
+        } else if(statusOfChange == SENDING) {
+            values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, WAS_CHANGED_WHILE_SYNC);
+            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + WAS_CHANGED_WHILE_SYNC);
         }
 
         int nRowsEffected = db.update(
@@ -201,13 +201,13 @@ public class TaskChangesDbHelper {
         String[] selectionArgs = { String.valueOf(taskId) };
 
         ContentValues values = new ContentValues();
-        int statusOfChange = getCurrentStatus(taskId);
-        if (statusOfChange == WAS_CHANGED_WHILE_SYNC) {
-            values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Set status " + NEED_FOR_SYNC + " for task_id = " + taskId + "after sync");
-        } else {
+        Integer statusOfChange = getCurrentStatus(taskId);
+        if (statusOfChange == null || statusOfChange != WAS_CHANGED_WHILE_SYNC) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, ALREADY_SYNCHRONIZED);
             Log.i(TASK_CHANGES_TAG, "Set status " + ALREADY_SYNCHRONIZED + " for task_id = " + taskId + "after sync");
+        }  else {
+            values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
+            Log.i(TASK_CHANGES_TAG, "Set status " + NEED_FOR_SYNC + " for task_id = " + taskId + "after sync");
         }
 
 
@@ -332,7 +332,7 @@ public class TaskChangesDbHelper {
         db.close();
     }
 
-    private int getCurrentStatus(long taskId) {
+    private Integer getCurrentStatus(long taskId) {
         Integer syncStatus = null;
         String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ? ";
         String[] selectionArgs = { String.valueOf(taskId) };
