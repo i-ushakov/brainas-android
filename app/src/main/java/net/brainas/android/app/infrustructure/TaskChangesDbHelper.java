@@ -97,7 +97,7 @@ public class TaskChangesDbHelper {
             Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + NEED_FOR_SYNC);
         } else if(statusOfChange == SENDING) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, WAS_CHANGED_WHILE_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + WAS_CHANGED_WHILE_SYNC);
+            Log.i(TASK_CHANGES_TAG, "Logging change for task_id " + task.getId() + "with status: " + SENDING);
         }
 
         int nRowsEffected = db.update(
@@ -136,9 +136,6 @@ public class TaskChangesDbHelper {
                 selection,
                 selectionArgs);
 
-        if (nRowsEffected > 0) {
-            Log.i(TASK_CHANGES_TAG, "Chages of Tasks with ids = " + tasksIds.toString() + " was sent for sync with server");
-        }
         return nRowsEffected;
     }
 
