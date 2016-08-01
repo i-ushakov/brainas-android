@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.google.common.base.Charsets;
@@ -32,6 +33,7 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -207,7 +209,8 @@ public class SynchronizationService extends Service {
 
         // Retrieve all changes from database and prepare for sending in the form of XML-file
         try {
-            allChangesInXML = syncHelper.getAllChangesInXML(accountId);
+            HashMap<Long, Pair<String,String>> tasksChanges = taskChangesDbHelper.getChangesOfTasks(accountId);
+            allChangesInXML = syncHelper.getAllChangesInXML(tasksChanges);
             allChangesInXMLFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(accountId), "all_changes", "xml");
             final File allChangesInXMLFileFinal = allChangesInXMLFile;
             Files.write(allChangesInXML, allChangesInXMLFile, Charsets.UTF_8);
@@ -220,12 +223,16 @@ public class SynchronizationService extends Service {
                 public void onComplete(String response, Exception e) {
                     handleResponseFromServer(response);
                     deleteChangesXML(allChangesInXMLFileFinal);
+                    // remove sending status from changes log after sync is completed
+                    taskChangesDbHelper.removeAllSendingStatus(accountId);
                 }});
             if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
                 tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
             else {
                 tasksSyncAsyncTask.execute(allChangesInXMLFile);
             }
+            // we check in changes log, that we are sending these changes to server now
+            taskChangesDbHelper.setStatusToSending(tasksChanges.keySet().toArray(new Long[tasksChanges.keySet().size()]));
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
             deleteChangesXML(allChangesInXMLFile);

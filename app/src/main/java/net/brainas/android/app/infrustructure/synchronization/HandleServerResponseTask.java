@@ -130,7 +130,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                         if (task != null) {
                             task.setGlobalId(globalTaskId);
                             tasksManager.saveTask(task, false, false);
-                            taskChangesDbHelper.uncheckFromSync(localTaskId);
+                            taskChangesDbHelper.setStatusAfterSync(localTaskId);
                         } else {
                             taskChangesDbHelper.removeFromSync(globalTaskId);
                         }
