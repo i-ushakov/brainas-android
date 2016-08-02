@@ -45,6 +45,7 @@ import net.brainas.android.app.infrustructure.LocationProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**
@@ -374,13 +375,13 @@ public class EditEventActivity extends EditTaskActivity
     }
 
     private void saveEvent() {
-        if (!editMode) {
-            Condition newCondition = new Condition();
-            newCondition.addEvent(event);
-            event.setParent(newCondition);
-            task.addCondition(newCondition);
-            newCondition.setParent(task);
-        }
+        Condition newCondition = new Condition();
+        newCondition.addEvent(event);
+        event.setParent(newCondition);
+        CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<>();
+        conditions.add(newCondition);
+        task.setConditions(conditions);
+        newCondition.setParent(task);
         tasksManager.saveTask(task);
         showTaskErrorsOrWarnings(task);
         finish();
