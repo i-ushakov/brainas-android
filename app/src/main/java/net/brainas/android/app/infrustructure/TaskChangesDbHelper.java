@@ -11,6 +11,7 @@ import net.brainas.android.app.domain.models.Task;
 
 import org.json.JSONException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -128,7 +129,7 @@ public class TaskChangesDbHelper {
         String[] selectionArgs = tasksIdsInStr;
 
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TASKS_CHANGES_STATUS, SENDING);
+        values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, SENDING);
 
         int nRowsEffected = db.update(
                 TABLE_TASKS_CHANGES,
@@ -136,6 +137,9 @@ public class TaskChangesDbHelper {
                 selection,
                 selectionArgs);
 
+        if (nRowsEffected > 0) {
+            Log.i(TASK_CHANGES_TAG, "Set sync_status 'Sending'(2) for tasks: " + Arrays.toString(tasksIds));
+        }
         return nRowsEffected;
     }
 
@@ -182,7 +186,7 @@ public class TaskChangesDbHelper {
         String[] selectionArgs = { String.valueOf(taskId) };
 
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, 0);
+        values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, ALREADY_SYNCHRONIZED);
 
         int nRowsEffected = db.update(
                 TABLE_TASKS_CHANGES,
@@ -190,10 +194,14 @@ public class TaskChangesDbHelper {
                 selection,
                 selectionArgs);
 
+        if (nRowsEffected > 0) {
+            Log.i(TASK_CHANGES_TAG, "Uncheck From Sync  task_id: " + taskId);
+        }
+
         return nRowsEffected;
     }
 
-    public int setStatusAfterSync(long taskId) {
+    public int setFlagAfterSuccessfullSync(long taskId) {
         String selection = COLUMN_NAME_TASKS_CHANGES_TASKID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(taskId) };
 
@@ -201,10 +209,10 @@ public class TaskChangesDbHelper {
         Integer statusOfChange = getCurrentStatus(taskId);
         if (statusOfChange == null || statusOfChange != WAS_CHANGED_WHILE_SYNC) {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, ALREADY_SYNCHRONIZED);
-            Log.i(TASK_CHANGES_TAG, "Set status " + ALREADY_SYNCHRONIZED + " for task_id = " + taskId + "after sync");
+            Log.i(TASK_CHANGES_TAG, "Set status " + ALREADY_SYNCHRONIZED + " for task_id = " + taskId + " after sync");
         }  else {
             values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
-            Log.i(TASK_CHANGES_TAG, "Set status " + NEED_FOR_SYNC + " for task_id = " + taskId + "after sync");
+            Log.i(TASK_CHANGES_TAG, "Set status " + NEED_FOR_SYNC + " for task_id = " + taskId + " after sync");
         }
 
 
@@ -219,30 +227,23 @@ public class TaskChangesDbHelper {
 
     public int removeAllSendingStatus(int accountId) {
         String selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ? ";
-        selection = selection +  " AND " + COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS + " = " + SENDING;
+        selection = selection +  " AND ("
+                + COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS + " = " + SENDING + " OR "
+                + COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS + " = " + WAS_CHANGED_WHILE_SYNC + ")";
         String[] selectionArgs = { String.valueOf(accountId) };
 
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, ALREADY_SYNCHRONIZED);
-        int nRowsEffected0 = db.update(
-                TABLE_TASKS_CHANGES,
-                values,
-                selection,
-                selectionArgs);
-        Log.i(TASK_CHANGES_TAG, "Removed status " + WAS_CHANGED_WHILE_SYNC + " and set status = " + ALREADY_SYNCHRONIZED + "for " + nRowsEffected0 + " tasks");
-
-        selection = COLUMN_NAME_TASKS_CHANGES_ACCOUNTID + " LIKE ? " +  " AND " + COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS + " = " + WAS_CHANGED_WHILE_SYNC;
-
         values.put(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS, NEED_FOR_SYNC);
-        int nRowsEffected1 = db.update(
+        int nRowsEffected = db.update(
                 TABLE_TASKS_CHANGES,
                 values,
                 selection,
                 selectionArgs);
+        if (nRowsEffected > 0) {
+            Log.i(TASK_CHANGES_TAG, "Replace statuses SENDING and WAS_CHANGED_WHILE_SYNC and set status NEED_FOR_SYNC for " + nRowsEffected + " tasks");
+        }
 
-        Log.i(TASK_CHANGES_TAG, "Removed status " + WAS_CHANGED_WHILE_SYNC + " and set status = " + NEED_FOR_SYNC + "for " + nRowsEffected1 + " tasks");
-
-        return nRowsEffected0 + nRowsEffected1;
+        return nRowsEffected;
     }
 
     public String getTimeOfLastChanges(long localTaskId) {
@@ -345,7 +346,7 @@ public class TaskChangesDbHelper {
         );
 
         while (cursor.moveToNext()) {
-            syncStatus = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_STATUS));
+            syncStatus = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_SYNCSTATUS));
             Log.i(TASK_CHANGES_TAG, "Task_id: = " + taskId + " have syncStatus: " + syncStatus);
         };
 
