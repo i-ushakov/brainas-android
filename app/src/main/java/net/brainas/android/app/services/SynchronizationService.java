@@ -223,8 +223,6 @@ public class SynchronizationService extends Service {
                 public void onComplete(String response, Exception e) {
                     handleResponseFromServer(response);
                     deleteChangesXML(allChangesInXMLFileFinal);
-                    // remove sending status from changes log after sync is completed
-                    taskChangesDbHelper.removeAllSendingStatus(accountId);
                 }});
             if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
                 tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
@@ -262,6 +260,8 @@ public class SynchronizationService extends Service {
         handleServerResponseTask.setListener(new HandleServerResponseTask.HandleServerResponseListener() {
             @Override
             public void onComplete(String jsonString, Exception e) {
+                // remove sending status from changes log after sync is completed
+                taskChangesDbHelper.removeAllSendingStatus(accountId);
                 // notify about updates
                 notifyAboutSyncronization();
             }
