@@ -13,7 +13,6 @@
         android:icon="@drawable/cancel_icon_white"
         android:title="@string/action_edit_task"
         app:showAsAction="never"/>
-
     <!-- Make task done  -->
     <item
         android:id="@+id/action_done_task"
