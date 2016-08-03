@@ -178,6 +178,18 @@ public class GoogleDriveManager implements
         }
     }
 
+    public DriveId checkFolderExistByResourceID (String folderResourceId) {
+        if (folderResourceId == null) {
+            return null;
+        }
+
+        DriveId folderDriveId = fetchDriveIdByResourceId(folderResourceId, null);
+        if (folderDriveId == null) {
+            return null;
+        }
+        return checkFolderExistsByDriverId(folderDriveId);
+    }
+
     public DriveId checkFolderExistsByDriverId(DriveId folderDriveId) {// TODO# Refactor to checkByDriveId - precisely
         Metadata metadata = folderDriveId.asDriveFolder().getMetadata(mGoogleApiClient).await().getMetadata();
 
