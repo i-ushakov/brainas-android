@@ -456,6 +456,7 @@ public class EditEventActivity extends EditTaskActivity
             if (currentUserLocation != null) {
                 eventLocation.setLng(currentUserLocation.longitude);
                 eventLocation.setLat(currentUserLocation.latitude);
+                eventLocation.setRadius(150d);
                 GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
                 googleApiHelper.setAddressByLocation(eventLocation, false);
             }

@@ -94,7 +94,7 @@ public class EventLocation extends Event {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();
             Double distance = distance(lat, lng, currentLat, currentLng, "M");
-            if (radius <= 150d) {
+            if (radius == null || radius <= 150d) {
                 radius = 150d;
             }
             if (distance <= radius) {
