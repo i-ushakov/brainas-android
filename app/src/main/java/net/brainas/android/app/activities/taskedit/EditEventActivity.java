@@ -75,6 +75,7 @@ public class EditEventActivity extends EditTaskActivity
     private GoogleMap googleMap;
     private Marker currentMarker;
     private Marker userLocationMarker;
+    private LatLng currentUserLocation = null;
 
     private String validationMessage = "Validation of event is failed";
 
@@ -276,6 +277,9 @@ public class EditEventActivity extends EditTaskActivity
 
     public void saveEventHandler(View view) {
         if (UIHelper.safetyBtnClick(view, EditEventActivity.this)) {
+            if (event instanceof  EventLocation) {
+                makeSureThatLocationIsSet();
+            }
             if (validateEvent()) {
                 ((View) findViewById(R.id.saveEventBtn)).setOnClickListener(null);
                 saveEvent();
@@ -423,6 +427,7 @@ public class EditEventActivity extends EditTaskActivity
 
             protected void onPostExecute(LatLng latLng) {
                 if (latLng != null) {
+                    currentUserLocation = latLng;
                     setUserLocationMarker(latLng);
                     if (!editMode) {
                         moveAndZoomCamera(latLng);
@@ -440,6 +445,21 @@ public class EditEventActivity extends EditTaskActivity
     @Override
     public void updateAfterLocationWasChanged(Location location) {
         setUserLocationMarker(new LatLng(location.getLatitude(), location.getLongitude()));
+    }
+
+    private void makeSureThatLocationIsSet () {
+        if (!(event instanceof EventLocation)) {
+            return;
+        }
+        EventLocation eventLocation = (EventLocation)event;
+        if(((EventLocation)event).getLng() == null || ((EventLocation)event).getLat() == null) {
+            if (currentUserLocation != null) {
+                eventLocation.setLng(currentUserLocation.longitude);
+                eventLocation.setLat(currentUserLocation.latitude);
+                GoogleApiHelper googleApiHelper = ((BrainasApp)BrainasApp.getAppContext()).getGoogleApiHelper();
+                googleApiHelper.setAddressByLocation(eventLocation, false);
+            }
+        }
     }
 }
 

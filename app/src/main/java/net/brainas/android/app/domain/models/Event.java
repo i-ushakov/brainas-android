@@ -23,6 +23,7 @@ public abstract class Event {
     public enum TYPES {
         GPS,
         TIME;
+        // May be we don't neeed this (we need only name())
         public String getLabel(Context context) {
             Resources res = context.getResources();
             int resId = res.getIdentifier(this.name(), "string", context.getPackageName());

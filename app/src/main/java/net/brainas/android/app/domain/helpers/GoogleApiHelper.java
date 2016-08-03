@@ -21,7 +21,7 @@ import java.util.Locale;
 public class GoogleApiHelper {
     Context context;
     TasksManager tasksManager;
-    EventLocation gpsEvent;
+    EventLocation locationEvent;
     boolean needSavingTheEvent;
 
     public GoogleApiHelper(Context context) {
@@ -30,7 +30,7 @@ public class GoogleApiHelper {
 
     public void setAddressByLocation(EventLocation gpsEvent, boolean needSavingTheEvent) {
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
-        this.gpsEvent = gpsEvent;
+        this.locationEvent = gpsEvent;
         this.needSavingTheEvent = needSavingTheEvent;
         if (NetworkHelper.isNetworkActive()) {
             new GettingAddressByLocation().execute(gpsEvent);
@@ -51,9 +51,9 @@ public class GoogleApiHelper {
         }
 
         protected void onPostExecute(String address) {
-            gpsEvent.setAddress(address);
+            locationEvent.setAddress(address);
             if (needSavingTheEvent) {
-                tasksManager.saveEvent(gpsEvent);
+                tasksManager.saveEvent(locationEvent);
             }
         }
     }
