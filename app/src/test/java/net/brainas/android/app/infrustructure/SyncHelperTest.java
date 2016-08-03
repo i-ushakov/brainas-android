@@ -39,7 +39,6 @@ import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -146,7 +145,7 @@ public class SyncHelperTest {
         HashMap<Long, Pair<String, String>> changes = new HashMap<Long, Pair<String, String>>();
         changes.put(1l, pair);
 
-        when(taskChangesDbHelper.getChangedTasks(accountId)).thenReturn(changes);
+        when(taskChangesDbHelper.getChangesOfTasks(accountId)).thenReturn(changes);
         when(tasksManager.getTaskByLocalId(anyInt())).thenReturn(task);
 
         // task
