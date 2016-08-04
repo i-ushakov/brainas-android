@@ -1,12 +1,16 @@
 package net.brainas.android.app.UI.logic;
 
+import android.content.Context;
 import android.graphics.Point;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.UI.views.TaskTileView;
+import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
@@ -26,6 +30,9 @@ public class ReminderScreenManager implements
         AccountsManager.SingInObserver {
     private int panelWidth;
     private ViewGroup tilesPanel;
+    private Context context;
+    private ScrollView rightScrollPanel;
+    private int scrollPanelWidth;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
 
     private BrainasApp app;
@@ -33,6 +40,7 @@ public class ReminderScreenManager implements
 
     public ReminderScreenManager(ViewGroup tilesPanel) {
         this.tilesPanel = tilesPanel;
+        this.context = tilesPanel.getContext();
         this.panelWidth = tilesPanel.getWidth();
         this.tilesGrid = this.calculateTilesGrid(panelWidth);
         tasksManager = ((BrainasApp)BrainasApp.getAppContext()).getTasksManager();
@@ -46,6 +54,7 @@ public class ReminderScreenManager implements
             List<Task> activeTasks = app.getTasksManager().getActiveList();
             List<TaskTileView> tiles = this.initTiles(activeTasks);
             this.placeTiles(tiles);
+
         }
     }
 
@@ -130,6 +139,12 @@ public class ReminderScreenManager implements
                 tile.setLayoutParams(params);
                 this.tilesPanel.addView(tile);
             }
+            addRightScrollPanel();
+            if ( tiles.size() > 5) {
+                for (int i = 5; i < tiles.size(); i++) {
+                    addTilesToRightPanel(tiles.get(i));
+                }
+            }
         }
     }
 
@@ -145,6 +160,30 @@ public class ReminderScreenManager implements
         this.tilesGrid.add(new ReminderTileCell(15*gridStep,0,5*gridStep));
         this.tilesGrid.add(new ReminderTileCell(15 * gridStep, 5 * gridStep, 5 * gridStep));
 
+        this.scrollPanelWidth = 5 * gridStep;
         return  this.tilesGrid;
+    }
+
+    private void addRightScrollPanel() {
+        this.tilesPanel.removeView(rightScrollPanel);
+
+        rightScrollPanel = new ScrollView(context);
+        rightScrollPanel.setBackgroundColor(Utils.getColor(context, android.R.color.darker_gray));
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(scrollPanelWidth, ViewGroup.LayoutParams.MATCH_PARENT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        rightScrollPanel.setLayoutParams(layoutParams);
+
+        LinearLayout innerLayout = new LinearLayout(context);
+        innerLayout.setOrientation(LinearLayout.VERTICAL);
+        rightScrollPanel.addView(innerLayout);
+
+        this.tilesPanel.addView(rightScrollPanel);
+    }
+
+    private void addTilesToRightPanel(TaskTileView tile) {
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(scrollPanelWidth, scrollPanelWidth);
+        tile.setLayoutParams(params);
+        ((LinearLayout)rightScrollPanel.getChildAt(0)).addView(tile);
     }
 }
