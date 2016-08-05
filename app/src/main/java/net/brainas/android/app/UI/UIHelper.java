@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 
 import net.brainas.android.app.R;
 
@@ -25,6 +26,12 @@ public class UIHelper {
         }
     }
 
+    static public void addClickEffectToButtonImage(ImageView view, Context context) {
+        AnimationSet animationSet = new AnimationSet(false);
+        animationSet.addAnimation(AnimationUtils.loadAnimation(context, R.anim.press_btn_alpha));
+        view.startAnimation(animationSet);
+    }
+
     static public boolean preventDoubleClick(Long lastClickTime) {
         if (lastClickTime == null) {
             return false;
@@ -41,7 +48,11 @@ public class UIHelper {
             return false;
         }
         view.setTag(SystemClock.elapsedRealtime());
-        addClickEffectToButton(view, context);
+        if (view instanceof ImageView) {
+            addClickEffectToButtonImage((ImageView) view, context);
+        } else {
+            addClickEffectToButton(view, context);
+        }
         return true;
     }
 }

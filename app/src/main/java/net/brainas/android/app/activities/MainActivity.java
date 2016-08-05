@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationSettingsStates;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 import net.brainas.android.app.infrustructure.LocationProvider;
@@ -147,8 +148,10 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_tasks);
         menuItemTasks.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent tasksIntent = new Intent(MainActivity.this, TasksActivity.class);
-                startActivity(tasksIntent);
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Intent tasksIntent = new Intent(MainActivity.this, TasksActivity.class);
+                    startActivity(tasksIntent);
+                }
             }
         });
     }
@@ -157,7 +160,9 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_accounts);
         menuItemTasks.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                startAccountsActivity();
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    startAccountsActivity();
+                }
             }
         });
     }

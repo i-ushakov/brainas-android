@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import net.brainas.android.app.BrainasAppException;
 import net.brainas.android.app.R;
+import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.activities.TaskCardActivity;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
@@ -118,10 +119,12 @@ public class TaskTileView extends RelativeLayout implements View.OnClickListener
 
     @Override
     public void onClick(View v) {
-        Intent taskCardIntent = new Intent(context, TaskCardActivity.class);
-        Bundle b = new Bundle();
-        b.putLong("taskId", task.getId());
-        taskCardIntent.putExtras(b);
-        context.startActivity(taskCardIntent);
+        if (UIHelper.safetyBtnClick(v, context)) {
+            Intent taskCardIntent = new Intent(context, TaskCardActivity.class);
+            Bundle b = new Bundle();
+            b.putLong("taskId", task.getId());
+            taskCardIntent.putExtras(b);
+            context.startActivity(taskCardIntent);
+        }
     }
 }
