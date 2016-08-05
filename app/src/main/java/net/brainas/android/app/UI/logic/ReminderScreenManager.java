@@ -54,7 +54,6 @@ public class ReminderScreenManager implements
             List<Task> activeTasks = app.getTasksManager().getActiveList();
             List<TaskTileView> tiles = this.initTiles(activeTasks);
             this.placeTiles(tiles);
-
         }
     }
 
@@ -168,7 +167,6 @@ public class ReminderScreenManager implements
         this.tilesPanel.removeView(rightScrollPanel);
 
         rightScrollPanel = new ScrollView(context);
-        rightScrollPanel.setBackgroundColor(Utils.getColor(context, android.R.color.darker_gray));
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(scrollPanelWidth, ViewGroup.LayoutParams.MATCH_PARENT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
