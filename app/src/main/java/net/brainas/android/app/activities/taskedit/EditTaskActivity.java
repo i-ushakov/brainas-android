@@ -1,5 +1,7 @@
 package net.brainas.android.app.activities.taskedit;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -14,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -177,6 +181,7 @@ public class EditTaskActivity extends AppCompatActivity {
                 taskPicturePanel.setVisibility(View.GONE);
                 break;
             case 1:
+                hideKeyboard();
                 taskTitlePanel.setVisibility(View.GONE);
                 categoryPanel.setVisibility(View.GONE);
                 conditionPanel.setVisibility(View.GONE);
@@ -253,6 +258,17 @@ public class EditTaskActivity extends AppCompatActivity {
 
     public void loadFromGallery(View view) {
         UIHelper.addClickEffectToButton(view, this);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(this);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     private void renderPicture() {
@@ -333,6 +349,11 @@ public class EditTaskActivity extends AppCompatActivity {
     }
 
     private void setEditTitleFieldListeners() {
+        if (task != null && (task.getMessage() == null || task.getMessage().equals("New task"))) {
+            if(editTitleField.requestFocus()) {
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+            }
+        }
         editTitleField.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
