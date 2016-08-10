@@ -39,7 +39,9 @@ public class EventLocation extends Event {
     public void fillInParamsFromXML(Element eventEl) {
         this.lat = Double.parseDouble(eventEl.getElementsByTagName("lat").item(0).getTextContent());
         this.lng = Double.parseDouble(eventEl.getElementsByTagName("lng").item(0).getTextContent());
-        this.radius = Double.parseDouble(eventEl.getElementsByTagName("radius").item(0).getTextContent());
+        if (eventEl.getElementsByTagName("radius").item(0) != null) {
+            this.radius = Double.parseDouble(eventEl.getElementsByTagName("radius").item(0).getTextContent());
+        }
         if (eventEl.getElementsByTagName("address") != null) {
             if ( eventEl.getElementsByTagName("address").item(0) != null)
             this.address = eventEl.getElementsByTagName("address").item(0).getTextContent();
