@@ -180,6 +180,14 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         });
     }
 
+    private void recalculateAddTaskButtonHeight() {
+        android.view.ViewGroup.LayoutParams layoutParams = addTaskButton.getLayoutParams();
+        int btnHeight = (massagesPanel.getHeight() - (massagesPanel.getWidth()/15) * 20)*65/100;
+        layoutParams.height = btnHeight;
+        addTaskButton.setLayoutParams(layoutParams);
+        addTaskButton.getParent().requestLayout();
+    }
+
     private void startEditTaskActivity() {
         Intent tasksIntent = new Intent(MainActivity.this, EditTaskActivity.class);
         startActivity(tasksIntent);
@@ -191,6 +199,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
             @Override
             public void run() {
                 MainActivity m = (MainActivity) view.getContext();
+                m.recalculateAddTaskButtonHeight();
                 m.recalculateSlideButtonHeight();
             }
         });
@@ -235,7 +244,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
     }
 
     private void slideDown() {
-        int distanceY = menuPanel.getHeight() - slideButton.getLayoutParams().height - addTaskButton.getHeight();
+        int distanceY = menuPanel.getHeight() - slideButton.getLayoutParams().height - addTaskButton.getLayoutParams().height;
         menuPanel.animate().translationY(distanceY);
         slideButton.setImageResource(R.drawable.slide_up_icon);
     }
@@ -249,7 +258,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
 
     private void recalculateSlideButtonHeight() {
         ViewGroup.LayoutParams layoutParams = slideButton.getLayoutParams();
-        layoutParams.height = massagesPanel.getHeight() - (massagesPanel.getWidth()/15) * 20 - addTaskButton.getHeight();
+        layoutParams.height = massagesPanel.getHeight() - (massagesPanel.getWidth()/15) * 20 - addTaskButton.getLayoutParams().height;
         slideButton.setLayoutParams(layoutParams);
     }
 
