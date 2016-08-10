@@ -59,7 +59,9 @@
                     android:id="@+id/editTitleField"
                     android:hint="Enter title of Task here: (100 characters)"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="5dp" />
+                    android:layout_marginTop="5dp"
+                    android:imeOptions="actionDone"
+                    android:singleLine="true"/>
             </LinearLayout>
 
             <include layout="@layout/content_edit_task_picture_panel" />
