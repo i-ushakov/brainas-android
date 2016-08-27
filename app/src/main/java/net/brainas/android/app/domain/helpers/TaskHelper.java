@@ -37,6 +37,7 @@ public class TaskHelper {
         Element taskEl = doc.createElement(elementName);
         taskEl.setAttribute("id", ((Long)task.getId()).toString());
         taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
+
         // message
         Element messageEl = doc.createElement("message");
         messageEl.setTextContent(task.getMessage());
@@ -46,6 +47,11 @@ public class TaskHelper {
         Element descriptionEl = doc.createElement("description");
         descriptionEl.setTextContent(task.getDescription());
         taskEl.appendChild(descriptionEl);
+
+        //status
+        Element statusEl = doc.createElement("status");
+        statusEl.setTextContent(task.getStatus().name());
+        taskEl.appendChild(statusEl);
 
         // picture
         if (task.getPicture() != null) {
