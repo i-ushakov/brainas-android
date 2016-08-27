@@ -8,7 +8,6 @@ android {
             storeFile file(System.env.ANDROID_KEYSTORE_PATH)
             storePassword System.env.ANDROID_KEYSTORE_PWD
         }
-
         debug {
             keyAlias System.env.ANDROID_KEY_ALIAS
             keyPassword System.env.ANDROID_KEY_PWD
@@ -88,6 +87,15 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+dependencies {
+    compile 'com.google.android.gms:play-services-ads:8.4.0'
+}
+dependencies {
+    compile 'com.google.android.gms:play-services-auth:8.4.0'
+}
+dependencies {
+    compile 'com.google.android.gms:play-services-gcm:8.4.0'
+}
 dependencies {
     compile 'com.google.android.gms:play-services-ads:8.4.0'
 }
