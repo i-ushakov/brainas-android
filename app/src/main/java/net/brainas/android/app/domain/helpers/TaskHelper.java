@@ -61,7 +61,7 @@ public class TaskHelper {
             pictureEl.appendChild(pictureNameEl);
             if (task.getPicture().getResourceId() != null) {
                 Element pictureResourceIdEl = doc.createElement("resourceId");
-                pictureResourceIdEl.setTextContent(task.getPicture().getDriveId().getResourceId());
+                pictureResourceIdEl.setTextContent(task.getPicture().getResourceId());
                 pictureEl.appendChild(pictureResourceIdEl);
             }
             taskEl.appendChild(pictureEl);
