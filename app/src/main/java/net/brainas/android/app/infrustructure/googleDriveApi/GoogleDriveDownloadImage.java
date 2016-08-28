@@ -82,29 +82,33 @@ public class GoogleDriveDownloadImage implements GoogleDriveManager.CurrentTask 
             return;
         }
 
-        InputStream is = driveContentsResult.getDriveContents().getInputStream();
-        Bitmap bitmap = BitmapFactory.decodeStream(is);
-        image.setBitmap(bitmap);
-
-        File imageFile = InfrustructureHelper.creteFileForGivenName(
-                InfrustructureHelper.getPathToImageFolder(accountId),
-                fileName);
-        BasicImageDownloader.writeToDisk(imageFile, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
-            @Override
-            public void onBitmapSaved() {
-                image.onDownloadCompleted();
-            }
-
-            @Override
-            public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
-                Log.e(GOOGLE_DRIVE_TAG, "Cannot save image on disk");
-            }
-        }, bitmapCompressFormat, false);
-
         try {
-            is.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            InputStream is = driveContentsResult.getDriveContents().getInputStream();
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            image.setBitmap(bitmap);
+            File imageFile = InfrustructureHelper.creteFileForGivenName(
+                    InfrustructureHelper.getPathToImageFolder(accountId),
+                    fileName);
+            BasicImageDownloader.writeToDisk(imageFile, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
+                @Override
+                public void onBitmapSaved() {
+                    image.onDownloadCompleted();
+                }
+
+                @Override
+                public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
+                    Log.e(GOOGLE_DRIVE_TAG, "Cannot save image on disk");
+                }
+            }, bitmapCompressFormat, false);
+
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (OutOfMemoryError e) {
+            Log.i(GOOGLE_DRIVE_TAG, "Out of memory. May be too huge image");
+            return;
         }
     }
 
