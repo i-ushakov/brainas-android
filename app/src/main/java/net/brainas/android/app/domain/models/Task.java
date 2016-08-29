@@ -116,7 +116,7 @@ public class Task {
     }
 
     public boolean haveImage() {
-        if (picture != null) { // TODO check File
+        if (picture != null && picture.getBitmap() != null) {
             return true;
         }
         return false;
