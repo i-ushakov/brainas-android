@@ -96,6 +96,15 @@
                     android:id="@+id/menu_item_logo"
                     android:adjustViewBounds="true"
                     android:layout_margin="2dp"/>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/settings_menu_icon"
+                    android:id="@+id/menu_item_settings"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
             </LinearLayout>
 
             <LinearLayout
