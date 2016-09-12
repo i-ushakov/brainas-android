@@ -29,14 +29,19 @@
         android:layout_below="@+id/add_task_button"
         android:background="@color/skyBlue" />
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/slide_button"
+        android:id="@+id/main_menu_panel">
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_below="@+id/slide_button"
-            android:id="@+id/main_menu_panel"
-            android:layout_weight="3">
-
+            android:id="@+id/main_menu_columns">
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
@@ -69,7 +74,7 @@
                     android:src="@drawable/my_accounts_menu_icon"
                     android:id="@+id/menu_item_accounts"
                     android:adjustViewBounds="true"
-                    android:layout_margin="2dp"/>account_icon
+                    android:layout_margin="2dp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -123,6 +128,69 @@
                     android:adjustViewBounds="true"
                     android:layout_margin="2dp"/>
 
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/feedback_menu_icon"
+                    android:id="@+id/menu_item_feedback"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/about_ba__menu_icon"
+                    android:id="@+id/menu_item_about_ba"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
             </LinearLayout>
         </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/bottom_advertisement_block">
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/kit_ushakov_bototm_advert"
+                android:background="@color/colorPrimaryDark"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/creator_of_project_lbl"
+                    android:text="Creator of project:"
+                    android:textStyle="bold"
+                    android:textSize="18dp"
+                    android:textColor="#e1e1e1"
+                    android:textColorHighlight="#000000"
+                    android:textIsSelectable="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/kit_ushakov_lbl"
+                    android:text="Kit Ushakov"
+                    android:textStyle="bold|italic"
+                    android:textSize="20dp"
+                    android:textColor="#e1e1e1"
+                    android:textColorHighlight="#000000"
+                    android:textIsSelectable="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/web_site_kit_ushakov_lbl"
+                    android:text="www.kitushakov.com"
+                    android:textSize="14dp"
+                    android:textStyle="bold"
+                    android:textColor="#e1e1e1"
+                    android:textColorHighlight="#000000"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
 </RelativeLayout>
