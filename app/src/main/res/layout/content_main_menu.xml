@@ -48,8 +48,17 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/colorPrimaryDark"
-                    android:src="@drawable/task_list_icon"
-                    android:id="@+id/menu_item_tasks"
+                    android:src="@drawable/todo_menu_icon"
+                    android:id="@+id/menu_item_todo"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/people_menu_icon"
+                    android:id="@+id/menu_item_people"
                     android:adjustViewBounds="true"
                     android:layout_margin="2dp"/>
 
@@ -69,12 +78,13 @@
                 android:layout_height="match_parent"
                 android:id="@+id/second_menu_column"
                 android:layout_weight="1">
+
                 <ImageView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/colorPrimaryDark"
-                    android:src="@drawable/categories_menu_icon"
-                    android:id="@+id/menu_item_categories"
+                    android:src="@drawable/task_list_icon"
+                    android:id="@+id/menu_item_tasks"
                     android:adjustViewBounds="true"
                     android:layout_margin="2dp"/>
             </LinearLayout>
@@ -84,6 +94,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/third_menu_column"
-                android:layout_weight="1"></LinearLayout>
+                android:layout_weight="1">
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorPrimaryDark"
+                    android:src="@drawable/categories_menu_icon"
+                    android:id="@+id/menu_item_categories"
+                    android:adjustViewBounds="true"
+                    android:layout_margin="2dp"/>
+
+            </LinearLayout>
         </LinearLayout>
 </RelativeLayout>
