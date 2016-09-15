@@ -206,9 +206,13 @@ public class TasksManager {
         }
     }
 
-    public boolean restoreTaskToWaiting(long takId) {
+    public boolean restoreTask(long takId) {
         Task task = getTaskByLocalId(takId);
         if (task != null) {
+            if (task.getConditions().size() == 0) {
+                this.changeStatus(task, Task.STATUSES.TODO);
+                return true;
+            }
             if (conditionsValidation(task.getConditions())) {
                 this.changeStatus(task, Task.STATUSES.WAITING);
                 return true;
@@ -333,6 +337,7 @@ public class TasksManager {
 
     private Task refreshTaskObject(Task heapTask, Task freshTask) {
         if (!heapTask.equals(freshTask)) {
+            heapTask.setGlobalId(freshTask.getGlobalId());
             heapTask.setMessage(freshTask.getMessage());
             heapTask.setDescription(freshTask.getDescription());
             heapTask.setConditions(freshTask.getConditions());
