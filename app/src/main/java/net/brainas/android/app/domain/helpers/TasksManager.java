@@ -30,6 +30,7 @@ public class TasksManager {
         ALL,
         ACTIVE,
         WAITING,
+        TODO,
         USED
     }
 

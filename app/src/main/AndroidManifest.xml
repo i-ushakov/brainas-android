@@ -33,6 +33,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".activities.TodoListActivity"
+            android:label="@string/title_activity_todo_list"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"></activity>
+        <activity
             android:name=".activities.TasksActivity"
             android:label="@string/title_activity_tasks"
             android:theme="@style/AppTheme.NoActionBar"

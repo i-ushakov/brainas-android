@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         addTaskButton = (ImageView)this.findViewById(R.id.add_task_button);
 
         setOnTouchListenerForSlideButton();
+        setOnClickListenerForTodoMenuItem();
         setOnClickListenerForTasksMenuItem();
         setOnClickListenerForAccountsMenuItem();
         setOnClickListenerForAddTaskButton();
@@ -140,6 +141,18 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
                     togglePanel();
                 }
                 return true;
+            }
+        });
+    }
+
+    private void setOnClickListenerForTodoMenuItem() {
+        ImageView menuItemTodo = (ImageView)this.findViewById(R.id.menu_item_todo);
+        menuItemTodo.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Intent todoIntent = new Intent(MainActivity.this, TodoListActivity.class);
+                    startActivity(todoIntent);
+                }
             }
         });
     }

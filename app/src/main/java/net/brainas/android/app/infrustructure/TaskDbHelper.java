@@ -156,6 +156,11 @@ public class TaskDbHelper {
                     selectionArgsList.add(group.toString());
                     break;
 
+                case TODO :
+                    selection = selection + " and " + COLUMN_NAME_TASKS_STATUS + " LIKE ?";
+                    selectionArgsList.add(group.toString());
+                    break;
+
                 case USED :
                     selection = selection + " and (" + COLUMN_NAME_TASKS_STATUS + " LIKE ? OR " + COLUMN_NAME_TASKS_STATUS + " LIKE ?)";
                     selectionArgsList.add("DONE");

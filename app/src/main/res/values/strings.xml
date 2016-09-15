@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Brain Assistant</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_todo_list">Todo List</string>
     <string name="title_activity_tasks">TasksActivity</string>
     <string name="title_activity_card_of_task">TasksActivity</string>
     <string name="action_make_done">Make the task done</string>
