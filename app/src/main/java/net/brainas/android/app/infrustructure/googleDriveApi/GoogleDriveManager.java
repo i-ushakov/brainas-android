@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure.googleDriveApi;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -98,12 +99,11 @@ public class GoogleDriveManager implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Iterator<CurrentTask> it = currentTaskQueue.iterator();
+        final Iterator<CurrentTask> it = currentTaskQueue.iterator();
         while (it.hasNext()) {
-            CurrentTask currentTask = it.next();
+            final CurrentTask currentTask = it.next();
             if (currentTask != null) {
-                currentTask.execute(mGoogleApiClient);
-                Log.i(GOOGLE_DRIVE_TAG, "Execute task from currentTaskQueue: " + currentTask.getClass().getName());
+                executeTaskInSeparateThread(currentTask, "Execute task from currentTaskQueue: " + currentTask.getClass().getName());
                 it.remove();
             }
         }
@@ -165,12 +165,12 @@ public class GoogleDriveManager implements
     }
 
     public void downloadPicture(Image image, int accuntId) {
-        GoogleDriveDownloadImage googleDriveDownloadImage = new GoogleDriveDownloadImage();
+        final GoogleDriveDownloadImage googleDriveDownloadImage = new GoogleDriveDownloadImage();
         googleDriveDownloadImage.setImage(image);
         googleDriveDownloadImage.setAccountId(accuntId);
 
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            googleDriveDownloadImage.execute(mGoogleApiClient);
+            executeTaskInSeparateThread(googleDriveDownloadImage, null);
         } else {
             currentTaskQueue.add(googleDriveDownloadImage);
             Log.i(GOOGLE_DRIVE_TAG, "Added task to currentTaskQueue: " + googleDriveDownloadImage.getClass().getName());
@@ -272,6 +272,26 @@ public class GoogleDriveManager implements
                     .setResultCallback(idCallback);
         }
         return driveId;
+    }
+
+    private void executeTaskInSeparateThread(final CurrentTask currentTask, final String logMessage) {
+        if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    currentTask.execute(mGoogleApiClient);
+                    if (logMessage != null) {
+                        Log.i(GOOGLE_DRIVE_TAG, logMessage);
+                    }
+                }
+            };
+            thread.start();
+        } else {
+            currentTask.execute(mGoogleApiClient);
+            if (logMessage != null) {
+                Log.i(GOOGLE_DRIVE_TAG, logMessage);
+            }
+        }
     }
 
 }
