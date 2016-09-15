@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 
 import com.google.android.gms.drive.DriveId;
 
+import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -14,6 +15,7 @@ import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -224,6 +226,9 @@ public class TaskDbHelper {
                     String pictureFileId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_FILE_ID));
                     if (pictureFileId != null) {
                         picture.setResourceId(pictureFileId);
+                    }
+                    if (picture.getBitmap() == null && picture.getDriveId() != null) {
+                        GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture, accountId);
                     }
                     task.setPicture(picture);
                 }

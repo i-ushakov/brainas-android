@@ -47,6 +47,7 @@ public class Task {
     public enum STATUSES {
         ACTIVE,
         WAITING,
+        TODO,
         DONE,
         CANCELED,
         DISABLED;
@@ -124,7 +125,7 @@ public class Task {
 
     public void setStatus(String status){
         if (status == null) {
-            this.status = STATUSES.WAITING;
+            this.status = STATUSES.TODO;
             return;
         }
         switch (status) {
@@ -133,6 +134,9 @@ public class Task {
                 break;
             case "WAITING" :
                 this.status = STATUSES.WAITING;
+                break;
+            case "TODO" :
+                this.status = STATUSES.TODO;
                 break;
             case "DONE" :
                 this.status = STATUSES.DONE;
@@ -253,6 +257,14 @@ public class Task {
                 this.status = STATUSES.DISABLED;
             } else {
                 this.status = STATUSES.WAITING;
+            }
+        } else if (this.status == STATUSES.TODO) {
+            if (this.conditions.size() > 0) {
+                if (!checkActualityOfConditions()) {
+                    this.status = STATUSES.DISABLED;
+                } else {
+                    this.status = STATUSES.WAITING;
+                }
             }
         }
     }

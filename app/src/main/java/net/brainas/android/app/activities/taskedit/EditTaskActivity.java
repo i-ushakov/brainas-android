@@ -104,7 +104,7 @@ public class EditTaskActivity extends AppCompatActivity {
             }
         } else {
             task = new Task(userId, getResources().getString(R.string.activity_edit_new_task));
-            task.setStatus(Task.STATUSES.DISABLED);
+            task.setStatus(Task.STATUSES.TODO);
             mode = Mode.CREATE;
         }
         setToolBar();
@@ -395,7 +395,7 @@ public class EditTaskActivity extends AppCompatActivity {
             String message = taskTitleEditable.toString().trim();
             if (task == null) {
                 task = new Task(userId, message);
-                task.setStatus(Task.STATUSES.WAITING);
+                task.setStatus(Task.STATUSES.TODO);
             }
             if (!message.equals("")) {
                 task.setMessage(message);

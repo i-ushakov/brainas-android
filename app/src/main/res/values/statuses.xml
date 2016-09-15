@@ -2,6 +2,7 @@
 <resources>
     <string name="ACTIVE">Active</string>
     <string name="WAITING">Waiting</string>
+    <string name="TODO">TODO</string>
     <string name="DONE">Done</string>
     <string name="CANCELED">Canceled</string>
     <string name="DISABLED">Disabled</string>

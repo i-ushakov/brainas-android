@@ -99,7 +99,7 @@ public class TaskCardActivity extends AppCompatActivity
             getMenuInflater().inflate(R.menu.task_card_active, menu);
         } else if (status == Task.STATUSES.DONE || status == Task.STATUSES.CANCELED) {
             getMenuInflater().inflate(R.menu.task_card_used, menu);
-        } else if (status == Task.STATUSES.WAITING || status == Task.STATUSES.DISABLED) {
+        } else if (status == Task.STATUSES.WAITING || status == Task.STATUSES.DISABLED || status == Task.STATUSES.TODO) {
             getMenuInflater().inflate(R.menu.task_card_waiting, menu);
         }
         return true;
@@ -124,8 +124,8 @@ public class TaskCardActivity extends AppCompatActivity
                 finish();
                 return true;
             case R.id.action_restore_task :
-                if (tasksManager.restoreTaskToWaiting(task.getId())) {
-                    setTaskStatus(Task.STATUSES.WAITING);
+                if (tasksManager.restoreTask(task.getId())) {
+                    setTaskStatus(task.getStatus());
                     invalidateOptionsMenu();
                 }
                 return true;
