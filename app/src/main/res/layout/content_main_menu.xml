@@ -158,7 +158,8 @@
                 android:layout_height="match_parent"
                 android:id="@+id/kit_ushakov_bototm_advert"
                 android:background="@color/colorPrimaryDark"
-                android:gravity="center">
+                android:gravity="center"
+                android:onClick="openKitUshakovWebSite">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -168,7 +169,10 @@
                     android:textSize="18dp"
                     android:textColor="#e1e1e1"
                     android:textColorHighlight="#000000"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:onClick="openKitUshakovWebSite"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -178,7 +182,10 @@
                     android:textSize="20dp"
                     android:textColor="#e1e1e1"
                     android:textColorHighlight="#000000"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:onClick="openKitUshakovWebSite"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -188,7 +195,10 @@
                     android:textStyle="bold"
                     android:textColor="#e1e1e1"
                     android:textColorHighlight="#000000"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:onClick="openKitUshakovWebSite"/>
             </LinearLayout>
         </LinearLayout>
 

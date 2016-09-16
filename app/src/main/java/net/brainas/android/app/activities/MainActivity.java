@@ -3,6 +3,7 @@ package net.brainas.android.app.activities;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -178,6 +179,13 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
                 }
             }
         });
+    }
+
+    public void openKitUshakovWebSite(View view) {
+        String url = "http://www.kitushakov.com";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
     }
 
     private void startAccountsActivity() {
