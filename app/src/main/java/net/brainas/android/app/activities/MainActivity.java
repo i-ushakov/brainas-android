@@ -27,6 +27,8 @@ import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.taskedit.EditTaskActivity;
 import net.brainas.android.app.infrustructure.LocationProvider;
 
+import com.crashlytics.android.Crashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity  implements AccountsManager.ManagePreloader{
     static public final int REQUEST_CHECK_SETTINGS = 1001;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
 
         app = (BrainasApp)this.getApplication();
