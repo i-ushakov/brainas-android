@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.location.LocationSettingsStates;
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
     static public final int REQUEST_CHECK_SETTINGS = 1001;
 
     private BrainasApp app;
+    private Tracker mTracker;
     private LocationProvider locationProvider;
     private MainActivity.ActivePanel activePanel = ActivePanel.MESSAGES;
     private ViewGroup massagesPanel;
@@ -87,6 +90,9 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         BrainasApp.activityResumed();
         setActivePanel(ActivePanel.MESSAGES);
         initLayout();
+        mTracker = app.getDefaultTracker();
+        mTracker.setScreenName("Main Activity");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
 
     @Override
@@ -189,6 +195,10 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.setData(Uri.parse(url));
         startActivity(i);
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("MenuItemClick")
+                .setAction("GoToWebSite")
+                .build());
     }
 
     private void startAccountsActivity() {

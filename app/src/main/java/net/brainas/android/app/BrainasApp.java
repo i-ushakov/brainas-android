@@ -8,6 +8,9 @@ import android.content.SharedPreferences;
 import android.support.multidex.MultiDex;
 import android.util.Log;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.Tracker;
+
 import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
 import net.brainas.android.app.activities.MainActivity;
@@ -47,6 +50,8 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     // Activities
     private MainActivity mainActivity;
 
+    private Tracker mTracker;
+
     // Domain Layer Managers
     private TasksManager tasksManager;
     private ActivationManager activationManager;
@@ -67,6 +72,41 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
 
     // Application Layer Managers
     private AccountsManager accountsManager;
+
+    /**
+     * Gets the default {@link Tracker} for this {@link Application}.
+     * @return tracker
+     */
+    synchronized public Tracker getDefaultTracker() {
+        if (mTracker == null) {
+            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+            // To enable debug logging use: adb shell setprop log.tag.GAv4 DEBUG
+            mTracker = analytics.newTracker(R.xml.global_tracker);
+        }
+        return mTracker;
+    }
+
+    /**
+     * This is a subclass of {@link Application} used to provide shared objects for this app, such as
+     * the {@link Tracker}.
+     */
+    public class AnalyticsApplication extends Application {
+        private Tracker mTracker;
+
+        /**
+         * Gets the default {@link Tracker} for this {@link Application}.
+         * @return tracker
+         */
+        synchronized public Tracker getDefaultTracker() {
+            if (mTracker == null) {
+                GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+                // To enable debug logging use: adb shell setprop log.tag.GAv4 DEBUG
+                mTracker = analytics.newTracker(R.xml.global_tracker);
+            }
+            return mTracker;
+        }
+    }
+
 
     public void onCreate() {
         super.onCreate();
