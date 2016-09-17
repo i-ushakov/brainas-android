@@ -106,7 +106,7 @@
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="@string/fabric_api_key" />
+            android:value="537b1b240fbe57c52d42ce22c58180d755af1a8e" />
 
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_map_API_key"/>
 
