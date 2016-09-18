@@ -68,8 +68,11 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
 
         setOnTouchListenerForSlideButton();
         setOnClickListenerForTodoMenuItem();
+        setOnClickListenerForCategoriesMenuItem();
+        setOnClickListenerForPeopleMenuItem();
         setOnClickListenerForTasksMenuItem();
         setOnClickListenerForAccountsMenuItem();
+        setOnClickListenerForSettingsMenuItem();
         setOnClickListenerForAddTaskButton();
 
         if (!app.getAccountsManager().initialSingIn(this)) {
@@ -179,12 +182,45 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         });
     }
 
+    private void setOnClickListenerForCategoriesMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_categories);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Toast.makeText(MainActivity.this,"This ability will be available in next versions", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void setOnClickListenerForPeopleMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_people);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Toast.makeText(MainActivity.this,"This ability will be available in next versions", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
     private void setOnClickListenerForAccountsMenuItem() {
         ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_accounts);
         menuItemTasks.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
                     startAccountsActivity();
+                }
+            }
+        });
+    }
+
+    private void setOnClickListenerForSettingsMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_settings);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Toast.makeText(MainActivity.this,"This ability will be available in next versions", Toast.LENGTH_SHORT).show();
                 }
             }
         });
