@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         setOnClickListenerForTodoMenuItem();
         setOnClickListenerForCategoriesMenuItem();
         setOnClickListenerForPeopleMenuItem();
+        setOnClickListenerForFeedbackMenuItem();
         setOnClickListenerForTasksMenuItem();
         setOnClickListenerForAccountsMenuItem();
         setOnClickListenerForSettingsMenuItem();
@@ -199,6 +201,17 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
             public void onClick(View v) {
                 if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
                     Toast.makeText(MainActivity.this,"This ability will be available in next versions", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void setOnClickListenerForFeedbackMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_feedback);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    Toast.makeText(MainActivity.this,"This is beta version of Brain Assistant app ", Toast.LENGTH_SHORT).show();
                 }
             }
         });

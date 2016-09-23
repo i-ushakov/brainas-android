@@ -132,7 +132,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/colorPrimaryDark"
-                    android:src="@drawable/feedback_menu_icon"
+                    android:src="@drawable/version_menu_icon"
                     android:id="@+id/menu_item_feedback"
                     android:adjustViewBounds="true"
                     android:layout_margin="2dp"/>
