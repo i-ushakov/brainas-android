@@ -4,14 +4,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
@@ -19,6 +24,7 @@ import net.brainas.android.app.UI.views.TaskTileView;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.synchronization.SynchronizationManager;
 
 import java.util.ArrayList;
@@ -29,12 +35,14 @@ import java.util.Map;
 public class TasksActivity extends AppCompatActivity implements
         SynchronizationManager.TaskSyncObserver,
         ActivationManager.ActivationObserver,
-        Task.TaskChangesObserver {
+        Task.TaskChangesObserver,
+        SearchView.OnQueryTextListener {
     private BrainasApp app;
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private GridView tasksGrid;
     private TextView userNotSignedInMessage;
+    private String searchText = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,9 +89,35 @@ public class TasksActivity extends AppCompatActivity implements
         BrainasApp.activityPaused();
     }
 
-    private void updateTasksGrid(TasksManager.GROUP_OF_TASKS group, int accountId) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.search_menu, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.bar_search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(this);
+
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        this.searchText = newText;
+        if (newText.equals("")) {
+            this.searchText = null;
+        }
+        refreshTaskGrid();
+        return false;
+    }
+
+    private void updateTasksGrid(HashMap<String,Object> params, int accountId) {
         userNotSignedInMessage.setVisibility(View.GONE);
-        tasksGrid.setAdapter(new TaskTileAdapter(this, group, accountId));
+        tasksGrid.setAdapter(new TaskTileAdapter(this, params, accountId));
         tasksGrid.setOnItemClickListener(null);
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -124,6 +158,7 @@ public class TasksActivity extends AppCompatActivity implements
 
     private void refreshTaskGrid() {
         if (app.getAccountsManager().isUserSingIn()) {
+            HashMap<String,Object> params = new HashMap<String, Object>();
             TasksManager.GROUP_OF_TASKS group;
             switch (tabLayout.getSelectedTabPosition()) {
                 case 0:
@@ -141,8 +176,12 @@ public class TasksActivity extends AppCompatActivity implements
                     tab.select();
                     break;
             }
+            params.put(TaskDbHelper.GROUP_OF_TASK_PARAM, group);
+            if (this.searchText != null) {
+                params.put(TaskDbHelper.SEARCH_TEXT_PARAM, this.searchText);
+            }
             int accountId = app.getAccountsManager().getUserAccount().getId();
-            updateTasksGrid(group, accountId);
+            updateTasksGrid(params, accountId);
         } else {
             showUserNotSignedInMessage();
         }
@@ -152,10 +191,8 @@ public class TasksActivity extends AppCompatActivity implements
         private Context context;
         private List<Task> tasks = new ArrayList<Task>();
 
-        public TaskTileAdapter(Context context, TasksManager.GROUP_OF_TASKS group, int accountId) {
+        public TaskTileAdapter(Context context, HashMap<String, Object> params, int accountId) {
             this.context = context;
-            Map<String,Object> params = new HashMap<>();
-            params.put("GROUP_OF_TASKS", group);
             tasks = app.getTasksManager().getTasksFromDB(params, accountId);
             /*for (Task task : tasks) {
                 task.attachObserver(TasksActivity.this);

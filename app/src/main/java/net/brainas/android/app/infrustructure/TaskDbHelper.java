@@ -18,6 +18,7 @@ import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,6 +29,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class TaskDbHelper {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "Brainas.db";
+
+    public static String GROUP_OF_TASK_PARAM = "GROUP_OF_TASKS";
+    public static String SEARCH_TEXT_PARAM = "SEARCH_TEXT";
+
 
     private static final String COMMA_SEP = ",";
 
@@ -135,7 +140,7 @@ public class TaskDbHelper {
     public static void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    public ArrayList<Task> getTasks(Map<String,Object> params, Integer accountId){
+    public ArrayList<Task> getTasks(HashMap<String,Object> params, Integer accountId){
         ArrayList<Task> tasks = new ArrayList<Task>();
 
         String selection = COLUMN_NAME_TASKS_USER + " LIKE ?";
@@ -167,6 +172,12 @@ public class TaskDbHelper {
                     selectionArgsList.add("CANCELED");
                     break;
             }
+        }
+
+        if (params != null && params.containsKey(TaskDbHelper.SEARCH_TEXT_PARAM)) {
+            String searchText = (String) params.get(TaskDbHelper.SEARCH_TEXT_PARAM);
+            selection = selection + " and " + COLUMN_NAME_TASKS_MESSAGE + " LIKE ?";
+            selectionArgsList.add("%" + searchText + "%");
         }
 
         // by local id

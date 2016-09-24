@@ -14,6 +14,8 @@
 
     <!-- TasksActivity -->
     <string name="user_must_be_signed_id">You must sign in to Brain Assistant\'s app to continue.</string>
+    <string name="search_title">Search tasks</string>
+
 
     <!-- AccountsActivity -->
     <string name="activity_accounts_title">Accounts</string>

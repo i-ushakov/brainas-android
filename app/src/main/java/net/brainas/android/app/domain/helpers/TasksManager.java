@@ -101,7 +101,7 @@ public class TasksManager {
         return tasks;
     }
 
-    public ArrayList<Task> getTasksFromDB(Map<String, Object> params, Integer accountId) {
+    public ArrayList<Task> getTasksFromDB(HashMap<String, Object> params, Integer accountId) {
         if (accountId == null) {
             accountId = this.accountId;
         }
@@ -125,7 +125,7 @@ public class TasksManager {
         if (accountId == null) {
             return null;
         }
-        Map<String,Object> params = new HashMap<>();
+        HashMap<String,Object> params = new HashMap<>();
         params.put("TASK_ID", id);
         Task task = null;
         List<Task> tasks = getTasksFromDB(params, accountId);
@@ -140,7 +140,7 @@ public class TasksManager {
         if (accountId == null) {
             return null;
         }
-        Map<String,Object> params = new HashMap<>();
+        HashMap<String,Object> params = new HashMap<>();
         params.put("TASK_GLOBAL_ID", globalId);
         Task task = null;
         List<Task> tasks = getTasksFromDB(params, accountId);
@@ -157,7 +157,7 @@ public class TasksManager {
         if (accountId == null) {
             return null;
         }
-        Map<String,Object> params = new HashMap<>();
+        HashMap<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", GROUP_OF_TASKS.ACTIVE);
         ArrayList<Task> activeTasks = this.getTasksFromDB(params, accountId);
         cleanActiveList();
@@ -170,7 +170,7 @@ public class TasksManager {
         if (accountId == null) {
             return null;
         }
-        Map<String,Object> params = new HashMap<>();
+        HashMap<String,Object> params = new HashMap<>();
         params.put("GROUP_OF_TASKS", TasksManager.GROUP_OF_TASKS.WAITING);
         ArrayList<Task> waitingTasks = this.getTasksFromDB(params, accountId);
         cleanWaitingList();
@@ -242,7 +242,7 @@ public class TasksManager {
     }
 
     public void deleteTaskByGlobalId(int taskGlobalId) {
-        Map<String,Object> params = new HashMap<>();
+        HashMap<String,Object> params = new HashMap<>();
         params.put("TASK_GLOBAL_ID", taskGlobalId);
         List<Task> tasks = taskDbHelper.getTasks(params, accountId);
         if (tasks.size() > 0) {
