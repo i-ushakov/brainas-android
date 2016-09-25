@@ -88,6 +88,13 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait"></activity>
 
+        <activity
+            android:name=".activities.AboutActivity"
+            android:label="@string/activity_about_title"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"></activity>
+
         <service
             android:name=".services.ActivationService"
             android:icon="@drawable/ic_setting_dark"

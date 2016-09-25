@@ -38,5 +38,9 @@
     <string name="service_activation_name">Brainas activation service</string>
     <string name="service_synchronization_name">Brainas synchronization service</string>
 
+    <!-- AboutActivity-->
+    <string name="activity_about_title">About BA Project</string>
+
+
 
 </resources>

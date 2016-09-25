@@ -245,10 +245,8 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         menuItemTasks.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
-                    String url = "https://brainas.net/site/about";
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(url));
-                    startActivity(i);
+                    Intent tasksIntent = new Intent(MainActivity.this, AboutActivity.class);
+                    startActivity(tasksIntent);
                 }
             }
         });
