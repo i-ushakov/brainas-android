@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         setOnClickListenerForAccountsMenuItem();
         setOnClickListenerForSettingsMenuItem();
         setOnClickListenerForAddTaskButton();
+        setOnClickListenerForAboutMenuItem();
 
         if (!app.getAccountsManager().initialSingIn(this)) {
             startAccountsActivity();
@@ -234,6 +235,20 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
             public void onClick(View v) {
                 if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
                     Toast.makeText(MainActivity.this,"This ability will be available in next versions", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void setOnClickListenerForAboutMenuItem() {
+        ImageView menuItemTasks = (ImageView)this.findViewById(R.id.menu_item_about_ba);
+        menuItemTasks.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (UIHelper.safetyBtnClick(v, MainActivity.this)) {
+                    String url = "https://brainas.net/site/about";
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
                 }
             }
         });
