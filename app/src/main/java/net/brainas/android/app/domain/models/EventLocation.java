@@ -54,7 +54,9 @@ public class EventLocation extends Event {
             JSONObject params = new JSONObject(paramsJSONStr);
             lat  = params.getDouble("lat");
             lng  = params.getDouble("lng");
-            radius  = params.getDouble("radius");
+            if (params.has("radius")) {
+                radius = params.getDouble("radius");
+            }
             if (params.has("address")) {
                 address = params.getString("address");
             }
