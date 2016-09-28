@@ -32,7 +32,9 @@ public class Task {
     }
 
     public void attachObserver(TaskChangesObserver observer){
-        observers.add(observer);
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
     }
 
     public void detachObserver(TaskChangesObserver observer){

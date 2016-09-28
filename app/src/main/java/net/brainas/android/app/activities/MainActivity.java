@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         if (!app.getAccountsManager().initialSingIn(this)) {
             startAccountsActivity();
         }
+
+        initLayout();
     }
 
     @Override
@@ -94,11 +96,10 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
     public void onResume() {
         super.onResume();
         BrainasApp.activityResumed();
-        setActivePanel(ActivePanel.MESSAGES);
-        initLayout();
         mTracker = app.getDefaultTracker();
         mTracker.setScreenName("Main Activity");
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
+        togglePanelUp();
     }
 
     @Override
@@ -314,6 +315,14 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
                 m.slideDown();
             }
         });
+    }
+
+    private MainActivity.ActivePanel togglePanelUp() {
+        if (getActivePanel().equals(ActivePanel.GENERAL)){
+            slideDown();
+            setActivePanel(ActivePanel.MESSAGES);
+        }
+        return ActivePanel.MESSAGES;
     }
 
     private MainActivity.ActivePanel togglePanel(){
