@@ -37,6 +37,10 @@ public class ActivationManager implements AccountsManager.SingInObserver {
         observers.remove(observer);
     }
 
+    public void detachAllObservers() {
+        observers.clear();
+    }
+
     public ActivationManager() {
         app = ((BrainasApp)BrainasApp.getAppContext());
     }

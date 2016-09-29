@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
     private ImageView slideButton;
     private ImageView addTaskButton;
     private ProgressDialog mProgressDialog;
+    private ReminderScreenManager reminderScreenManager = null;
 
     public enum ActivePanel {
         MESSAGES, GENERAL
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         app = (BrainasApp)this.getApplication();
         app.setMainActivity(this);
 
-        locationProvider = new LocationProvider(this);
+        locationProvider = new LocationProvider(getApplicationContext());
         app.setLocationProvider(locationProvider);
 
         massagesPanel = (ViewGroup) findViewById(R.id.messages_panel);
@@ -145,6 +145,12 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
+        this.reminderScreenManager = null;
+        locationProvider.stopUpdates();
+        locationProvider = null;
+        app.close();
+        finish();
+        //android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     private void setOnTouchListenerForSlideButton() {
@@ -305,7 +311,7 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
         messagesPanel.post(new Runnable() {
             @Override
             public void run() {
-                ReminderScreenManager reminderScreenManager = new ReminderScreenManager(massagesPanel);
+                reminderScreenManager = new ReminderScreenManager(massagesPanel);
                 app.getAccountsManager().attach(reminderScreenManager);
                 app.setReminderScreenManager(reminderScreenManager);
                 reminderScreenManager.refreshTilesWithActiveTasks();

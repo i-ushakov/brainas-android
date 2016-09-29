@@ -25,7 +25,9 @@ import net.brainas.android.app.infrustructure.images.CleanUnusedImages;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by innok on 1/20/2016.
@@ -40,8 +42,8 @@ public class AccountsManager implements
 
     private BrainasApp app;
     private GoogleSignInOptions gso;
-    private HashMap<Integer, GoogleApiClient> GoogleApiClients= new HashMap<Integer, GoogleApiClient>();
-    private  GoogleApiClient mGoogleApiClient = null;
+    private HashMap<Integer, GoogleApiClient> GoogleApiClients = new HashMap<Integer, GoogleApiClient>();
+    private GoogleApiClient mGoogleApiClient = null;
     private UserAccount userAccount = null;
     private String accessCode = null;
     private List<SingInObserver> observers = new ArrayList<>();
@@ -62,6 +64,10 @@ public class AccountsManager implements
 
     public void detach(SingInObserver observer){
         observers.remove(observer);
+    }
+
+    public void detachAllObservers() {
+        observers.clear();
     }
 
     public AccountsManager() {
@@ -268,6 +274,16 @@ public class AccountsManager implements
             return true;
         }
         return false;
+    }
+
+    public void prepareToCloseApp() {
+        Iterator it = GoogleApiClients.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            GoogleApiClient googleApiClient = (GoogleApiClient)pair.getValue();
+            googleApiClient.disconnect();
+            it.remove();
+        }
     }
 
     private void signOut(final AppCompatActivity activity) {

@@ -314,6 +314,18 @@ public class TasksManager {
         return this.accountId;
     }
 
+    public void prepareToCloseApp() {
+        Iterator it = tasksHashMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            Task task = (Task)pair.getValue();
+            task.detachAllObservers();
+        }
+        for(Task task : activeList) {
+            task.detachAllObservers();
+        }
+    }
+
     private ArrayList<Task> objectsMapping(ArrayList<Task> tasks) {
         ArrayList<Task> mappedTasks = new ArrayList<> ();
         long taskId;

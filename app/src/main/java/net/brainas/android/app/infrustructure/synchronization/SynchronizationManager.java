@@ -54,6 +54,10 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         observers.remove(observer);
     }
 
+    public void detachAllObservers() {
+        observers.clear();
+    }
+
     public SynchronizationManager() {app = ((BrainasApp)BrainasApp.getAppContext());}
 
     @Override

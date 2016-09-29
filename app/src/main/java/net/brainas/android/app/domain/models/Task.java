@@ -41,6 +41,10 @@ public class Task {
         observers.remove(observer);
     }
 
+    public void detachAllObservers() {
+        observers.clear();
+    }
+
     public CopyOnWriteArrayList<TaskChangesObserver> getTaskChangesObservers() {
         return observers;
     }

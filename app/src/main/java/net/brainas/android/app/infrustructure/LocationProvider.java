@@ -120,6 +120,11 @@ public class LocationProvider implements
         return mCurrentLocation;
     }
 
+    public void stopUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        mGoogleApiClient.connect();
+    }
+
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(15000);

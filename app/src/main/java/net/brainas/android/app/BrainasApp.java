@@ -336,6 +336,16 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         }
     }
 
+    public void close() {
+        locationProvider.stopUpdates();
+        locationProvider = null;
+        activationManager.detachAllObservers();
+        accountsManager.detachAllObservers();
+        accountsManager.prepareToCloseApp();
+        synchronizationManager.detachAllObservers();
+        tasksManager.prepareToCloseApp();
+    }
+
 
     private void saveLastUsedAccountInPref() {
         SharedPreferences preferences = getAppPreferences();
