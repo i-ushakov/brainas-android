@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
+
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.domain.helpers.ActivationManager;
@@ -29,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by innok on 3/28/2016.
@@ -57,6 +61,7 @@ public class ActivationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Fabric.with(getApplicationContext(), new Crashlytics());
         app = ((BrainasApp)BrainasApp.getAppContext());
         taskDbHelper = app.getTaskDbHelper();
         taskChangesDbHelper = app.getTasksChangesDbHelper();

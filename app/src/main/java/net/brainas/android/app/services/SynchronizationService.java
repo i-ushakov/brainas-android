@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -41,6 +42,8 @@ import java.util.concurrent.ScheduledFuture;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by innok on 3/31/2016.
@@ -76,6 +79,7 @@ public class SynchronizationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Fabric.with(getApplicationContext(), new Crashlytics());
         initHelpers();
         if (intent != null) {
             accountName = intent.getExtras().getString("accountName");
