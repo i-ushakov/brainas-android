@@ -379,13 +379,14 @@ public class EditEventActivity extends EditTaskActivity
     }
 
     private void saveEvent() {
-        Condition newCondition = new Condition();
-        newCondition.addEvent(event);
-        event.setParent(newCondition);
-        CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<>();
-        conditions.add(newCondition);
-        task.setConditions(conditions);
-        newCondition.setParent(task);
+        if (!editMode) {
+            Condition newCondition = new Condition();
+            newCondition.addEvent(event);
+            event.setParent(newCondition);
+            newCondition.setParent(task);
+            task.addCondition(newCondition);
+
+        }
         tasksManager.saveTask(task);
         showTaskErrorsOrWarnings(task);
         finish();
