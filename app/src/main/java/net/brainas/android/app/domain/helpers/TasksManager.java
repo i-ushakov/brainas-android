@@ -195,9 +195,11 @@ public class TasksManager {
             while (iterator.hasNext()) {
                 Condition condition =iterator.next();
                 ArrayList<Event> events = condition.getEvents();
-                Event event = events.get(0);
-                event.setParent(null);
-                events.clear();
+                if (events.size() > 0) {
+                    Event event = events.get(0);
+                    event.setParent(null);
+                    events.clear();
+                }
                 condition.setParent(null);
             }
             conditions.clear();
