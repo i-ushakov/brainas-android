@@ -2,6 +2,7 @@ package net.brainas.android.app.infrustructure;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
@@ -121,7 +122,12 @@ public class InfrustructureHelper {
             NoSuchAlgorithmException,
             KeyManagementException {
         KeyStore trustStore = KeyStore.getInstance("BKS");
-        InputStream trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
+        InputStream trustStoreStream;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
+        } else {
+            trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server_v1);
+        }
         trustStore.load(trustStoreStream, (BrainasApp.getAppContext()).getResources().getString(R.string.key_store_pass_for_cert).toCharArray());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
