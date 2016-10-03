@@ -155,6 +155,7 @@ public class InfrustructureHelper {
         connection.setRequestProperty(
                 "Content-Type", "multipart/form-data;boundary=" + SyncHelper.boundary);
 
+        connection.setConnectTimeout(7000);
         return connection;
     }
 

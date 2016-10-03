@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import net.brainas.android.app.AccountsManager;
@@ -28,10 +30,10 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    // public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
-    public static String serverUrl = "https://brainas.net/backend/web/connection/";
+    public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
+    //public static String serverUrl = "https://brainas.net/backend/web/connection/";
 
-    static String TAG = "SYNCHRONIZATION";
+    static String TAG = "#SYNC_MANAGER";
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
@@ -78,6 +80,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
             Log.i(TAG, "Service " + SynchronizationService.class + " already running");
             return;
         }
+        Log.i(TAG, "Trying to start  sync service");
         Intent synchronizationService = new Intent(app.getBaseContext(), SynchronizationService.class);
         synchronizationService.putExtra("accountName", accountName);
         app.getBaseContext().startService(synchronizationService);
@@ -89,9 +92,15 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         app.getBaseContext().registerReceiver(syncMustBeStoppedReceiver, new IntentFilter(SynchronizationService.BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED));
     }
 
+    public void unregisterSynchronizationServiceReceivers() {
+        app.getBaseContext().unregisterReceiver(syncWasDoneReceiver);
+        app.getBaseContext().unregisterReceiver(syncMustBeStoppedReceiver);
+    }
+
     public void stopSynchronizationService() {
         Intent activationService = new Intent(app.getBaseContext(), SynchronizationService.class);
         app.getBaseContext().stopService(activationService);
+        unregisterSynchronizationServiceReceivers();
     }
 
     private void notifyAllObservers() {
@@ -113,6 +122,17 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         public void onReceive(Context context, Intent intent) {
             Log.i(TAG, "Got notification about synchronization must be stopped");
             stopSynchronizationService();
+            final Bundle extras = intent.getExtras();
+            if (extras != null && extras.getBoolean("restartSync") != false) {
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i(TAG, "Try to restart synchronization again");
+                        startSynchronizationService(extras.getString("accountName"));
+                    }
+                }, 20*1000);
+            }
         }
     };
 }

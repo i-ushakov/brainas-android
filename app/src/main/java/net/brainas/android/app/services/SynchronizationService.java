@@ -51,8 +51,14 @@ import io.fabric.sdk.android.Fabric;
 public class SynchronizationService extends Service {
     public static final String BROADCAST_ACTION_SYNCHRONIZATION = "net.brainas.android.app.services.synchronization";
     public static final String BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED = "net.brainas.android.app.services.synchronizationMustBeStopped";
+    public static final String ERR_TYPE_CANNOT_EXCHANGE_CODE_ON_TOKEN = "CANNOT_EXCHANGE_CODE_ON_TOKEN";
+    public static final String ERR_TYPE_NO_INTERNET_FOR_EXCHANGE_CODE = "NO_INTERNET_FOR_EXCHANGE_CODE";
+    public static final String ERR_TYPE_NO_ACCESS_CODE = "NO_ACCESS_CODE";
+    public static final String ERR_TYPE_INVALID_TOKEN = "INVALID_TOKEN";
 
-    private static String TAG = "SYNCHRONIZATION";
+
+
+    private static String TAG = "#SYNC_SERVICE";
     public static final String SERVICE_NAME = "synchronization";
     public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
@@ -100,7 +106,13 @@ public class SynchronizationService extends Service {
         } else if (accessToken != null) {
             startSynchronization();
         } else {
-            notifyAboutServiceMustBeStopped();
+            if (accessCode == null ) {
+                Log.i(TAG, "No accesss CODE for get TOKEN");
+                notifyAboutServiceMustBeStopped(false, ERR_TYPE_NO_ACCESS_CODE);
+            } else if (accessCode != null && !NetworkHelper.isNetworkActive()) {
+                Log.i(TAG, "No internet to exchange CODE on TOKEN");
+                notifyAboutServiceMustBeStopped(true, ERR_TYPE_NO_INTERNET_FOR_EXCHANGE_CODE);
+            }
         }
 
         return Service.START_STICKY;
@@ -138,8 +150,8 @@ public class SynchronizationService extends Service {
                     return;
                 }
 
-                notifyAboutServiceMustBeStopped();
-                Log.i(TAG, "We still not have accessToken; synchronization was stopped");
+                Log.i(TAG, "We still not have accessToken. Cannot exchange access CODE on TOKEN");
+                notifyAboutServiceMustBeStopped(false, ERR_TYPE_CANNOT_EXCHANGE_CODE_ON_TOKEN);
                 return;
             }
         });
@@ -252,7 +264,8 @@ public class SynchronizationService extends Service {
     }
     private void handleResponseFromServer (String response) {
         if (response != null && response.equals(RESPONSE_STATUS_INVALID_TOKEN)) {
-            notifyAboutServiceMustBeStopped();
+            Log.e(TAG, "We have error on server: invalid access token");
+            notifyAboutServiceMustBeStopped(false, ERR_TYPE_INVALID_TOKEN);
             return;
         }
 
@@ -280,12 +293,20 @@ public class SynchronizationService extends Service {
         sendBroadcast(intent);
     }
 
-    private void notifyAboutServiceMustBeStopped() {
-        userAccount.setAccessCode(null);
-        userAccount.setAccessToken(null);
-        AccountsManager.saveUserAccount(userAccount);
+    private void notifyAboutServiceMustBeStopped(boolean restartSync, String errType) {
         Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED);
         sendBroadcast(intent);
-        Log.i(TAG, "Something went wrong, for example we couldn't exchange code on token, so service must be stopped");
+        if (restartSync == true) {
+            Log.i(TAG, "Something went wrong, may be internet connection problem, so sync service must be restart");
+            intent.putExtra("restartSync", true);
+            intent.putExtra("accountName", userAccount.getAccountName());
+        } else {
+            Log.i(TAG, "Something went wrong, for example we couldn't get access token, so sync service must be stopped");
+            intent.putExtra("restartSync", false);
+            intent.putExtra("errType", errType);
+            userAccount.setAccessCode(null);
+            userAccount.setAccessToken(null);
+            AccountsManager.saveUserAccount(userAccount);
+        }
     }
 }
