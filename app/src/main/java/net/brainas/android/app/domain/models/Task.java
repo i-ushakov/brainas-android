@@ -2,6 +2,7 @@ package net.brainas.android.app.domain.models;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.location.Location;
 
 import net.brainas.android.app.services.ActivationService;
 
@@ -29,6 +30,10 @@ public class Task {
 
     public interface TaskChangesObserver {
         void updateAfterTaskWasChanged();
+    }
+
+    public interface ActivationConditionProvider {
+        Location getCurrentLocation();
     }
 
     public void attachObserver(TaskChangesObserver observer){
@@ -204,7 +209,7 @@ public class Task {
         return conditions;
     }
 
-    public boolean isConditionsSatisfied(ActivationService activationService) {
+    public boolean isConditionsSatisfied(ActivationConditionProvider activationService) {
         HashMap<Event.TYPES, Boolean> triggeredEventsMap = new HashMap<>();
         for(Condition condition : conditions) {
             ArrayList<Event> events = condition.getEvents();

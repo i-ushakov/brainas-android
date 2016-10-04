@@ -1,5 +1,6 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.location.Location;
 import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
@@ -38,6 +39,7 @@ public class TasksManager {
     private ArrayList<Task> activeList = new ArrayList<>();
 
     public TasksManager(TaskDbHelper taskDbHelper, TaskChangesDbHelper taskChangesDbHelper, Integer accountId) {
+        app = ((BrainasApp)BrainasApp.getAppContext());
         this.accountId = accountId;
         this.taskDbHelper = taskDbHelper;
         this.taskChangesDbHelper = taskChangesDbHelper;
@@ -281,10 +283,21 @@ public class TasksManager {
     }
 
     public void saveTask(Task task) {
-        saveTask(task, true, true);
+        saveTask(task, true, true, false);
     }
 
-    public void saveTask(Task task, boolean needToNotify, boolean needToLoggingChanges){
+    public void saveTask(Task task, boolean needToNotify, boolean needToLoggingChanges) {
+        saveTask(task, needToNotify, needToLoggingChanges, false);
+    }
+
+    public void saveTask(Task task, boolean needToNotify, boolean needToLoggingChanges, boolean needToCheckActivity) {
+        if (needToCheckActivity && task.isConditionsSatisfied(activationConditionProvider)) {
+            task.setStatus(Task.STATUSES.ACTIVE);
+        } else if (needToCheckActivity && task.getConditions().size() > 0){
+            task.setStatus(Task.STATUSES.WAITING);
+        } else if (needToCheckActivity && task.getConditions().size() == 0) {
+            task.setStatus(Task.STATUSES.TODO);
+        }
         task.checkStatus();
         //TaskDbHelper taskDbHelper = ((BrainasApp)BrainasApp.getAppContext()).getTaskDbHelper();
         long taskId = taskDbHelper.addOrUpdateTask(task);
@@ -370,4 +383,11 @@ public class TasksManager {
             refreshTaskObject(tasksHashMap.get(taskId), task);
         }
     }
+
+    private Task.ActivationConditionProvider activationConditionProvider = new Task.ActivationConditionProvider() {
+        @Override
+        public Location getCurrentLocation() {
+            return app.getLocationProvider().getCurrentLocation();
+        }
+    };
 }

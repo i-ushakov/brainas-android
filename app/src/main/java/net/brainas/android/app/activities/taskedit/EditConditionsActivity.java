@@ -78,7 +78,7 @@ public class EditConditionsActivity extends EditTaskActivity implements Task.Tas
 
     public void saveTask(View view) {
         if (UIHelper.safetyBtnClick(view, EditConditionsActivity.this)) {
-            tasksManager.saveTask(task);
+            tasksManager.saveTask(task, true, true, true);
             showTaskErrorsOrWarnings(task);
             finish();
         }

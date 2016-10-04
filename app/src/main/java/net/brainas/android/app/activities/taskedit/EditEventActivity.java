@@ -387,7 +387,7 @@ public class EditEventActivity extends EditTaskActivity
             task.addCondition(newCondition);
 
         }
-        tasksManager.saveTask(task);
+        tasksManager.saveTask(task, true, true, true);
         showTaskErrorsOrWarnings(task);
         finish();
     }

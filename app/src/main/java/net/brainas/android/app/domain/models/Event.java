@@ -60,7 +60,7 @@ public abstract class Event {
 
     abstract public String getEventName();
 
-    abstract public boolean isTriggered(ActivationService activationService);
+    abstract public boolean isTriggered(Task.ActivationConditionProvider activationService);
 
     abstract public int getIconDrawableId();
 

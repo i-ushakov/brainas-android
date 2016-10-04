@@ -73,7 +73,7 @@ public class EventTime extends Event {
     }
 
     @Override
-    public boolean isTriggered(ActivationService activationService) {
+    public boolean isTriggered(Task.ActivationConditionProvider activationConditionProvider) {
         Calendar currentTime = Calendar.getInstance();
         if (datetime != null) {
             if (datetime.before(currentTime)) {

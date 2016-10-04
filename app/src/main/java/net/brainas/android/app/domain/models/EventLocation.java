@@ -92,7 +92,7 @@ public class EventLocation extends Event {
     }
 
     @Override
-    public boolean isTriggered(ActivationService activationService) {
+    public boolean isTriggered(Task.ActivationConditionProvider activationService) {
         Location location = activationService.getCurrentLocation();
         if (location != null) {
             double currentLat = location.getLatitude();

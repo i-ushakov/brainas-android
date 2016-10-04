@@ -40,7 +40,7 @@ import io.fabric.sdk.android.Fabric;
 /**
  * Created by innok on 3/28/2016.
  */
-public class ActivationService extends Service {
+public class ActivationService extends Service implements Task.ActivationConditionProvider {
     public static final String BROADCAST_ACTION_ACTIVATION = "net.brainas.android.app.services.activation";
 
     private static String TAG = "ActivationService";
@@ -160,6 +160,7 @@ public class ActivationService extends Service {
         }
     }
 
+    @Override
     public Location getCurrentLocation() {
         return locationProvider.getCurrentLocation();
     }
