@@ -126,6 +126,7 @@ public class EditTaskActivity extends AppCompatActivity {
         super.onResume();
         BrainasApp.activityResumed();
         refreshContent();
+        checkTitleFocus();
     }
 
     @Override
@@ -349,11 +350,7 @@ public class EditTaskActivity extends AppCompatActivity {
     }
 
     private void setEditTitleFieldListeners() {
-        if (task != null && (task.getMessage() == null || task.getMessage().equals("New task"))) {
-            if(editTitleField.requestFocus()) {
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-            }
-        }
+        checkTitleFocus();
         editTitleField.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
@@ -370,6 +367,18 @@ public class EditTaskActivity extends AppCompatActivity {
                                       int before, int count) {
             }
         });
+    }
+
+    private void checkTitleFocus() {
+        if (task != null && (task.getMessage() == null || task.getMessage().equals("New task"))) {
+            if(editTitleField.requestFocus()) {
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+            }
+        } else {
+            if(editTitleField.requestFocus()) {
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+            }
+        }
     }
 
     private boolean validate() {
