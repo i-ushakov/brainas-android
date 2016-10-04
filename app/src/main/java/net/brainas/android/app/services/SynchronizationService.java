@@ -93,19 +93,23 @@ public class SynchronizationService extends Service {
     }
 
     @Override
+    // this solution from http://stackoverflow.com/questions/3072173/how-to-call-a-method-after-a-delay-in-android
     public void onTaskRemoved(Intent rootIntent) {
-        Log.i(TAG, "Service: onTaskRemoved");
-        if (Build.VERSION.SDK_INT == 19)
-        {
-            Intent restartIntent = new Intent(this, getClass());
-            restartIntent.putExtra("accountName",accountName);
+        Log.i(TAG, "Sync Service: onTaskRemoved");
+        //if (Build.VERSION.SDK_INT == 19)
+        //{
+        Intent restartIntent = new Intent(this, getClass());
+        restartIntent.putExtra("accountName",accountName);
 
-            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-            PendingIntent pi = PendingIntent.getService(this, 1, restartIntent,
-                    PendingIntent.FLAG_ONE_SHOT);
-            //restartIntent.putExtra("RESTART",
-            am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 3000, pi);
+        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+        PendingIntent pi = PendingIntent.getService(this, 1, restartIntent,
+                PendingIntent.FLAG_ONE_SHOT);
+        if (android.os.Build.VERSION.SDK_INT >= 19) {
+            am.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
+        } else {
+            am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
         }
+        //}
     }
 
     private void initialiseSyncService(Intent intent) {
