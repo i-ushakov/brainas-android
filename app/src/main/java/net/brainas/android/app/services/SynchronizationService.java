@@ -295,7 +295,6 @@ public class SynchronizationService extends Service {
 
     private void notifyAboutServiceMustBeStopped(boolean restartSync, String errType) {
         Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION_MUST_BE_STOPPED);
-        sendBroadcast(intent);
         if (restartSync == true) {
             Log.i(TAG, "Something went wrong, may be internet connection problem, so sync service must be restart");
             intent.putExtra("restartSync", true);
@@ -308,5 +307,6 @@ public class SynchronizationService extends Service {
             userAccount.setAccessToken(null);
             AccountsManager.saveUserAccount(userAccount);
         }
+        sendBroadcast(intent);
     }
 }
