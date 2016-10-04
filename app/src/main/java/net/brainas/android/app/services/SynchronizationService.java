@@ -1,5 +1,7 @@
 package net.brainas.android.app.services;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -86,6 +88,27 @@ public class SynchronizationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Fabric.with(getApplicationContext(), new Crashlytics());
+        initialiseSyncService(intent);
+        return Service.START_STICKY;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.i(TAG, "Service: onTaskRemoved");
+        if (Build.VERSION.SDK_INT == 19)
+        {
+            Intent restartIntent = new Intent(this, getClass());
+            restartIntent.putExtra("accountName",accountName);
+
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            PendingIntent pi = PendingIntent.getService(this, 1, restartIntent,
+                    PendingIntent.FLAG_ONE_SHOT);
+            //restartIntent.putExtra("RESTART",
+            am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 3000, pi);
+        }
+    }
+
+    private void initialiseSyncService(Intent intent) {
         initHelpers();
         if (intent != null) {
             accountName = intent.getExtras().getString("accountName");
@@ -114,8 +137,6 @@ public class SynchronizationService extends Service {
                 notifyAboutServiceMustBeStopped(true, ERR_TYPE_NO_INTERNET_FOR_EXCHANGE_CODE);
             }
         }
-
-        return Service.START_STICKY;
     }
 
     @Override
