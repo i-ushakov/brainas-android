@@ -63,6 +63,7 @@ public class EditEventActivity extends EditTaskActivity
 
     private Toolbar toolbar;
 
+    private Long taskLocalId = null;
     private Task task = null;
 
     private Event event = null;
@@ -87,7 +88,11 @@ public class EditEventActivity extends EditTaskActivity
         locationProvider = ((BrainasApp)BrainasApp.getAppContext()).getLocationProvider();
         locationProvider.attachObserver(this);
 
-        retrieveAndSetTask();
+        taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
+        task = getTask(taskLocalId);
+        if (task == null) {
+            finish();
+        }
         if (task != null) {
             retrieveAndSetEvent(task);
         } else {
@@ -128,12 +133,8 @@ public class EditEventActivity extends EditTaskActivity
         finish();
     }
 
-    private void retrieveAndSetTask() {
-        Long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
-        task = app.getTasksManager().getTaskByLocalId(taskLocalId);
-        if (task == null) {
-            finish();
-        }
+    private Task getTask(Long taskLocalId) {
+        return app.getTasksManager().getTaskByLocalId(taskLocalId);
     }
 
     private void retrieveAndSetEvent(Task task) {
@@ -379,6 +380,7 @@ public class EditEventActivity extends EditTaskActivity
     }
 
     private void saveEvent() {
+        task = getTask(taskLocalId);
         if (!editMode) {
             Condition newCondition = new Condition();
             newCondition.addEvent(event);
