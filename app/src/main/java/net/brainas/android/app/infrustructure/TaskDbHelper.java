@@ -532,35 +532,39 @@ public class TaskDbHelper {
         String selectQuery = "SELECT * FROM " + TABLE_EVENTS + " WHERE " + COLUMN_NAME_EVENTS_CONDITION + " = " + condition.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        Long id;
-        int globalId;
-        String type, params;
-        Event event = null;
-        if (cursor.moveToFirst()) {
-            do {
-                id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
-                globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
-                type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
-                params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
+        try {
+            Long id;
+            int globalId;
+            String type, params;
+            Event event = null;
+            if (cursor.moveToFirst()) {
+                do {
+                    id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
+                    globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
+                    type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
+                    params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
 
-                event = null;
-                switch (type) {
-                    case "GPS" :
-                        event = new EventLocation(id, globalId, condition);
-                        break;
+                    event = null;
+                    switch (type) {
+                        case "GPS":
+                            event = new EventLocation(id, globalId, condition);
+                            break;
 
-                    case "TIME" :
-                        event = new EventTime(id, globalId, condition);
-                        break;
-                }
-                if (event != null){
-                    event.fillInParamsFromJSONString(params);
-                    events.add(event);
-                }
-            } while (cursor.moveToNext());
+                        case "TIME":
+                            event = new EventTime(id, globalId, condition);
+                            break;
+                    }
+                    if (event != null) {
+                        event.fillInParamsFromJSONString(params);
+                        events.add(event);
+                    }
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if(cursor != null) {
+                cursor.close();
+            }
         }
-
-        cursor.close();
         return events;
     }
 
