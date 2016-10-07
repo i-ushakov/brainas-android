@@ -88,6 +88,7 @@ public class SynchronizationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Fabric.with(getApplicationContext(), new Crashlytics());
+        app = ((BrainasApp) BrainasApp.getAppContext());
         Crashlytics.log(Log.ERROR, TAG, "onStartCommand");
         initialiseSyncService(intent);
         return Service.START_STICKY;
@@ -97,20 +98,22 @@ public class SynchronizationService extends Service {
     // this solution from http://stackoverflow.com/questions/3072173/how-to-call-a-method-after-a-delay-in-android
     public void onTaskRemoved(Intent rootIntent) {
         Log.i(TAG, "Sync Service: onTaskRemoved");
-        //if (Build.VERSION.SDK_INT == 19)
-        //{
-        Intent restartIntent = new Intent(this, getClass());
+        /*Intent restartIntent = new Intent(app, ServiceMustBeAliveReceiver.class);
+        restartIntent.putExtra("serviceClass", "SynchronizationService");
         restartIntent.putExtra("accountName",accountName);
-
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-        PendingIntent pi = PendingIntent.getService(this, 1, restartIntent,
-                PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendingIntent = PendingIntent.getService(app, 2002, restartIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         if (android.os.Build.VERSION.SDK_INT >= 19) {
-            am.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
+            am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, System.currentTimeMillis() + 3000, pendingIntent);
         } else {
-            am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
-        }
-        //}
+            am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, System.currentTimeMillis() + 3000, pendingIntent);
+        }*/
+
+        Intent restartIntent = new Intent();
+        restartIntent.putExtra("serviceClass", "SynchronizationService");
+        restartIntent.putExtra("accountName",accountName);
+        restartIntent.setAction(ServiceMustBeAliveReceiver.SYNC_INTENT);
     }
 
     private void initialiseSyncService(Intent intent) {
@@ -230,6 +233,7 @@ public class SynchronizationService extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         stopSynchronization();
         Log.i(TAG, "Syncronization service was destroyed");
     }
@@ -243,6 +247,7 @@ public class SynchronizationService extends Service {
         lastSyncTime = null;
         accessToken = null;
         accessCode = null;
+        notifyAboutServiceMustBeStopped(false, null);
     }
 
     public void synchronization() {

@@ -105,8 +105,17 @@
             android:name=".services.SynchronizationService"
             android:icon="@drawable/ic_setting_dark"
             android:process=":brainas_synchronizationn_process"
-            android:label="@string/service_activation_name"></service>
+            android:label="@string/service_synchronization_name"></service>
 
+        <receiver android:name=".services.ServiceMustBeAliveReceiver"
+            android:process=":remote"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name= "net.brainas.android.app.services.intent.SYNC_SERVICE_HAVE_TO_BE_RESTORE" />
+                <action android:name= "net.brainas.android.app.services.intent.ACVTIVATION_SERVICE_HAVE_TO_BE_RESTORE" />
+            </intent-filter>
+        </receiver>
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

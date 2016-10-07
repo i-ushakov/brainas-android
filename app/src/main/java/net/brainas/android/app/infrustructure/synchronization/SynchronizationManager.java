@@ -1,5 +1,7 @@
 package net.brainas.android.app.infrustructure.synchronization;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.util.Log;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.infrustructure.UserAccount;
+import net.brainas.android.app.services.ServiceMustBeAliveReceiver;
 import net.brainas.android.app.services.SynchronizationService;
 
 import java.util.ArrayList;
@@ -30,8 +33,8 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
-    //public static String serverUrl = "https://brainas.net/backend/web/connection/";
+    //public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
+    public static String serverUrl = "https://brainas.net/backend/web/connection/";
 
     static String TAG = "#SYNC_MANAGER";
 
@@ -85,6 +88,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         synchronizationService.putExtra("accountName", accountName);
         app.getBaseContext().startService(synchronizationService);
         registerSynchronizationServiceReceivers();
+        createServiceAlarm(accountName);
     }
 
     public void registerSynchronizationServiceReceivers() {
@@ -93,14 +97,17 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
     }
 
     public void unregisterSynchronizationServiceReceivers() {
-        app.getBaseContext().unregisterReceiver(syncWasDoneReceiver);
-        app.getBaseContext().unregisterReceiver(syncMustBeStoppedReceiver);
+        try {
+            app.getBaseContext().unregisterReceiver(syncWasDoneReceiver);
+            app.getBaseContext().unregisterReceiver(syncMustBeStoppedReceiver);
+        } catch (IllegalArgumentException e) {;}
     }
 
     public void stopSynchronizationService() {
         Intent activationService = new Intent(app.getBaseContext(), SynchronizationService.class);
         app.getBaseContext().stopService(activationService);
         unregisterSynchronizationServiceReceivers();
+        removeServiceAlarm();
     }
 
     private void notifyAllObservers() {
@@ -135,4 +142,23 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
             }
         }
     };
+
+    private void createServiceAlarm(String accountName) {
+        Log.i(TAG, "Create alarm to check is service still alive");
+        AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
+        Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
+        intent.putExtra("serviceClass", "SynchronizationService");
+        intent.putExtra("accountName", accountName);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, 1002, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.cancel(pendingIntent);
+        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 30 * 1000, pendingIntent);
+    }
+
+    private void removeServiceAlarm() {
+        Log.i(TAG, "Remove alarm that is checking service still alive");
+        Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(app, 1002, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
+        alarmManager.cancel(sender);
+    }
 }

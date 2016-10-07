@@ -42,8 +42,9 @@ import io.fabric.sdk.android.Fabric;
  */
 public class ActivationService extends Service implements Task.ActivationConditionProvider {
     public static final String BROADCAST_ACTION_ACTIVATION = "net.brainas.android.app.services.activation";
+    public static final String BROADCAST_ACTION_STOP_ACTIVATION = "net.brainas.android.app.services.stopactivation";
 
-    private static String TAG = "ActivationService";
+    private static String TAG = "#ACTIVATION_SERVICE";
     public static final String SERVICE_NAME = "activation";
 
     private boolean isBrainasAppVisible = false;
@@ -65,6 +66,8 @@ public class ActivationService extends Service implements Task.ActivationConditi
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Fabric.with(getApplicationContext(), new Crashlytics());
+        app = ((BrainasApp)BrainasApp.getAppContext());
+        Crashlytics.log(Log.ERROR, TAG, "onStartCommand");
         initialiseSyncService(intent);
         return Service.START_STICKY;
     }
@@ -73,23 +76,26 @@ public class ActivationService extends Service implements Task.ActivationConditi
     // this solution from http://stackoverflow.com/questions/3072173/how-to-call-a-method-after-a-delay-in-android
     public void onTaskRemoved(Intent rootIntent) {
         Log.i(TAG, "Activation Service: onTaskRemoved");
-        //if (Build.VERSION.SDK_INT == 19)
-        //{
-        Intent restartIntent = new Intent(this, getClass());
+        /*Intent restartIntent = new Intent(this, ServiceMustBeAliveReceiver.class);
+        restartIntent.putExtra("serviceClass", "ActivationService");
         restartIntent.putExtra("accountId", accountId);
 
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-        PendingIntent pi = PendingIntent.getService(this, 1, restartIntent,
+        PendingIntent pi = PendingIntent.getService(this, 2001, restartIntent,
                 PendingIntent.FLAG_ONE_SHOT);
         if (android.os.Build.VERSION.SDK_INT >= 19) {
             am.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
         } else {
             am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pi);
-        }
-        //}
+        }*/
+
+        Intent restartIntent = new Intent();
+        restartIntent.putExtra("serviceClass", "ActivationService");
+        restartIntent.putExtra("accountId",accountId);
+        restartIntent.setAction(ServiceMustBeAliveReceiver.ACT_INTENT);
+        app.sendBroadcast(restartIntent);
     }
     private void initialiseSyncService(Intent intent) {
-        app = ((BrainasApp)BrainasApp.getAppContext());
         taskDbHelper = app.getTaskDbHelper();
         taskChangesDbHelper = app.getTasksChangesDbHelper();
         locationProvider = app.getLocationProvider();
@@ -112,11 +118,18 @@ public class ActivationService extends Service implements Task.ActivationConditi
     }
 
 
-    @Override
-    public void onDestroy() {
+    public void stopService() {
         accountId = null;
         locationProvider.disconnect();
         this.unregisterReceiver(broadcastReceiver);
+        stopCheckConditionsInWL();
+        notifyAboutServiceMustBeStopped();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopService();
         Log.i(TAG, "ActivationService was destroyed");
     }
 
@@ -134,6 +147,10 @@ public class ActivationService extends Service implements Task.ActivationConditi
             }
         };
         timer.schedule(task, ActivationManager.CHECK_CONDITIONS_START_TIME, ActivationManager.CHECK_CONDITIONS_INTERVAL);
+    }
+
+    public void stopCheckConditionsInWL() {
+        timer.cancel();
     }
 
     private void checkConditionsInWL() {
@@ -172,6 +189,10 @@ public class ActivationService extends Service implements Task.ActivationConditi
         sendBroadcast(intent);
     }
 
+    private void notifyAboutServiceMustBeStopped() {
+        Intent intent = new Intent(BROADCAST_ACTION_STOP_ACTIVATION);
+        sendBroadcast(intent);
+    }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override

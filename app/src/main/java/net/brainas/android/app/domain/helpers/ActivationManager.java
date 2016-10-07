@@ -1,5 +1,7 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +12,7 @@ import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.services.ActivationService;
+import net.brainas.android.app.services.ServiceMustBeAliveReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +21,7 @@ import java.util.List;
  * Created by innok on 12/1/2015.
  */
 public class ActivationManager implements AccountsManager.SingInObserver {
-    static final String TAG = "ActivationManager";
+    static final String TAG = "#ACTIVATION_MANAGER";
     public static final int CHECK_CONDITIONS_START_TIME = 20000;
     public static final int CHECK_CONDITIONS_INTERVAL = 20000;
     private List<ActivationObserver> observers = new ArrayList<>();
@@ -61,11 +64,22 @@ public class ActivationManager implements AccountsManager.SingInObserver {
         activationService.putExtra("accountId", accountId);
         app.getBaseContext().startService(activationService);
         app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_ACTIVATION));
+        app.getBaseContext().registerReceiver(serviceMustBeStoppedReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_STOP_ACTIVATION));
+        createServiceAlarm(accountId);
     }
 
     public void stopActivationService() {
         Intent activationService = new Intent(app.getBaseContext(), ActivationService.class);
         app.getBaseContext().stopService(activationService);
+        unregisterServiceReceivers();
+        removeServiceAlarm();
+    }
+
+    public void unregisterServiceReceivers() {
+        try {
+            app.getBaseContext().unregisterReceiver(broadcastReceiver);
+            app.getBaseContext().unregisterReceiver(serviceMustBeStoppedReceiver);
+        } catch (IllegalArgumentException e) {;}
     }
 
     private void notifyAllObservers() {
@@ -81,4 +95,31 @@ public class ActivationManager implements AccountsManager.SingInObserver {
             Log.i(TAG, "Got notification about activation");
         }
     };
+
+    private BroadcastReceiver serviceMustBeStoppedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Got notification about activation service must be stopped");
+            stopActivationService();
+        }
+    };
+
+    private void createServiceAlarm(Integer accountId) {
+        Log.i(TAG, "Create alarm to check is service still alive");
+        AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
+        Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
+        intent.putExtra("serviceClass", "ActivationService");
+        intent.putExtra("accountId", accountId);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.cancel(pendingIntent);
+        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 30 * 1000, pendingIntent);
+    }
+
+    private void removeServiceAlarm() {
+        Log.i(TAG, "Remove alarm that is checking service still alive");
+        Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(app, 1001, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
+        alarmManager.cancel(sender);
+    }
 }
