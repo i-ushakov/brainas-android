@@ -36,7 +36,8 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
     //public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
     public static String serverUrl = "https://brainas.net/backend/web/connection/";
 
-    static String TAG = "#SYNC_MANAGER";
+    final static String TAG = "#SYNC_MANAGER";
+    final static Integer ALARM_CODE = 1102;
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
@@ -149,16 +150,17 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
         intent.putExtra("serviceClass", "SynchronizationService");
         intent.putExtra("accountName", accountName);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, 1002, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, ALARM_CODE, intent, 0);
         alarmManager.cancel(pendingIntent);
         alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 30 * 1000, pendingIntent);
     }
 
-    private void removeServiceAlarm() {
+    public void removeServiceAlarm() {
         Log.i(TAG, "Remove alarm that is checking service still alive");
         Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(app, 1002, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, ALARM_CODE, intent, 0);
         AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
-        alarmManager.cancel(sender);
+        alarmManager.cancel(pendingIntent);
+        pendingIntent.cancel();
     }
 }

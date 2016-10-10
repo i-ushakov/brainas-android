@@ -235,6 +235,7 @@ public class SynchronizationService extends Service {
     public void onDestroy() {
         super.onDestroy();
         stopSynchronization();
+        app.getSynchronizationManager().removeServiceAlarm();
         Log.i(TAG, "Syncronization service was destroyed");
     }
 

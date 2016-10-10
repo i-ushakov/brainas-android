@@ -112,6 +112,8 @@
             android:enabled="true"
             android:exported="true">
             <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name= "net.brainas.android.app.services.intent.SYNC_SERVICE_HAVE_TO_BE_RESTORE" />
                 <action android:name= "net.brainas.android.app.services.intent.ACVTIVATION_SERVICE_HAVE_TO_BE_RESTORE" />
             </intent-filter>

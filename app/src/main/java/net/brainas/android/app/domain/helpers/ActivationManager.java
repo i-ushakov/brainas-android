@@ -22,6 +22,7 @@ import java.util.List;
  */
 public class ActivationManager implements AccountsManager.SingInObserver {
     static final String TAG = "#ACTIVATION_MANAGER";
+    final static Integer ALARM_CODE = 1101;
     public static final int CHECK_CONDITIONS_START_TIME = 20000;
     public static final int CHECK_CONDITIONS_INTERVAL = 20000;
     private List<ActivationObserver> observers = new ArrayList<>();
@@ -110,16 +111,17 @@ public class ActivationManager implements AccountsManager.SingInObserver {
         Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
         intent.putExtra("serviceClass", "ActivationService");
         intent.putExtra("accountId", accountId);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, ALARM_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         alarmManager.cancel(pendingIntent);
         alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 30 * 1000, pendingIntent);
     }
 
-    private void removeServiceAlarm() {
+    public void removeServiceAlarm() {
         Log.i(TAG, "Remove alarm that is checking service still alive");
         Intent intent = new Intent(app, ServiceMustBeAliveReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(app, 1001, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(app, ALARM_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) app.getSystemService(app.ALARM_SERVICE);
-        alarmManager.cancel(sender);
+        alarmManager.cancel(pendingIntent);
+        pendingIntent.cancel();
     }
 }
