@@ -121,8 +121,10 @@ public class LocationProvider implements
     }
 
     public void stopUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        mGoogleApiClient.connect();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            disconnect();
+        }
     }
 
     private void createLocationRequest() {
