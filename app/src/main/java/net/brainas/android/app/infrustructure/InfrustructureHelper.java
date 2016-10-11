@@ -56,7 +56,14 @@ public class InfrustructureHelper {
     static public Bitmap getTaskPicture(String pictureName, int accountId)  {
         String pathToPictureFolder = getPathToImageFolder(accountId);
         File imageFile = new File(pathToPictureFolder + pictureName);
-        Bitmap bmp = BitmapFactory.decodeFile(imageFile.getPath());
+        Bitmap bmp;
+        try {
+            bmp = BitmapFactory.decodeFile(imageFile.getPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG,"Out of memory when try to get bitmap");
+            return null;
+        }
         return bmp;
     }
 
