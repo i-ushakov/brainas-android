@@ -256,7 +256,6 @@ public class Task {
 
     public boolean checkActualityOfConditions() {
         if (this.conditions.size() == 0) {
-            warnings.put("no_conditions", "The task was set in disabled status, because it dosn't have conditions");
             return false;
         }
         return true;
@@ -266,6 +265,7 @@ public class Task {
         if (this.status == null || this.status == STATUSES.WAITING || this.status == STATUSES.DISABLED) {
             if (!checkActualityOfConditions()) {
                 this.status = STATUSES.DISABLED;
+                warnings.put("no_conditions", "The task was set in disabled status, because it dosn't have conditions");
             } else {
                 this.status = STATUSES.WAITING;
             }
@@ -273,6 +273,7 @@ public class Task {
             if (this.conditions.size() > 0) {
                 if (!checkActualityOfConditions()) {
                     this.status = STATUSES.DISABLED;
+                    warnings.put("no_conditions", "The task was set in disabled status, because it dosn't have conditions");
                 } else {
                     this.status = STATUSES.WAITING;
                 }
