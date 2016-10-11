@@ -233,20 +233,22 @@ public class TaskDbHelper {
                 pictureName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_NAME));
                 if (pictureName != null) {
                     Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(pictureName, accountId);
-                    picture = new Image(pictureName, pictureBitmap);
-                    pictureDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID));
-                    if (pictureDriveIdStr != null) {
-                        DriveId pictureGoogleDriveId = DriveId.decodeFromString(pictureDriveIdStr);
-                        picture.setDriveId(pictureGoogleDriveId);
+                    if (pictureBitmap != null) {
+                        picture = new Image(pictureName, pictureBitmap);
+                        pictureDriveIdStr = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_DRIVE_ID));
+                        if (pictureDriveIdStr != null) {
+                            DriveId pictureGoogleDriveId = DriveId.decodeFromString(pictureDriveIdStr);
+                            picture.setDriveId(pictureGoogleDriveId);
+                        }
+                        String pictureFileId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_FILE_ID));
+                        if (pictureFileId != null) {
+                            picture.setResourceId(pictureFileId);
+                        }
+                        if (picture.getBitmap() == null && picture.getDriveId() != null) {
+                            GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture, accountId);
+                        }
+                        task.setPicture(picture);
                     }
-                    String pictureFileId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_PICTURE_FILE_ID));
-                    if (pictureFileId != null) {
-                        picture.setResourceId(pictureFileId);
-                    }
-                    if (picture.getBitmap() == null && picture.getDriveId() != null) {
-                        GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture, accountId);
-                    }
-                    task.setPicture(picture);
                 }
                 tasks.add(task);
             } while (cursor.moveToNext());
