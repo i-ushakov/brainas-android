@@ -1,7 +1,5 @@
 package net.brainas.android.app.services;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -17,6 +15,7 @@ import com.google.common.io.Files;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.BrainasAppSettings;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
@@ -224,7 +223,10 @@ public class SynchronizationService extends Service {
         };
 
         syncThreadHandle =
-                scheduler.scheduleAtFixedRate(syncTask, 5, 50, java.util.concurrent.TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(syncTask,
+                        BrainasAppSettings.getSynchronizationSartTime(),
+                        BrainasAppSettings.getSynchronizationInterval(),
+                        java.util.concurrent.TimeUnit.SECONDS);
 
         Log.i(TAG, "Syncronization service was started for user with account id = " + accountId +
                 " with access code = " + accessCode +

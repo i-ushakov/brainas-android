@@ -17,6 +17,7 @@ import android.util.Log;
 import com.crashlytics.android.Crashlytics;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.BrainasAppSettings;
 import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
@@ -147,7 +148,7 @@ public class ActivationService extends Service implements Task.ActivationConditi
                 });
             }
         };
-        timer.schedule(task, ActivationManager.CHECK_CONDITIONS_START_TIME, ActivationManager.CHECK_CONDITIONS_INTERVAL);
+        timer.schedule(task, BrainasAppSettings.getCheckConditionsStartTime(), BrainasAppSettings.getCheckConditionsInterval());
     }
 
     public void stopCheckConditionsInWL() {

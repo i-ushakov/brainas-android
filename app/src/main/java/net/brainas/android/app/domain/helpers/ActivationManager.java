@@ -23,8 +23,6 @@ import java.util.List;
 public class ActivationManager implements AccountsManager.SingInObserver {
     static final String TAG = "#ACTIVATION_MANAGER";
     final static Integer ALARM_CODE = 1101;
-    public static final int CHECK_CONDITIONS_START_TIME = 20000;
-    public static final int CHECK_CONDITIONS_INTERVAL = 20000;
     private List<ActivationObserver> observers = new ArrayList<>();
 
     BrainasApp app;
