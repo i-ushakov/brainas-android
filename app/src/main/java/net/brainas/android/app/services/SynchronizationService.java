@@ -296,7 +296,7 @@ public class SynchronizationService extends Service {
     }
     private void handleResponseFromServer (String response) {
         if (response != null && response.equals(RESPONSE_STATUS_INVALID_TOKEN)) {
-            //Log.e(TAG, "We have error on server: invalid access token");
+            Log.e(TAG, "We have error on server: invalid access token");
             Crashlytics.log(Log.ERROR, TAG, "We have error on server: invalid access token");
             //notifyAboutServiceMustBeStopped(false, ERR_TYPE_INVALID_TOKEN);
             return;
