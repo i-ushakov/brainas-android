@@ -43,6 +43,7 @@ public class TasksActivity extends AppCompatActivity implements
     private GridView tasksGrid;
     private TextView userNotSignedInMessage;
     private String searchText = null;
+    private TaskTileAdapter taskTileAdapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +118,13 @@ public class TasksActivity extends AppCompatActivity implements
 
     private void updateTasksGrid(HashMap<String,Object> params, int accountId) {
         userNotSignedInMessage.setVisibility(View.GONE);
-        tasksGrid.setAdapter(new TaskTileAdapter(this, params, accountId));
+        if (tasksGrid.getAdapter() == null) {
+            taskTileAdapter = new TaskTileAdapter(this, params, accountId);
+            tasksGrid.setAdapter(taskTileAdapter);
+        } else {
+            taskTileAdapter.updateItems(params, accountId);
+            tasksGrid.invalidateViews();
+        }
         tasksGrid.setOnItemClickListener(null);
         tasksGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -193,7 +200,8 @@ public class TasksActivity extends AppCompatActivity implements
 
         public TaskTileAdapter(Context context, HashMap<String, Object> params, int accountId) {
             this.context = context;
-            tasks = app.getTasksManager().getTasksFromDB(params, accountId);
+            tasks.clear();
+            tasks.addAll(app.getTasksManager().getTasksFromDB(params, accountId));
             /*for (Task task : tasks) {
                 task.attachObserver(TasksActivity.this);
             }*/
@@ -213,15 +221,21 @@ public class TasksActivity extends AppCompatActivity implements
 
         public TaskTileView getView(int position, View convertView, ViewGroup parent) {
             TaskTileView taskTileView;
-            if (convertView == null) {
+           // if (convertView == null) {
                 Task task = tasks.get(position);
                 taskTileView = new TaskTileView(context, task);
                 taskTileView.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.MATCH_PARENT, GridView.LayoutParams.MATCH_PARENT));
                 taskTileView.setPadding(8, 8, 8, 8);
-            } else {
-                taskTileView = (TaskTileView) convertView;
-            }
+            //} else {
+                //taskTileView = (TaskTileView) convertView;
+            //}
             return taskTileView;
+        }
+
+        public void updateItems(HashMap<String, Object> params, int accountId) {
+            tasks.clear();
+            tasks.addAll(app.getTasksManager().getTasksFromDB(params, accountId));
+            this.notifyDataSetChanged();
         }
     }
 
