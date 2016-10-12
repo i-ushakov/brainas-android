@@ -21,6 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
@@ -39,6 +40,8 @@ public class InfrustructureHelper {
     public static final String PATH_TO_SEND_FOLDER = PATH_TO_SYNC_DATE_FOLDER + "for_send/";
     static public String PATH_TO_TASK_IMAGES_FOLDER = "app_images/task_images/";
 
+    static private HashMap<String, Bitmap> bitmapCache = new HashMap<String, Bitmap>();
+
     static private  String TAG = "InfrustructureHelper";
 
     static public String getPathToImageFolder(int accountId) {
@@ -56,15 +59,20 @@ public class InfrustructureHelper {
     static public Bitmap getTaskPicture(String pictureName, int accountId)  {
         String pathToPictureFolder = getPathToImageFolder(accountId);
         File imageFile = new File(pathToPictureFolder + pictureName);
-        Bitmap bmp;
-        try {
-            bmp = BitmapFactory.decodeFile(imageFile.getPath());
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG,"Out of memory when try to get bitmap");
-            return null;
+        Bitmap bitmap;
+        if (bitmapCache.containsKey(imageFile.getPath())) {
+            bitmap = bitmapCache.get(imageFile.getPath());
+        } else {
+            try {
+                bitmap = BitmapFactory.decodeFile(imageFile.getPath());
+                bitmapCache.put(imageFile.getPath(), bitmap);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e(TAG, "Out of memory when try to get bitmap");
+                return null;
+            }
         }
-        return bmp;
+        return bitmap;
     }
 
 
