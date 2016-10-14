@@ -4,8 +4,9 @@
     tools:showIn="@layout/activity_edit_task"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="0dp"
     android:id="@+id/taskPicturePanel"
+    android:layout_weight="4"
     android:weightSum="2">
 
     <LinearLayout
@@ -38,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="12dp">
+        android:paddingTop="5dp">
         <RelativeLayout
             android:layout_width="0dip"
             android:layout_height="fill_parent"
@@ -61,11 +62,11 @@
                 android:layout_marginLeft="2dp"
                 android:layout_marginRight="2dp"
                 android:padding="6dp"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 android:onClick="searchImageInInternet">
                 <ImageView
-                    android:layout_width="37dp"
-                    android:layout_height="37dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_search_white_24dp"/>
                 <TextView
                     android:layout_width="match_parent"
@@ -74,7 +75,7 @@
                     android:text="Search"
                     android:id="@+id/searchImageBtnLabel"
                     android:textColor="#ffffff"
-                    android:textSize="20dp"
+                    android:textSize="18dp"
                     android:gravity="center"/>
             </LinearLayout>
 
@@ -88,12 +89,12 @@
                 android:layout_marginLeft="2dp"
                 android:layout_marginRight="2dp"
                 android:padding="6dp"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 android:onClick="capturePicture"
                 android:layout_below="@id/searchImageBtn">
                 <ImageView
-                    android:layout_width="37dp"
-                    android:layout_height="37dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_photo_camera_white_24dp"/>
                 <TextView
                     android:layout_width="match_parent"
@@ -102,7 +103,7 @@
                     android:text="Photo"
                     android:id="@+id/capturePictureBtnLabel"
                     android:textColor="#ffffff"
-                    android:textSize="20dp"
+                    android:textSize="18dp"
                     android:gravity="center"/>
             </LinearLayout>
 
@@ -116,12 +117,12 @@
                 android:layout_marginLeft="2dp"
                 android:layout_marginRight="2dp"
                 android:padding="6dp"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 android:onClick="loadFromGallery"
                 android:layout_below="@id/capturePictureBtn">
                 <ImageView
-                    android:layout_width="37dp"
-                    android:layout_height="37dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_photo_library_white_24dp"/>
                 <TextView
                     android:layout_width="match_parent"
@@ -130,7 +131,7 @@
                     android:text="Gallery"
                     android:id="@+id/loadFromGalleryBtnLabel"
                     android:textColor="#ffffff"
-                    android:textSize="20dp"
+                    android:textSize="18dp"
                     android:gravity="center"/>
             </LinearLayout>
         </RelativeLayout>
