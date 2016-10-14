@@ -133,10 +133,6 @@ public class EditEventActivity extends EditTaskActivity
         finish();
     }
 
-    private Task getTask(Long taskLocalId) {
-        return app.getTasksManager().getTaskByLocalId(taskLocalId);
-    }
-
     private void retrieveAndSetEvent(Task task) {
         Long eventId = getIntent().getLongExtra("eventId", 0);
         if (eventId != 0) {
