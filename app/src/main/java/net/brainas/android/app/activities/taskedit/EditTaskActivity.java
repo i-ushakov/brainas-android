@@ -78,6 +78,7 @@ public class EditTaskActivity extends AppCompatActivity {
     private Task task = null;
     private int userId;
     private boolean needToRemoveImage = false;
+    private Long taskLocalId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +98,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
         if (getIntent().hasExtra("taskLocalId")) {
             mode = Mode.EDIT;
-            long taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
+            taskLocalId = getIntent().getLongExtra("taskLocalId", 0);
             task = tasksManager.getTaskByLocalId(taskLocalId);
             if (task == null) {
                 finish();
@@ -126,7 +127,9 @@ public class EditTaskActivity extends AppCompatActivity {
         super.onResume();
         BrainasApp.activityResumed();
         refreshContent();
-        checkTitleFocus();
+        if (tabLayout.getSelectedTabPosition() == 0) {
+            checkTitleFocus();
+        }
     }
 
     @Override
@@ -240,6 +243,7 @@ public class EditTaskActivity extends AppCompatActivity {
                 String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD_NAME);
                 Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(imageFileName, app.getAccountsManager().getCurrentAccountId());
                 Image picture = new Image(imageFileName, imageBitmap);
+                task = getTask(taskLocalId);
                 task.setPicture(picture);
                 needToRemoveImage = true;
                 picture.attachObserver(new Image.ImageDownloadedObserver() {
@@ -261,6 +265,16 @@ public class EditTaskActivity extends AppCompatActivity {
         UIHelper.addClickEffectToButton(view, this);
     }
 
+    protected Task getTask(Long taskLocalId) {
+        if (taskLocalId != null && taskLocalId != 0) {
+            Task taskFromCache = app.getTasksManager().getTaskByLocalId(taskLocalId);
+            if (taskFromCache != null) {
+                return taskFromCache;
+            }
+        }
+        return task;
+    }
+
     private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
         //Find the currently focused view, so we can grab the correct window token from it.
@@ -270,6 +284,7 @@ public class EditTaskActivity extends AppCompatActivity {
             view = new View(this);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
     private void renderPicture() {
@@ -370,7 +385,9 @@ public class EditTaskActivity extends AppCompatActivity {
     }
 
     private void checkTitleFocus() {
-        if (task != null && (task.getMessage() == null || task.getMessage().equals("New task"))) {
+        Editable taskTitleEditable = editTitleField.getText();
+        if ((task != null && (task.getMessage() == null || task.getMessage().equals("New task"))) &&
+                (taskTitleEditable != null && (taskTitleEditable.toString().trim().matches("") || taskTitleEditable.toString().trim().matches("New task")))) {
             if(editTitleField.requestFocus()) {
                 getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
             }
@@ -411,6 +428,7 @@ public class EditTaskActivity extends AppCompatActivity {
             }
             tasksManager.saveTask(task);
             tasksManager.addToMappedTasks(task);
+            taskLocalId = task.getId();
             showTaskErrorsOrWarnings(task);
         }
     }
