@@ -16,5 +16,9 @@
     <color name="textColorForTimeEvent">#ffffff</color>
     <color name="white">#ffffff</color>
     <color name="myOrange">#FA5858</color>
+    <color name="statusActive">#ccff0000</color>
+    <color name="statusWaitning">#0000cc</color>
+    <color name="statusTodo">#4cae4c</color>
+    <color name="statusClosed">#808080</color>
 
 </resources>

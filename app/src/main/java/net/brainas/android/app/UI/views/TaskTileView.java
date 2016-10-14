@@ -82,10 +82,22 @@ public class TaskTileView extends RelativeLayout implements View.OnClickListener
                 } else {
                     setMessageText();
                 }
+                addStatusLbl();
             }
         });
 
         isContentSet = true;
+    }
+
+    private void addStatusLbl() {
+        RelativeLayout statusLblCont = (RelativeLayout) findViewById(R.id.statusLblCont);
+        int margin = (int)((double)this.getWidth()/30);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.setMargins(margin, margin, 0, 0);
+        layoutParams.addRule(RelativeLayout.ALIGN_LEFT, RelativeLayout.TRUE);
+        statusLblCont.setLayoutParams(layoutParams);
+        StatusView statusView = new StatusView(context, task.getStatus());
+        statusLblCont.addView(statusView);
     }
 
     private void setTaskImage() throws BrainasAppException {

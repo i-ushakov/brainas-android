@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StatusView">
+        <attr name="statusValue" format="enum">
+            <enum name="TODO" value="0"/>
+            <enum name="WAITING" value="1"/>
+            <enum name="ACTIVE" value="2"/>
+            <enum name="DONE" value="3"/>
+            <enum name="CANCELED" value="4"/>
+            <enum name="DISABLED" value="5"/>
+        </attr>
+    </declare-styleable>
+</resources>

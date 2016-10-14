@@ -22,4 +22,10 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"  />
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/statusLblCont">
+    </RelativeLayout>
+
 </RelativeLayout>
