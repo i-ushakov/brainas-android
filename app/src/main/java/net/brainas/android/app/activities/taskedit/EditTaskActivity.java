@@ -1,11 +1,14 @@
 package net.brainas.android.app.activities.taskedit;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -24,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.TaskHelper;
@@ -33,6 +37,9 @@ import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,8 +53,10 @@ public class EditTaskActivity extends AppCompatActivity {
 
     static public String IMAGE_REQUEST_EXTRA_FIELD_NAME = "image_name";
 
-    static private String TAG ="EditTaskActivity";
-    static private int GET_IMAGE_REQUEST = 1001;
+    static private String TAG ="#$#EDIT_TASK_ACTIVITY#$#";
+    static private int GET_IMAGE_FROM_REQUEST = 1001;
+    static private final int REQUEST_IMAGE_CAPTURE = 1002;
+
 
 
     static HashMap<String, Boolean> existActivities = new HashMap<>();
@@ -79,6 +88,7 @@ public class EditTaskActivity extends AppCompatActivity {
     private int userId;
     private boolean needToRemoveImage = false;
     private Long taskLocalId = null;
+    private File photoFile = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,33 +242,56 @@ public class EditTaskActivity extends AppCompatActivity {
             if (taskTitleEditable != null) {
                 intent.putExtra("searchTerm", taskTitleEditable.toString());
             }
-            startActivityForResult(intent, GET_IMAGE_REQUEST);
+            startActivityForResult(intent, GET_IMAGE_FROM_REQUEST);
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == GET_IMAGE_REQUEST) {
+        if (requestCode == GET_IMAGE_FROM_REQUEST) {
             if (resultCode == RESULT_OK) {
                 String imageFileName = data.getStringExtra(IMAGE_REQUEST_EXTRA_FIELD_NAME);
-                Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(imageFileName, app.getAccountsManager().getCurrentAccountId());
-                Image picture = new Image(imageFileName, imageBitmap);
-                task = getTask(taskLocalId);
-                task.setPicture(picture);
-                needToRemoveImage = true;
-                picture.attachObserver(new Image.ImageDownloadedObserver() {
-                    @Override
-                    public void onImageDownloadCompleted() {
-                        tasksManager.saveTask(task, false, false);
-                    }
-                });
-                GoogleDriveManager.getInstance(app).uploadPicture(picture);
+                addPictureToTask(imageFileName);
+            }
+        }
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            try {
+                File internalPictureLocation = InfrustructureHelper.createFileInDir(
+                        InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
+                        "task_picture", "png",
+                        false, false);
+                InfrustructureHelper.copyFile(photoFile, internalPictureLocation);
+                addPictureToTask(internalPictureLocation.getName());
+            } catch (IOException e) {
+                e.printStackTrace();
+                CLog.e(TAG, "Cannot move file with photo to iternal location", e);
             }
         }
     }
 
+    private void addPictureToTask(String pictureFileName) {
+        Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(pictureFileName, app.getAccountsManager().getCurrentAccountId());
+        Image picture = new Image(pictureFileName, imageBitmap);
+        task = getTask(taskLocalId);
+        task.setPicture(picture);
+        needToRemoveImage = true;
+
+        picture.attachObserver(new Image.ImageDownloadedObserver() {
+            @Override
+            public void onImageDownloadCompleted() {
+                tasksManager.saveTask(task, false, false);
+            }
+        });
+
+        GoogleDriveManager.getInstance(app).uploadPicture(picture);
+    }
+
     public void capturePicture(View view) {
-        UIHelper.addClickEffectToButton(view, this);
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            CLog.i(TAG, "Click for capture picture by camera");
+            dispatchTakePictureIntent();
+        }
     }
 
     public void loadFromGallery(View view) {
@@ -274,6 +307,36 @@ public class EditTaskActivity extends AppCompatActivity {
         }
         return task;
     }
+
+    private void dispatchTakePictureIntent() {
+        if (!InfrustructureHelper.isExternalStorageWritable()) {
+            CLog.e(TAG, "We can't take a picture cause external storage is not writable", null);
+            return;
+        }
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            try {
+                photoFile = InfrustructureHelper.createFileInDir(
+                        getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath() + "/",
+                        "task_picture", "jpg",
+                        false, false
+                );
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                CLog.e(TAG, "Cannot create file for photo from camera", e);
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "net.brainas.android.app.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
 
     private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
