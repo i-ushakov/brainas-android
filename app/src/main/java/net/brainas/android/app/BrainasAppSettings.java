@@ -13,6 +13,8 @@ public class BrainasAppSettings {
     private static final int CHECK_CONDITIONS_START_TIME = 20000; //ms
     private static final int CHECK_CONDITIONS_INTERVAL = 20000; //ms
 
+    private static final boolean WRITE_TO_CUSTOM_LOG = true;
+
     public static int getSynchronizationSartTime() {
         Log.i(APP_GENERAL_SETTINGS, "Synchronization first start time is " + SYNCHRONIZATION_SART_TIME);
         return SYNCHRONIZATION_SART_TIME;
@@ -29,5 +31,9 @@ public class BrainasAppSettings {
     public static int getCheckConditionsInterval() {
         Log.i(APP_GENERAL_SETTINGS, "Activation interval is " + CHECK_CONDITIONS_INTERVAL);
         return CHECK_CONDITIONS_INTERVAL;
+    }
+
+    public static boolean writeToCustomLog() {
+        return WRITE_TO_CUSTOM_LOG;
     }
 }

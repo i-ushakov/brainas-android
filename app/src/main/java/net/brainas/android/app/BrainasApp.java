@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.support.multidex.MultiDex;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.Tracker;
 
@@ -31,6 +32,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by Kit Ushakov on 11/9/2015.
@@ -107,9 +110,28 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         }
     }
 
+    private static Thread.UncaughtExceptionHandler mDefaultUEH;
+    private static Thread.UncaughtExceptionHandler mCaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) {
+            // Custom logic goes here
+            // This will make Crashlytics do its job
+            mDefaultUEH.uncaughtException(thread, ex);
+        }
+    };
 
     public void onCreate() {
         super.onCreate();
+        // Order is important!
+        // First, start Crashlytics
+        Fabric.with(getApplicationContext(), new Crashlytics());
+
+        // Second, set custom UncaughtExceptionHandler
+        mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(mCaughtExceptionHandler);
+
+        CLog.init(getApplicationContext());
+
         BrainasApp.context = getApplicationContext();
         accountsManager = new AccountsManager();
         accountsManager.attach(this);
