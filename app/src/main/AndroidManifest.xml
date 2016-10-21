@@ -11,6 +11,8 @@
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
+    <uses-feature android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:name=".BrainasApp"
@@ -127,6 +129,16 @@
             android:value="537b1b240fbe57c52d42ce22c58180d755af1a8e" />
 
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_map_API_key"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="net.brainas.android.app.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
 
     </application>
 
