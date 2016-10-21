@@ -3,15 +3,19 @@ package net.brainas.android.app.infrustructure;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -36,9 +40,9 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class InfrustructureHelper {
 
-    static public final String PATH_TO_SYNC_DATE_FOLDER = "app_sync/sync_data/";
+    static public final String PATH_TO_SYNC_DATE_FOLDER = "files/app_sync/sync_data/";
     public static final String PATH_TO_SEND_FOLDER = PATH_TO_SYNC_DATE_FOLDER + "for_send/";
-    static public String PATH_TO_TASK_IMAGES_FOLDER = "app_images/task_images/";
+    static public String PATH_TO_TASK_IMAGES_FOLDER = "files/app_images/task_images/";
 
     static private HashMap<String, Bitmap> bitmapCache = new HashMap<String, Bitmap>();
 
@@ -46,13 +50,13 @@ public class InfrustructureHelper {
 
     static public String getPathToImageFolder(int accountId) {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
-        String pathToPictureFolder = dataDir + accountId + "/" + PATH_TO_TASK_IMAGES_FOLDER ;
+        String pathToPictureFolder = dataDir + PATH_TO_TASK_IMAGES_FOLDER + accountId + "/";
         return pathToPictureFolder;
     }
 
     static public String getPathToSendDir(int accountId) {
         String dataDir = BrainasApp.getAppContext().getApplicationInfo().dataDir + "/";
-        String pathToSendDir = dataDir + accountId + "/" + PATH_TO_SEND_FOLDER;
+        String pathToSendDir = dataDir + PATH_TO_SEND_FOLDER + accountId + "/";
         return pathToSendDir;
     }
 
@@ -217,4 +221,39 @@ public class InfrustructureHelper {
         }
      */
 
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static void copyFile(File src, File dst) throws IOException
+    {
+        FileChannel inChannel = new FileInputStream(src).getChannel();
+        FileChannel outChannel = new FileOutputStream(dst).getChannel();
+        try
+        {
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        }
+        finally
+        {
+            if (inChannel != null)
+                inChannel.close();
+            if (outChannel != null)
+                outChannel.close();
+        }
+    }
 }
