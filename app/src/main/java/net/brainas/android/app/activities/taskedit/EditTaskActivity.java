@@ -2,7 +2,9 @@ package net.brainas.android.app.activities.taskedit;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -36,8 +38,8 @@ import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
+import net.brainas.android.app.infrustructure.images.BasicImageDownloader;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ public class EditTaskActivity extends AppCompatActivity {
     static private String TAG ="#$#EDIT_TASK_ACTIVITY#$#";
     static private int GET_IMAGE_FROM_REQUEST = 1001;
     static private final int REQUEST_IMAGE_CAPTURE = 1002;
+    static private final int REQUEST_IMAGE_FROM_GALLERY = 1003;
 
 
 
@@ -268,6 +271,51 @@ public class EditTaskActivity extends AppCompatActivity {
                 CLog.e(TAG, "Cannot move file with photo to iternal location", e);
             }
         }
+
+        if (requestCode == REQUEST_IMAGE_FROM_GALLERY && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            String[] proj = { MediaStore.Images.Media.DATA };
+
+            Cursor cursor = getContentResolver().query(uri,
+                    proj, null, null, null);
+
+            String res = null;
+            if (cursor.moveToFirst()) {
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                res = cursor.getString(column_index);
+            }
+            cursor.close();
+
+            Bitmap bitmap = BitmapFactory.decodeFile(res);
+
+            File internalPictureLocation = null;
+            try {
+                internalPictureLocation = InfrustructureHelper.createFileInDir(
+                        InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
+                        "task_picture", "png",
+                        false, false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            final File finalInternalPictureLocation = internalPictureLocation;
+            BasicImageDownloader.writeToDisk(internalPictureLocation, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
+                @Override
+                public void onBitmapSaved() {
+                    addPictureToTask(finalInternalPictureLocation.getName());
+                    EditTaskActivity.this.renderPicture();
+                    CLog.i(TAG, "Picture from gallery was successful moved to internal app image folder");
+                }
+
+                @Override
+                public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
+                    Toast.makeText(EditTaskActivity.this, "Can't move image into internal app image folder", Toast.LENGTH_SHORT).show();
+                    CLog.e(TAG, "Can't move image into internal app image folder", null);
+                }
+            }, Bitmap.CompressFormat.PNG, false);
+        }
+
+
     }
 
     private void addPictureToTask(String pictureFileName) {
@@ -290,12 +338,15 @@ public class EditTaskActivity extends AppCompatActivity {
     public void capturePicture(View view) {
         if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
             CLog.i(TAG, "Click for capture picture by camera");
-            dispatchTakePictureIntent();
+            takePhotoIntent();
         }
     }
 
     public void loadFromGallery(View view) {
-        UIHelper.addClickEffectToButton(view, this);
+        if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
+            CLog.i(TAG, "Click for get picture from gallery");
+            getFromGalleryIntent();
+        }
     }
 
     protected Task getTask(Long taskLocalId) {
@@ -308,7 +359,7 @@ public class EditTaskActivity extends AppCompatActivity {
         return task;
     }
 
-    private void dispatchTakePictureIntent() {
+    private void takePhotoIntent() {
         if (!InfrustructureHelper.isExternalStorageWritable()) {
             CLog.e(TAG, "We can't take a picture cause external storage is not writable", null);
             return;
@@ -337,6 +388,12 @@ public class EditTaskActivity extends AppCompatActivity {
         }
     }
 
+    private void getFromGalleryIntent() {
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        // Start the Intent
+        startActivityForResult(galleryIntent, REQUEST_IMAGE_FROM_GALLERY);
+    }
 
     private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
