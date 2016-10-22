@@ -113,6 +113,7 @@ public class SynchronizationService extends Service {
         restartIntent.putExtra("serviceClass", "SynchronizationService");
         restartIntent.putExtra("accountName",accountName);
         restartIntent.setAction(ServiceMustBeAliveReceiver.SYNC_INTENT);
+        app.sendBroadcast(restartIntent);
     }
 
     private void initialiseSyncService(Intent intent) {
@@ -237,7 +238,7 @@ public class SynchronizationService extends Service {
     public void onDestroy() {
         super.onDestroy();
         stopSynchronization();
-        app.getSynchronizationManager().removeServiceAlarm();
+        //app.getSynchronizationManager().removeServiceAlarm();
         Log.i(TAG, "Syncronization service was destroyed");
     }
 

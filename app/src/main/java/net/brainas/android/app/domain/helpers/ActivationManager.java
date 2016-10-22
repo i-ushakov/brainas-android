@@ -64,14 +64,14 @@ public class ActivationManager implements AccountsManager.SingInObserver {
         app.getBaseContext().startService(activationService);
         app.getBaseContext().registerReceiver(broadcastReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_ACTIVATION));
         app.getBaseContext().registerReceiver(serviceMustBeStoppedReceiver, new IntentFilter(ActivationService.BROADCAST_ACTION_STOP_ACTIVATION));
-        createServiceAlarm(accountId);
+        //createServiceAlarm(accountId);
     }
 
     public void stopActivationService() {
         Intent activationService = new Intent(app.getBaseContext(), ActivationService.class);
         app.getBaseContext().stopService(activationService);
         unregisterServiceReceivers();
-        removeServiceAlarm();
+        //removeServiceAlarm();
     }
 
     public void unregisterServiceReceivers() {

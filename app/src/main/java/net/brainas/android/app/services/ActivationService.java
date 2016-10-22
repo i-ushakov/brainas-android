@@ -131,7 +131,7 @@ public class ActivationService extends Service implements Task.ActivationConditi
     public void onDestroy() {
         super.onDestroy();
         stopService();
-        app.getActivationManager().removeServiceAlarm();
+        //app.getActivationManager().removeServiceAlarm();
         Log.i(TAG, "ActivationService was destroyed");
     }
 

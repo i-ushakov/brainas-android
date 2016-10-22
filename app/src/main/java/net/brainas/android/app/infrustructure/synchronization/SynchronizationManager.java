@@ -89,7 +89,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         synchronizationService.putExtra("accountName", accountName);
         app.getBaseContext().startService(synchronizationService);
         registerSynchronizationServiceReceivers();
-        createServiceAlarm(accountName);
+        //createServiceAlarm(accountName);
     }
 
     public void registerSynchronizationServiceReceivers() {
@@ -108,7 +108,7 @@ public class SynchronizationManager implements AccountsManager.SingInObserver {
         Intent activationService = new Intent(app.getBaseContext(), SynchronizationService.class);
         app.getBaseContext().stopService(activationService);
         unregisterSynchronizationServiceReceivers();
-        removeServiceAlarm();
+        //removeServiceAlarm();
     }
 
     private void notifyAllObservers() {
