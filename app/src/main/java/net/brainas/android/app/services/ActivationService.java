@@ -96,6 +96,7 @@ public class ActivationService extends Service implements Task.ActivationConditi
         restartIntent.setAction(ServiceMustBeAliveReceiver.ACT_INTENT);
         app.sendBroadcast(restartIntent);
     }
+
     private void initialiseSyncService(Intent intent) {
         taskDbHelper = app.getTaskDbHelper();
         taskChangesDbHelper = app.getTasksChangesDbHelper();

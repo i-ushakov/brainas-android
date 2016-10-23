@@ -262,7 +262,7 @@ public class EditTaskActivity extends AppCompatActivity {
             try {
                 File internalPictureLocation = InfrustructureHelper.createFileInDir(
                         InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
-                        "task_picture", "png",
+                        "task_picture", "jpg",
                         false, false);
                 InfrustructureHelper.copyFile(photoFile, internalPictureLocation);
                 addPictureToTask(internalPictureLocation.getName());
@@ -279,43 +279,34 @@ public class EditTaskActivity extends AppCompatActivity {
             Cursor cursor = getContentResolver().query(uri,
                     proj, null, null, null);
 
-            String res = null;
+            String filePath = null;
             if (cursor.moveToFirst()) {
                 int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                res = cursor.getString(column_index);
+                filePath = cursor.getString(column_index);
             }
             cursor.close();
 
-            Bitmap bitmap = BitmapFactory.decodeFile(res);
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath);
 
             File internalPictureLocation = null;
+            String ext = filePath.substring(filePath.lastIndexOf("."));
+            if (!ext.equals(".jpg") && !ext.equals(".png")) {
+                Toast.makeText(EditTaskActivity.this, "Cannot get image of this type", Toast.LENGTH_SHORT).show();
+                CLog.i(TAG, "cannot get image of tyep " + ext);
+                return;
+            }
             try {
                 internalPictureLocation = InfrustructureHelper.createFileInDir(
                         InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
-                        "task_picture", "png",
+                        "task_picture", ext,
                         false, false);
+                InfrustructureHelper.copyFile(new File(filePath), internalPictureLocation);
+                addPictureToTask(internalPictureLocation.getName());
+                EditTaskActivity.this.renderPicture();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            final File finalInternalPictureLocation = internalPictureLocation;
-            BasicImageDownloader.writeToDisk(internalPictureLocation, bitmap, new BasicImageDownloader.OnBitmapSaveListener() {
-                @Override
-                public void onBitmapSaved() {
-                    addPictureToTask(finalInternalPictureLocation.getName());
-                    EditTaskActivity.this.renderPicture();
-                    CLog.i(TAG, "Picture from gallery was successful moved to internal app image folder");
-                }
-
-                @Override
-                public void onBitmapSaveError(BasicImageDownloader.ImageError error) {
-                    Toast.makeText(EditTaskActivity.this, "Can't move image into internal app image folder", Toast.LENGTH_SHORT).show();
-                    CLog.e(TAG, "Can't move image into internal app image folder", null);
-                }
-            }, Bitmap.CompressFormat.PNG, false);
         }
-
-
     }
 
     private void addPictureToTask(String pictureFileName) {
