@@ -38,7 +38,6 @@ import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
-import net.brainas.android.app.infrustructure.images.BasicImageDownloader;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +89,7 @@ public class EditTaskActivity extends AppCompatActivity {
     private Task task = null;
     private int userId;
     private boolean needToRemoveImage = false;
+    private Image previousPicture = null;
     private Long taskLocalId = null;
     private File photoFile = null;
 
@@ -264,7 +264,7 @@ public class EditTaskActivity extends AppCompatActivity {
                         InfrustructureHelper.getPathToImageFolder(((BrainasApp)BrainasApp.getAppContext()).getAccountsManager().getCurrentAccountId()),
                         "task_picture", "jpg",
                         false, false);
-                InfrustructureHelper.copyFile(photoFile, internalPictureLocation);
+                InfrustructureHelper.moveFile(photoFile, internalPictureLocation);
                 addPictureToTask(internalPictureLocation.getName());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -313,6 +313,9 @@ public class EditTaskActivity extends AppCompatActivity {
         Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(pictureFileName, app.getAccountsManager().getCurrentAccountId());
         Image picture = new Image(pictureFileName, imageBitmap);
         task = getTask(taskLocalId);
+        if (task.getPicture() != null) {
+            previousPicture = task.getPicture();
+        }
         task.setPicture(picture);
         needToRemoveImage = true;
 
@@ -527,6 +530,10 @@ public class EditTaskActivity extends AppCompatActivity {
 
     private void save() {
         needToRemoveImage = false;
+        if (previousPicture != null) {
+            InfrustructureHelper.removePicture(previousPicture, app.getAccountsManager().getCurrentAccountId());
+            previousPicture = null;
+        }
         Editable taskTitleEditable = editTitleField.getText();
         if (validate()) {
             String message = taskTitleEditable.toString().trim();
@@ -547,7 +554,7 @@ public class EditTaskActivity extends AppCompatActivity {
     public void cancel(View view) {
         if (UIHelper.safetyBtnClick(view, EditTaskActivity.this)) {
             if (needToRemoveImage && task.getPicture() != null) {
-                // TODO remove image
+                InfrustructureHelper.removePicture(task.getPicture(), app.getAccountsManager().getCurrentAccountId());
                 needToRemoveImage= false;
             }
             finish();

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.domain.models.*;
+import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 
@@ -192,6 +193,7 @@ public class TasksManager {
             if(tasksHashMap.containsKey(task.getId())) {
                 tasksHashMap.remove(task.getId());
             }
+            InfrustructureHelper.removePicture(task.getPicture(), accountId);
             CopyOnWriteArrayList<Condition> conditions = task.getConditions();
             Iterator<Condition> iterator = conditions.iterator();
             while (iterator.hasNext()) {

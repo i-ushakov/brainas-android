@@ -8,6 +8,7 @@ import android.util.Log;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+import net.brainas.android.app.domain.models.Image;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -64,12 +65,12 @@ public class InfrustructureHelper {
         String pathToPictureFolder = getPathToImageFolder(accountId);
         File imageFile = new File(pathToPictureFolder + pictureName);
         Bitmap bitmap;
-        if (bitmapCache.containsKey(imageFile.getPath())) {
-            bitmap = bitmapCache.get(imageFile.getPath());
+        if (bitmapCache.containsKey(pictureName)) {
+            bitmap = bitmapCache.get(pictureName);
         } else {
             try {
                 bitmap = BitmapFactory.decodeFile(imageFile.getPath());
-                bitmapCache.put(imageFile.getPath(), bitmap);
+                bitmapCache.put(pictureName, bitmap);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e(TAG, "Out of memory when try to get bitmap");
@@ -240,6 +241,13 @@ public class InfrustructureHelper {
         return false;
     }
 
+    public static boolean moveFile(File src, File dst) throws IOException {
+        if (src == null || dst == null) {
+            return false;
+        }
+        copyFile(src, dst);
+        return src.delete();
+    }
     public static void copyFile(File src, File dst) throws IOException
     {
         FileChannel inChannel = new FileInputStream(src).getChannel();
@@ -254,6 +262,30 @@ public class InfrustructureHelper {
                 inChannel.close();
             if (outChannel != null)
                 outChannel.close();
+        }
+    }
+
+    public static void removePicture(Image picture, int accountId) {
+        if (picture == null) {
+            return;
+        }
+        File imageFolder = new File(getPathToImageFolder(accountId));
+        removeFileFromDir(imageFolder, picture.getName());
+        removeFromBitmapCache(picture);
+    }
+
+    public static boolean removeFileFromDir(File dir, String fileName ) {
+        if (dir == null || fileName == null) {
+            return false;
+        }
+        File file = new File(dir, fileName);
+        return file.delete();
+
+    }
+
+    public static void removeFromBitmapCache(Image image) {
+        if (bitmapCache.containsKey(image.getName())) {
+            bitmapCache.remove(image.getName());
         }
     }
 }
