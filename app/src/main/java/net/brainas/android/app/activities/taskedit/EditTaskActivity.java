@@ -2,6 +2,8 @@ package net.brainas.android.app.activities.taskedit;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -290,7 +293,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
             File internalPictureLocation = null;
             String ext = filePath.substring(filePath.lastIndexOf("."));
-            if (!ext.equals(".jpg") && !ext.equals(".png")) {
+            if (!ext.toLowerCase().equals(".jpg") && !ext.toLowerCase().equals(".jpeg") && !ext.toLowerCase().equals(".png") && !ext.toLowerCase().equals(".bmp")) {
                 Toast.makeText(EditTaskActivity.this, "Cannot get image of this type", Toast.LENGTH_SHORT).show();
                 CLog.i(TAG, "cannot get image of tyep " + ext);
                 return;
@@ -313,10 +316,16 @@ public class EditTaskActivity extends AppCompatActivity {
         Bitmap imageBitmap = InfrustructureHelper.getTaskPicture(pictureFileName, app.getAccountsManager().getCurrentAccountId());
         Image picture = new Image(pictureFileName, imageBitmap);
         task = getTask(taskLocalId);
-        if (task.getPicture() != null) {
-            previousPicture = task.getPicture();
+        Image currentPicture = task.getPicture();
+        if (currentPicture != null) {
+            if (needToRemoveImage) {
+                InfrustructureHelper.removePicture(currentPicture, app.getAccountsManager().getCurrentAccountId());
+            } else {
+                previousPicture = currentPicture;
+            }
         }
         task.setPicture(picture);
+
         needToRemoveImage = true;
 
         picture.attachObserver(new Image.ImageDownloadedObserver() {
@@ -359,6 +368,7 @@ public class EditTaskActivity extends AppCompatActivity {
             return;
         }
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             try {
                 photoFile = InfrustructureHelper.createFileInDir(
@@ -377,6 +387,12 @@ public class EditTaskActivity extends AppCompatActivity {
                         "net.brainas.android.app.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
+                List<ResolveInfo> resInfoList = EditTaskActivity.this.getPackageManager().queryIntentActivities(takePictureIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    EditTaskActivity.this.grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }

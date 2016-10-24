@@ -69,7 +69,7 @@ public class InfrustructureHelper {
             bitmap = bitmapCache.get(pictureName);
         } else {
             try {
-                bitmap = BitmapFactory.decodeFile(imageFile.getPath());
+                bitmap = decodeSampledBitmapFromFile(imageFile.getPath(), 512, 512);
                 bitmapCache.put(pictureName, bitmap);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -102,6 +102,44 @@ public class InfrustructureHelper {
             }
         }
         return inFiles;
+    }
+
+    public static Bitmap decodeSampledBitmapFromFile(String pathToImageFile, int reqWidth, int reqHeight) {
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(pathToImageFile, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(pathToImageFile, options);
+    }
+
+    private static  int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
     }
 
     public static File createFileInDir(String dir, String fileName, String ext) throws IOException {
@@ -286,6 +324,19 @@ public class InfrustructureHelper {
     public static void removeFromBitmapCache(Image image) {
         if (bitmapCache.containsKey(image.getName())) {
             bitmapCache.remove(image.getName());
+        }
+    }
+
+    public static File getDocumentFolder() {
+        File docsFolder = new File(Environment.getExternalStorageDirectory() + "/Documents");
+        boolean isPresent = true;
+        if (!docsFolder.exists()) {
+            isPresent = docsFolder.mkdir();
+        }
+        if (isPresent) {
+           return docsFolder;
+        } else {
+            return null;
         }
     }
 }
