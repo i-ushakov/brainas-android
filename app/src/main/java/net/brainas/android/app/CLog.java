@@ -1,6 +1,7 @@
 package net.brainas.android.app;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -28,7 +29,11 @@ public class CLog {
     static final String FLAG_2 = "2.flag";
 
     public static void init(Context context) {
-        pathToFiles = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath();
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            pathToFiles = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath();
+        } else{
+            pathToFiles = InfrustructureHelper.getDocumentFolder().getPath();
+        }
     }
 
     public static int i(String tag, String message) {
