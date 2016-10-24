@@ -40,7 +40,7 @@ public class CLog {
         if (BrainasAppSettings.writeToCustomLog()) {
             try {
                 File logFile = getCurrentLogFile();
-                writeToLogFile(logFile, tag, message);
+                writeToLogFile(logFile, tag, "INFO", message);
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Cannot write to custom log file");
@@ -56,7 +56,7 @@ public class CLog {
                 if (exception != null) {
                     message = message + " ### " + Log.getStackTraceString(exception);
                 }
-                writeToLogFile(logFile, tag, message);
+                writeToLogFile(logFile, tag, "ERROR", message);
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Cannot write to custom log file");
@@ -65,7 +65,7 @@ public class CLog {
         return Log.e(tag, message);
     }
 
-    private static void writeToLogFile(File logFile, String tag, String output) throws IOException {
+    private static void writeToLogFile(File logFile, String tag, String level, String output) throws IOException {
         // true - append
         int lineNumber = Thread.currentThread().getStackTrace()[4].getLineNumber();
         String fileName = Thread.currentThread().getStackTrace()[4].getFileName();
@@ -74,7 +74,7 @@ public class CLog {
         String placeOfCapture = fileName + ":" + lineNumber + ", " + className + "." + methodName + "()";
 
 
-        String content = getFormattedDate() + " " + tag + " " + output + "\r\n" + placeOfCapture + "\r\n\r\n";
+        String content = getFormattedDate() + " " + tag + " @" + level + "@ " + output + "\r\n" + placeOfCapture + "\r\n\r\n";
         byte[] contentInBytes = content.getBytes();
 
         FileOutputStream fop = new FileOutputStream(logFile, true);
