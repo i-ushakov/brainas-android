@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
@@ -20,6 +21,9 @@ import android.widget.TextView;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.R;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class AboutActivity extends AppCompatActivity {
 
@@ -50,8 +54,31 @@ public class AboutActivity extends AppCompatActivity {
 
         WebView webView = (WebView) findViewById(R.id.about_webview);
         webView.getSettings().setJavaScriptEnabled(true);
-        String pdf = "https://brainas.net/docs/about.pdf";
-        webView.loadUrl("http://drive.google.com/viewerng/viewer?embedded=true&url=" + pdf);
+        WebSettings settings = webView.getSettings();
+        settings.setDefaultTextEncodingName("utf-8");
+
+        String fileName = "about_en.html";
+
+        try {
+            InputStream is = getAssets().open(fileName);
+            int size = is.available();
+
+            byte[] buffer = new byte[size];
+            int bytesRead = is.read(buffer);
+            is.close();
+
+            String html = new String(buffer, 0, bytesRead, "UTF-8");
+
+            webView.loadDataWithBaseURL("file:///android_asset/", html,
+                    "text/html", "UTF-8", null);
+
+            webView.setInitialScale(100);
+            //webView.getSettings().setLoadWithOverviewMode(true);
+            //webView.getSettings().setUseWideViewPort(true);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
