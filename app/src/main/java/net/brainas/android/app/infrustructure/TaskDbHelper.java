@@ -27,8 +27,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Created by Kit Ushakov on 11/12/2015.
  */
 public class TaskDbHelper {
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "Brainas.db";
 
     public static String GROUP_OF_TASK_PARAM = "GROUP_OF_TASKS";
     public static String SEARCH_TEXT_PARAM = "SEARCH_TEXT";
