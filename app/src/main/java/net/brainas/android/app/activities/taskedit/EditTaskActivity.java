@@ -1,5 +1,6 @@
 package net.brainas.android.app.activities.taskedit;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.CLog;
 import net.brainas.android.app.R;
@@ -110,7 +112,13 @@ public class EditTaskActivity extends AppCompatActivity {
         tasksManager = app.getTasksManager();
         taskHelper = app.getTaskHelper();
 
-        userId = app.getAccountsManager().getCurrentAccountId();
+        AccountsManager accountManager = app.getAccountsManager();
+        if (accountManager != null) {
+            userId = app.getAccountsManager().getCurrentAccountId();
+        } else {
+            CLog.e(TAG, "We try to get accountManager, but it's null. It seems very strange", null);
+            return;
+        }
 
         if (getIntent().hasExtra("taskLocalId")) {
             mode = Mode.EDIT;
@@ -561,6 +569,7 @@ public class EditTaskActivity extends AppCompatActivity {
             if (!message.equals("")) {
                 task.setMessage(message);
             }
+            task = getTask(taskLocalId);
             tasksManager.saveTask(task);
             tasksManager.addToMappedTasks(task);
             taskLocalId = task.getId();
