@@ -21,7 +21,7 @@ import java.util.Calendar;
 public class CLog {
     static String TAG = "#$#CLog#";
     static boolean writeToCustomLogFile = true;
-    static String pathToFiles;
+    static String pathToFiles = null;
     static final String FILE_NAME_FIRST = "custom_log_1.txt";
     static final String FLAG_1 = "1.flag";
     static final String FILE_NAME_SECOND = "custom_log_2.txt";
@@ -29,10 +29,15 @@ public class CLog {
     static final String FLAG_2 = "2.flag";
 
     public static void init(Context context) {
+        File documents = null;
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-            pathToFiles = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath();
+            documents = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         } else{
-            pathToFiles = InfrustructureHelper.getDocumentFolder().getPath();
+            documents = context.getExternalFilesDir("Documents");
+        }
+
+        if (documents != null) {
+            pathToFiles = documents.getPath();
         }
     }
 
@@ -67,6 +72,9 @@ public class CLog {
 
     private static void writeToLogFile(File logFile, String tag, String level, String output) throws IOException {
         // true - append
+        if (logFile == null) {
+            return;
+        }
         int lineNumber = Thread.currentThread().getStackTrace()[4].getLineNumber();
         String fileName = Thread.currentThread().getStackTrace()[4].getFileName();
         String className = Thread.currentThread().getStackTrace()[4].getClassName();
@@ -86,6 +94,9 @@ public class CLog {
     }
 
     private static File getCurrentLogFile() throws IOException {
+        if (pathToFiles == null) {
+            return null;
+        }
         File logFile = new File(pathToFiles + "/" + getCurrentLogFileName());
         if(!logFile.exists()){
             logFile.createNewFile();

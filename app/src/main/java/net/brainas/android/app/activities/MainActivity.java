@@ -23,6 +23,7 @@ import com.google.android.gms.location.LocationSettingsStates;
 
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.UI.logic.ReminderScreenManager;
