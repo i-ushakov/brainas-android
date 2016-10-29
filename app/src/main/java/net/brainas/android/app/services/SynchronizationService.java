@@ -314,7 +314,7 @@ public class SynchronizationService extends Service {
             @Override
             public void onComplete(String jsonString, Exception e) {
                 // remove sending status from changes log after sync is completed
-                taskChangesDbHelper.removeAllSendingStatus(accountId);
+                taskChangesDbHelper.removeAllSendingStatus(accountId); //TODO possibale logic error
                 // notify about updates
                 notifyAboutSyncronization();
             }
