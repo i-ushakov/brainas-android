@@ -171,7 +171,7 @@ public class SyncHelper {
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
             } else {
-                Log.i(TAG, "NO ACCESS_TOKEN!!!"); // TODO Stop service and try to restart with new google ACCESS CODE
+                Log.i(TAG, "NO ACCESS_TOKEN!!!"); // TODO Stop service and try to restart with new/may be old google ACCESS CODE
                 return null;
             }
 
