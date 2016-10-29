@@ -1,10 +1,13 @@
 package net.brainas.android.app.activities.taskedit;
 
-import android.app.TimePickerDialog;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -15,8 +18,15 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
@@ -40,11 +50,13 @@ import net.brainas.android.app.domain.models.Event;
 import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.GeofenceTransitionsIntentService;
 import net.brainas.android.app.infrustructure.LocationProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
@@ -53,7 +65,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class EditEventActivity extends EditTaskActivity
         implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback,
-        LocationProvider.LocationChangedObserver {
+        LocationProvider.LocationChangedObserver, ResultCallback<Status>, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static String TAG = "EditEventActivity";
     private BrainasApp app;
@@ -79,6 +91,8 @@ public class EditEventActivity extends EditTaskActivity
     private LatLng currentUserLocation = null;
 
     private String validationMessage = "Validation of event is failed";
+    private GoogleApiClient mGoogleApiClient;
+    private PendingIntent mGeofencePendingIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +134,18 @@ public class EditEventActivity extends EditTaskActivity
         });
 
         setTypeSpinner();
+
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+                    .addApi(Places.GEO_DATA_API)
+                    .addApi(Places.PLACE_DETECTION_API)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+        }
+        mGoogleApiClient.connect();
+        Log.i(TAG, "Try to connect mGoogleApiClient ...");
     }
 
     @Override
@@ -276,6 +302,7 @@ public class EditEventActivity extends EditTaskActivity
         if (UIHelper.safetyBtnClick(view, EditEventActivity.this)) {
             if (event instanceof  EventLocation) {
                 makeSureThatLocationIsSet();
+                //setGeofence(eventLocation);
             }
             if (validateEvent()) {
                 ((View) findViewById(R.id.saveEventBtn)).setOnClickListener(null);
@@ -387,6 +414,8 @@ public class EditEventActivity extends EditTaskActivity
         }
         tasksManager.saveTask(task, true, true, true);
         showTaskErrorsOrWarnings(task);
+        task = getTask(taskLocalId);
+        setGeofencesForAllEventsOfTask(task);
         finish();
     }
 
@@ -460,6 +489,88 @@ public class EditEventActivity extends EditTaskActivity
                 googleApiHelper.setAddressByLocation(eventLocation, false);
             }
         }
+    }
+
+    private void setGeofencesForAllEventsOfTask(Task task) {
+        if (task == null) {
+            return;
+        }
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        for(Condition condition : conditions) {
+            ArrayList<Event> events = condition.getEvents();
+            Event event = events.get(0);
+            if (event instanceof EventLocation) {
+                setGeofence((EventLocation) event);
+            }
+        }
+    }
+
+    private boolean setGeofence (EventLocation eventLocation){
+        if (mGoogleApiClient == null || !mGoogleApiClient.isConnected()) {
+            return false;
+        }
+        LocationServices.GeofencingApi.addGeofences(
+                mGoogleApiClient,
+                getGeofencingRequest(eventLocation.getLat(), eventLocation.getLng(), eventLocation.getId()),
+                getGeofencePendingIntent()
+        ).setResultCallback(this);
+
+
+        return true;
+
+    }
+
+    private GeofencingRequest getGeofencingRequest(Double latitude, Double longitude, long eventId) {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        List<Geofence> mGeofenceList = new ArrayList<>();
+        mGeofenceList.add(new Geofence.Builder()
+                // Set the request ID of the geofence. This is a string to identify this
+                // geofence.
+                .setRequestId(String.valueOf(task.getId()))
+
+                .setCircularRegion(
+                        latitude,
+                        longitude,
+                        150
+                )
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                        Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build());
+        builder.addGeofences(mGeofenceList);
+        return builder.build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
+        }
+        Intent intent = new Intent(getApplicationContext(), GeofenceTransitionsIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public void onResult(@NonNull Status status) {
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }
 

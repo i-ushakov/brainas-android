@@ -19,6 +19,7 @@ public abstract class Event {
     private int globalId;
     private long conditionId;
     private int globalConditionId;
+    protected boolean active;
 
     public enum TYPES {
         GPS,
@@ -87,6 +88,14 @@ public abstract class Event {
 
     public int getGlobalId() {
         return globalId;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public boolean getActive() {
+        return active;
     }
 
     public void setConditionId(int conditionId){

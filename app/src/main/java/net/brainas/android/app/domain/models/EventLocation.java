@@ -2,6 +2,7 @@ package net.brainas.android.app.domain.models;
 
 import android.location.Location;
 
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.R;
 import net.brainas.android.app.services.ActivationService;
 
@@ -14,6 +15,7 @@ import org.w3c.dom.Element;
  */
 public class EventLocation extends Event {
     static String EVENT_NAME = "Location";
+    static final String EVENT_LOCATION_TAG = "#$#EVENT_LOCATION$#$";
     Double lat = null;
     Double lng = null;
     Double radius = null;
@@ -93,7 +95,12 @@ public class EventLocation extends Event {
 
     @Override
     public boolean isTriggered(Task.ActivationConditionProvider activationService) {
-        Location location = activationService.getCurrentLocation();
+        if (active) {
+            CLog.i(EVENT_LOCATION_TAG, "Location event with id " + this.getId() + " and params " + this.getJSONStringWithParams() + " was triggered by geofence system");
+            return true;
+        }
+        return false;
+        /*Location location = activationService.getCurrentLocation();
         if (location != null) {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();
@@ -106,7 +113,7 @@ public class EventLocation extends Event {
             }
             return false;
         }
-        return false;
+        return false;*/
     }
 
     @Override

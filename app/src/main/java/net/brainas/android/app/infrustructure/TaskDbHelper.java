@@ -4,10 +4,12 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.nfc.Tag;
 
 import com.google.android.gms.drive.DriveId;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Condition;
 import net.brainas.android.app.domain.models.Event;
@@ -68,7 +70,7 @@ public class TaskDbHelper {
     public static final String COLUMN_NAME_CONDITIONS_GLOBALID = "global_id";
     private static final String CREATE_TABLE_CONDITIONS =
             "CREATE TABLE " + TABLE_CONDITIONS + " (" +
-                    COLUMN_NAME_CONDITIONS_ID + " INTEGER PRIMARY KEY," +
+                    COLUMN_NAME_CONDITIONS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     COLUMN_NAME_CONDITIONS_TASK + " INTEGER," +
                     COLUMN_NAME_CONDITIONS_GLOBALID + " INTEGER " + " )";
     private static final String DELETE_TABLE_CONDITIONS =
@@ -82,13 +84,15 @@ public class TaskDbHelper {
     public static final String COLUMN_NAME_EVENTS_CONDITION = "condition_id";
     public static final String COLUMN_NAME_EVENTS_TYPE = "type";
     public static final String COLUMN_NAME_EVENTS_PARAMS = "params";
+    public static final String COLUMN_NAME_EVENTS_ACTIVE = "ACTIVE";
     private static final String CREATE_TABLE_EVENTS =
             "CREATE TABLE " + TABLE_EVENTS + " (" +
-                    COLUMN_NAME_EVENTS_ID + " INTEGER PRIMARY KEY," +
+                    COLUMN_NAME_EVENTS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     COLUMN_NAME_EVENTS_GLOBALID + " INTEGER " + COMMA_SEP +
                     COLUMN_NAME_EVENTS_CONDITION + " INTEGER" + COMMA_SEP +
                     COLUMN_NAME_EVENTS_TYPE + " INTEGER" + COMMA_SEP +
-                    COLUMN_NAME_EVENTS_PARAMS + " TEXT" + " )";
+                    COLUMN_NAME_EVENTS_PARAMS + " TEXT" + COMMA_SEP +
+                    COLUMN_NAME_EVENTS_ACTIVE + " INTEGER DEFAULT 0" + " )";
     private static final String DELETE_TABLE_EVENTS =
             "DROP TABLE IF EXISTS " + TABLE_EVENTS;
 
@@ -470,6 +474,7 @@ public class TaskDbHelper {
             values.put(COLUMN_NAME_EVENTS_CONDITION, conditionId);
             values.put(COLUMN_NAME_EVENTS_TYPE, event.getType().toString());
             values.put(COLUMN_NAME_EVENTS_PARAMS, event.getJSONStringWithParams());
+            values.put(COLUMN_NAME_EVENTS_ACTIVE, event.getActive());
 
             int nRowsEffected = 0;
             if (event.getId() != 0) {
@@ -527,6 +532,21 @@ public class TaskDbHelper {
         return conditions;
     }
 
+    public int setActiveStatusForEvent(Long localId, boolean active) {
+        String selection = COLUMN_NAME_EVENTS_ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(localId) };
+        ContentValues values = new ContentValues();
+        int activeState = (active) ? 1 : 0;
+        values.put(COLUMN_NAME_EVENTS_ACTIVE, activeState);
+        int nRowsEffected = db.update(
+                TABLE_EVENTS,
+                values,
+                selection,
+                selectionArgs);
+
+        return nRowsEffected;
+    }
+
     private ArrayList<Event> getEvents(Condition condition) {
         ArrayList<Event> events = new ArrayList<Event>();
         String selectQuery = "SELECT * FROM " + TABLE_EVENTS + " WHERE " + COLUMN_NAME_EVENTS_CONDITION + " = " + condition.getId();
@@ -537,12 +557,14 @@ public class TaskDbHelper {
             int globalId;
             String type, params;
             Event event = null;
+            boolean active;
             if (cursor.moveToFirst()) {
                 do {
                     id = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ID)));
                     globalId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_GLOBALID)));
                     type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_TYPE));
                     params = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_EVENTS_PARAMS));
+                    active = (cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_EVENTS_ACTIVE)) == 1);
 
                     event = null;
                     switch (type) {
@@ -558,6 +580,7 @@ public class TaskDbHelper {
                         event.fillInParamsFromJSONString(params);
                         events.add(event);
                     }
+                    event.setActive(active);
                 } while (cursor.moveToNext());
             }
         } finally {

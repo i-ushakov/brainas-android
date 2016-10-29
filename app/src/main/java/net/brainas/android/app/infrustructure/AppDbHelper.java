@@ -17,7 +17,6 @@ public class AppDbHelper extends SQLiteOpenHelper {
 
     public AppDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
         this.db = this.getWritableDatabase();
     }
 

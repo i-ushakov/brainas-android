@@ -109,6 +109,8 @@
             android:process=":brainas_synchronizationn_process"
             android:label="@string/service_synchronization_name"></service>
 
+        <service android:name="net.brainas.android.app.infrustructure.GeofenceTransitionsIntentService"/>
+
         <receiver android:name=".services.ServiceMustBeAliveReceiver"
             android:process=":remote"
             android:enabled="true"
