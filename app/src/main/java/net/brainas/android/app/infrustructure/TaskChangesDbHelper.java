@@ -264,6 +264,7 @@ public class TaskChangesDbHelper {
         if (cursor.moveToFirst()) {
             timeOfLastChanges = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_DATETIME));
         } while (cursor.moveToNext());
+        cursor.close();
 
         return timeOfLastChanges;
     }
@@ -292,6 +293,7 @@ public class TaskChangesDbHelper {
         if (cursor.moveToFirst()) {
             globalId = Long.parseLong(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TASKS_CHANGES_TASKGLOBALID)));
         } while (cursor.moveToNext());
+        cursor.close();
 
         return globalId;
     }
