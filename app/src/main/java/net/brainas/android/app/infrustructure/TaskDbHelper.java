@@ -311,7 +311,8 @@ public class TaskDbHelper {
             taskId = newRowId;
         }
 
-        deletedAllConditions(task);
+        //deletedAllConditions(task);
+        cleanDeletedCondition(task);
         saveConditions(task.getConditions(), task.getId());
 
         return taskId;
@@ -460,6 +461,20 @@ public class TaskDbHelper {
         String selectionForConditions = COLUMN_NAME_CONDITIONS_ID + " LIKE ?";
         String[]  selectionArgsForConditions = { String.valueOf(conditionId) };
         db.delete(TABLE_CONDITIONS, selectionForConditions, selectionArgsForConditions);
+    }
+
+    private void cleanDeletedCondition(Task task) {
+        CopyOnWriteArrayList<Condition> conditions = task.getConditions();
+        ArrayList<Long> conditionsIds = new ArrayList<Long>();
+        for(Condition condition : conditions) {
+            conditionsIds.add(condition.getId());
+        }
+        CopyOnWriteArrayList<Condition> conditionsFromDB = getConditions(task);
+        for (Condition conditionFromDB : conditionsFromDB) {
+            if (!conditionsIds.contains(conditionFromDB.getId())) {
+                removeConditionById(conditionFromDB.getId());
+            }
+        }
     }
 
     private void cleanOldEvents(Condition condition) {
