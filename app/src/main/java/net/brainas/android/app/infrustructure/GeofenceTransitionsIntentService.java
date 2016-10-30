@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Vibrator;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
@@ -32,8 +33,13 @@ public class GeofenceTransitionsIntentService extends IntentService {
     public void onCreate() {
         super.onCreate();
         CLog.init(this.getApplicationContext());
-        appDbHelper = new AppDbHelper(this);
+        appDbHelper = new AppDbHelper(this.getApplicationContext());
         taskDbHelper = new TaskDbHelper(appDbHelper);
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        appDbHelper.getDbAccess().close();
     }
 
     protected void onHandleIntent(Intent intent) {
@@ -49,10 +55,9 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
         // Test that the reported transition was of interest.
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            CLog.i(GEOFENCE_TAG, "We entered into geofence zone");
-
             List<Geofence>  triggeringGeofences = geofencingEvent.getTriggeringGeofences();
             List<Long> eventsIds = retrieveActivatedEventIds(triggeringGeofences);
+            CLog.i(GEOFENCE_TAG, "We entered into geofence zone of events with ids: " + TextUtils.join(", ", eventsIds));
             setActiveParamForEvents(eventsIds);
         } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             // TODO
@@ -76,6 +81,5 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 CLog.i(GEOFENCE_TAG, "Set active state for event with id " + eventId);
             }
         }
-        appDbHelper.getDbAccess().close();
     }
 }

@@ -41,6 +41,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.R;
 import net.brainas.android.app.UI.UIHelper;
 import net.brainas.android.app.domain.helpers.GoogleApiHelper;
@@ -506,15 +507,17 @@ public class EditEventActivity extends EditTaskActivity
     }
 
     private boolean setGeofence (EventLocation eventLocation){
+        CLog.i(TAG,"Adding geofence event with id = " + eventLocation.getId());
         if (mGoogleApiClient == null || !mGoogleApiClient.isConnected()) {
+            CLog.i(TAG,"Cannot set Geofence cause mGoogleApiClient == null or not connected");
             return false;
         }
+
         LocationServices.GeofencingApi.addGeofences(
                 mGoogleApiClient,
                 getGeofencingRequest(eventLocation.getLat(), eventLocation.getLng(), eventLocation.getId()),
-                getGeofencePendingIntent()
+                getGeofencePendingIntent(eventLocation.getId())
         ).setResultCallback(this);
-
 
         return true;
 
@@ -527,12 +530,12 @@ public class EditEventActivity extends EditTaskActivity
         mGeofenceList.add(new Geofence.Builder()
                 // Set the request ID of the geofence. This is a string to identify this
                 // geofence.
-                .setRequestId(String.valueOf(task.getId()))
+                .setRequestId(String.valueOf(eventId))
 
                 .setCircularRegion(
                         latitude,
                         longitude,
-                        150
+                        75
                 )
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
@@ -542,15 +545,17 @@ public class EditEventActivity extends EditTaskActivity
         return builder.build();
     }
 
-    private PendingIntent getGeofencePendingIntent() {
+    private PendingIntent getGeofencePendingIntent(long eventId) {
         // Reuse the PendingIntent if we already have it.
         if (mGeofencePendingIntent != null) {
+            CLog.i(TAG, "mGeofencePendingIntent != null");
             return mGeofencePendingIntent;
         }
-        Intent intent = new Intent(getApplicationContext(), GeofenceTransitionsIntentService.class);
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
-        return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.
+        CLog.i(TAG,"Getting PendingIntent with requestCode = " + (int)eventId + " for add geofence event");
+        return PendingIntent.getService(getApplicationContext(), (int)eventId, intent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
     }
 

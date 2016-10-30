@@ -1,10 +1,21 @@
 package net.brainas.android.app.domain.helpers;
 
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationServices;
+
 import net.brainas.android.app.BrainasApp;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.domain.models.*;
+import net.brainas.android.app.infrustructure.GeofenceTransitionsIntentService;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
@@ -19,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Created by Kit Ushakov on 11/9/2015.
  */
-public class TasksManager {
+public class TasksManager implements ResultCallback<Status> {
     private static String TASK_MANAGER_TAG = "TASK_MANAGER";
 
     private BrainasApp app;
@@ -27,6 +38,11 @@ public class TasksManager {
     private TaskChangesDbHelper taskChangesDbHelper;
     private HashMap<Long, Task> tasksHashMap = new HashMap<>();
     private Integer accountId = null;
+
+    @Override
+    public void onResult(@NonNull Status status) {
+
+    }
 
     public enum GROUP_OF_TASKS {
         ALL,
@@ -84,7 +100,7 @@ public class TasksManager {
     }
 
     public ArrayList<Task> getActiveList() {
-        activeList = fiilInALFromDB();
+        activeList = fillInALFromDB();
         return activeList;
     }
 
@@ -155,7 +171,7 @@ public class TasksManager {
         return task;
     }
 
-    public ArrayList<Task> fiilInALFromDB() {
+    public ArrayList<Task> fillInALFromDB() {
         // We cannot get tasks if we don't know current user account id
         if (accountId == null) {
             return null;
@@ -211,6 +227,29 @@ public class TasksManager {
         } else {
             return false;
         }
+    }
+    public boolean removeGeofence(Condition condition, Context context, GoogleApiClient mGoogleApiClient) {
+        if (condition == null) {
+            return false;
+        }
+        Long eventId = condition.getEvents().get(0).getId();
+        CLog.i("#$#GEOFENCE#$#", "Removing geofence for event with id = " + eventId);
+        LocationServices.GeofencingApi.removeGeofences(
+                mGoogleApiClient,
+                // This is the same pending intent that was used in addGeofences().
+                getGeofencePendingIntent(eventId, context)
+        ).setResultCallback(this); // Result processed in onResult().
+        return true;
+    }
+
+    private PendingIntent getGeofencePendingIntent(long eventId, Context context) {
+
+        Intent intent = new Intent(context, GeofenceTransitionsIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        CLog.i("#$#GEOFENCE#$#","Getting PendingIntent with requestCode = " + (int)eventId + " for remove geofence event");
+        return PendingIntent.getService(context, (int)eventId, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
     }
 
     public boolean restoreTask(long takId) {
