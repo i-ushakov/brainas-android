@@ -3,6 +3,7 @@ package net.brainas.android.app.infrustructure;
 import android.util.Log;
 import android.support.v4.util.Pair;
 
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.domain.helpers.TaskHelper;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.domain.models.Task;
@@ -190,8 +191,8 @@ public class SyncHelper {
             request.writeBytes("--" + boundary + lineEnd);
             bis.close();
         } catch (IOException e) {
-            Log.e(TAG, "Sending sync data to server has failed");
             e.printStackTrace();
+            CLog.e(TAG, "Sending sync data to server has failed", e);
             return null;
         } catch (CertificateException e) {
             e.printStackTrace();
