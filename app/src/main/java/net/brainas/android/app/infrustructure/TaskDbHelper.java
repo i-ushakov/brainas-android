@@ -489,7 +489,7 @@ public class TaskDbHelper {
             values.put(COLUMN_NAME_EVENTS_CONDITION, conditionId);
             values.put(COLUMN_NAME_EVENTS_TYPE, event.getType().toString());
             values.put(COLUMN_NAME_EVENTS_PARAMS, event.getJSONStringWithParams());
-            values.put(COLUMN_NAME_EVENTS_ACTIVE, event.getActive());
+            //values.put(COLUMN_NAME_EVENTS_ACTIVE, event.getActive());
 
             int nRowsEffected = 0;
             if (event.getId() != 0) {
