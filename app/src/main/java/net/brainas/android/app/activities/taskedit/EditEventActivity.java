@@ -416,7 +416,7 @@ public class EditEventActivity extends EditTaskActivity
         tasksManager.saveTask(task, true, true, true);
         showTaskErrorsOrWarnings(task);
         task = getTask(taskLocalId);
-        setGeofencesForAllEventsOfTask(task);
+        //setGeofencesForAllEventsOfTask(task);
         finish();
     }
 
@@ -535,11 +535,12 @@ public class EditEventActivity extends EditTaskActivity
                 .setCircularRegion(
                         latitude,
                         longitude,
-                        75
+                        5
                 )
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setLoiteringDelay(2000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                        Geofence.GEOFENCE_TRANSITION_EXIT)
+                        Geofence.GEOFENCE_TRANSITION_EXIT | Geofence.GEOFENCE_TRANSITION_DWELL)
                 .build());
         builder.addGeofences(mGeofenceList);
         return builder.build();
@@ -551,16 +552,17 @@ public class EditEventActivity extends EditTaskActivity
             CLog.i(TAG, "mGeofencePendingIntent != null");
             return mGeofencePendingIntent;
         }
-        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        Intent intent = new Intent(getBaseContext(), GeofenceTransitionsIntentService.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
         CLog.i(TAG,"Getting PendingIntent with requestCode = " + (int)eventId + " for add geofence event");
-        return PendingIntent.getService(getApplicationContext(), (int)eventId, intent, PendingIntent.
+        return PendingIntent.getService(getBaseContext(), 0, intent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
     }
 
     @Override
     public void onResult(@NonNull Status status) {
+        CLog.i(TAG, "onResult" + status);
     }
 
     @Override
@@ -570,12 +572,12 @@ public class EditEventActivity extends EditTaskActivity
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        CLog.i(TAG, "onConnectionSuspended" + i);
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        CLog.i(TAG, "onConnectionFailed" + connectionResult);
     }
 }
 
