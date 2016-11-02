@@ -95,25 +95,27 @@ public class EventLocation extends Event {
 
     @Override
     public boolean isTriggered(Task.ActivationConditionProvider activationService) {
-        if (active) {
+        CLog.i("ACTIVATION","isTriggered event " + this.getId() + " of task " + this.getParent().getParent().getId());
+        /*if (active) {
             CLog.i(EVENT_LOCATION_TAG, "Location event with id " + this.getId() + " and params " + this.getJSONStringWithParams() + " was triggered by geofence system");
             return true;
-        }
-        return false;
-        /*Location location = activationService.getCurrentLocation();
+        }*/
+
+        Location location = activationService.getCurrentLocation();
         if (location != null) {
             double currentLat = location.getLatitude();
             double currentLng = location.getLongitude();
             Double distance = distance(lat, lng, currentLat, currentLng, "M");
-            if (radius == null || radius <= 150d) {
-                radius = 150d;
+            CLog.i("BA_ACTIVATION_SERVICE","currentLat = " + currentLat + ", currentLng = " + currentLng + ", lat = " + lat + ", lng = " + lng + ", distance =" + distance);
+            if (radius == null || radius <= 200d) {
+                radius = 200d;
             }
             if (distance <= radius) {
                 return true;
             }
             return false;
         }
-        return false;*/
+        return false;
     }
 
     @Override
