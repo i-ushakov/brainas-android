@@ -114,8 +114,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     private static Thread.UncaughtExceptionHandler mCaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
         @Override
         public void uncaughtException(Thread thread, Throwable ex) {
-            // Custom logic goes here
-            // This will make Crashlytics do its job
+            CLog.e("BA_UNCAUGHT_EXCEPTION", "uncaughtException", ex);
             mDefaultUEH.uncaughtException(thread, ex);
         }
     };
@@ -130,7 +129,7 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
         mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(mCaughtExceptionHandler);
 
-        CLog.init(getApplicationContext());
+        CLog.init(getBaseContext());
 
         BrainasApp.context = getApplicationContext();
         accountsManager = new AccountsManager();

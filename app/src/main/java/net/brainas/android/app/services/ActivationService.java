@@ -18,6 +18,7 @@ import com.crashlytics.android.Crashlytics;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppSettings;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.UI.NotificationController;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.domain.helpers.TasksManager;
@@ -45,7 +46,7 @@ public class ActivationService extends Service implements Task.ActivationConditi
     public static final String BROADCAST_ACTION_ACTIVATION = "net.brainas.android.app.services.activation";
     public static final String BROADCAST_ACTION_STOP_ACTIVATION = "net.brainas.android.app.services.stopactivation";
 
-    private static String TAG = "#ACTIVATION_SERVICE";
+    private static String TAG = "BA_ACTIVATION_SERVICE";
     public static final String SERVICE_NAME = "activation";
 
     private boolean isBrainasAppVisible = false;
@@ -63,12 +64,26 @@ public class ActivationService extends Service implements Task.ActivationConditi
 
     private final Handler handler = new Handler();
 
+    private static Thread.UncaughtExceptionHandler mDefaultUEH;
+    private static Thread.UncaughtExceptionHandler mCaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) {
+            CLog.e("BA_UNCAUGHT_EXCEPTION", "uncaughtException", ex);
+            mDefaultUEH.uncaughtException(thread, ex);
+        }
+    };
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Fabric.with(getApplicationContext(), new Crashlytics());
+
+        // Second, set custom UncaughtExceptionHandler
+        mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(mCaughtExceptionHandler);
+
         app = ((BrainasApp)BrainasApp.getAppContext());
-        Crashlytics.log(Log.ERROR, TAG, "onStartCommand");
+        CLog.i(TAG, "onStartCommand");
         initialiseSyncService(intent);
         return Service.START_STICKY;
     }
@@ -157,12 +172,14 @@ public class ActivationService extends Service implements Task.ActivationConditi
     }
 
     private void checkConditionsInWL() {
+        CLog.i(TAG, "checkConditionsInWL");
         ArrayList<Long> activatedTasksIds = new ArrayList<>();
         ArrayList<Task> waitingList = tasksManager.getWaitingList();
         if (waitingList != null) {
             Iterator<Task> iterator = waitingList.iterator();
             while (iterator.hasNext()) {
                 Task task = iterator.next();
+                CLog.i(TAG, "checking task with id = " + task.getId());
                 if (task.isConditionsSatisfied(this)) {
                     tasksManager.changeStatus(task, Task.STATUSES.ACTIVE);
                     activatedTasksIds.add(task.getId());
@@ -170,7 +187,7 @@ public class ActivationService extends Service implements Task.ActivationConditi
             }
         }
 
-        Log.i(TAG, "Checked condition in Waiting List and " + activatedTasksIds.size() + " tasks was activated");
+        CLog.i(TAG, "Checked condition in Waiting List and " + activatedTasksIds.size() + " tasks was activated");
 
         if (activatedTasksIds.size() > 0) {
             if (!isBrainasAppVisible) {

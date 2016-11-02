@@ -54,7 +54,7 @@ public class CLog {
         return Log.i(tag, message);
     }
 
-    public static int e(String tag, String message, Exception exception) {
+    public static int e(String tag, String message, Throwable exception) {
         if (BrainasAppSettings.writeToCustomLog()) {
             try {
                 File logFile = getCurrentLogFile();

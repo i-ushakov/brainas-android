@@ -59,10 +59,16 @@ public class GeofenceTransitionsIntentService extends IntentService {
             List<Long> eventsIds = retrieveActivatedEventIds(triggeringGeofences);
             CLog.i(GEOFENCE_TAG, "We entered into geofence zone of events with ids: " + TextUtils.join(", ", eventsIds));
             setActiveParamForEvents(eventsIds);
+        } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+            List<Geofence>  triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+            List<Long> eventsIds = retrieveActivatedEventIds(triggeringGeofences);
+            CLog.i(GEOFENCE_TAG, "We are inside geofence zone of events with ids: " + TextUtils.join(", ", eventsIds));
         } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-            // TODO
+            List<Geofence>  triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+            List<Long> eventsIds = retrieveActivatedEventIds(triggeringGeofences);
+            CLog.i(GEOFENCE_TAG, "We exit from geofence zone of events with ids: " + TextUtils.join(", ", eventsIds));
         } else {
-            // TODO Log error
+            //errors log
         }
     }
 
