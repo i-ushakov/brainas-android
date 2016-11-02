@@ -2,12 +2,10 @@ package net.brainas.android.app.infrustructure;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -21,8 +19,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.maps.model.LatLng;
 
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.activities.MainActivity;
 
 import java.text.DateFormat;
@@ -35,7 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class LocationProvider implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-    private static final String TAG = "LocationProvider";
+    private static final String LOCATION_PROVIDER_TAG = "#$#LOCATION_PROVIDER#$#";
 
     private Context context;
 
@@ -90,7 +88,7 @@ public class LocationProvider implements
         mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
         if (mCurrentLocation != null) {
-            Log.i(TAG, "Last location from FusedLocationApi lat = " + mCurrentLocation.getLatitude() + " lng: " + mCurrentLocation.getLongitude());
+            Log.i(LOCATION_PROVIDER_TAG, "Last location from FusedLocationApi lat = " + mCurrentLocation.getLatitude() + " lng: " + mCurrentLocation.getLongitude());
         }
 
         if (mRequestingLocationUpdates) {
@@ -100,12 +98,12 @@ public class LocationProvider implements
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.w(TAG, "Google Location Services connection is failed");
+        Log.w(LOCATION_PROVIDER_TAG, "Google Location Services connection is failed");
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.i(TAG, "onConnectionSuspended");
+        Log.i(LOCATION_PROVIDER_TAG, "onConnectionSuspended");
     }
 
     @Override
@@ -113,7 +111,7 @@ public class LocationProvider implements
         mCurrentLocation = location;
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         notifyAllObservers(location);
-        Log.i(TAG, "onLocationChanged: mCurrentLocation = " + mCurrentLocation + "mLastUpdateTime" + mLastUpdateTime);
+        CLog.i(LOCATION_PROVIDER_TAG, "onLocationChanged: mCurrentLocation = " + mCurrentLocation + "mLastUpdateTime" + mLastUpdateTime);
     }
 
     public Location getCurrentLocation() {
@@ -176,6 +174,7 @@ public class LocationProvider implements
 
     private void startLocationUpdates() {
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        mRequestingLocationUpdates = false;
     }
 
     private void notifyAllObservers(Location location) {
@@ -185,5 +184,4 @@ public class LocationProvider implements
             observer.updateAfterLocationWasChanged(location);
         }
     }
-
 }
