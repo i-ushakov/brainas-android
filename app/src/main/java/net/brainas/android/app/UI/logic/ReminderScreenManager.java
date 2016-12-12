@@ -33,6 +33,7 @@ public class ReminderScreenManager implements
     private Context context;
     private ScrollView rightScrollPanel;
     private int scrollPanelWidth;
+    private int scrollPanelHeight;
     private List<ReminderTileCell> tilesGrid = new ArrayList<>();
 
     private BrainasApp app;
@@ -128,7 +129,7 @@ public class ReminderScreenManager implements
     private void placeTiles(List<TaskTileView> tiles) {
         this.tilesPanel.removeAllViews();
         if (tiles != null) {
-            for (int i = 0; i < tiles.size() && i < 5; i++) {
+            for (int i = 0; i < tiles.size() && i < 10; i++) {
                 TaskTileView tile = tiles.get(i);
                 ReminderTileCell tc = tilesGrid.get(i);
                 int cellSize = tc.getSize();
@@ -139,8 +140,8 @@ public class ReminderScreenManager implements
                 this.tilesPanel.addView(tile);
             }
             addRightScrollPanel();
-            if ( tiles.size() > 5) {
-                for (int i = 5; i < tiles.size(); i++) {
+            if ( tiles.size() > 10) {
+                for (int i = 10; i < tiles.size(); i++) {
                     addTilesToRightPanel(tiles.get(i));
                 }
             }
@@ -150,16 +151,23 @@ public class ReminderScreenManager implements
     private List<ReminderTileCell> calculateTilesGrid(int panelWidth) {
         int gridStep = panelWidth/15;
 
-        // 10x10
-        this.tilesGrid.add(new ReminderTileCell(0,0,10*gridStep));
+        // 6x6
+        this.tilesGrid.add(new ReminderTileCell(0, 0, 6*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(0, 6*gridStep, 6*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(6*gridStep,0,6*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(6*gridStep,6*gridStep,6*gridStep));
 
-        // 5x5
-        this.tilesGrid.add(new ReminderTileCell(10*gridStep,0,5*gridStep));
-        this.tilesGrid.add(new ReminderTileCell(10*gridStep,5*gridStep,5*gridStep));
-        this.tilesGrid.add(new ReminderTileCell(15*gridStep,0,5*gridStep));
-        this.tilesGrid.add(new ReminderTileCell(15 * gridStep, 5 * gridStep, 5 * gridStep));
+        // 4x4
+        this.tilesGrid.add(new ReminderTileCell(12*gridStep,0,4*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(12*gridStep,4*gridStep,4*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(12*gridStep,8*gridStep,4*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(16*gridStep,0,4*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(16*gridStep,4*gridStep,4*gridStep));
+        this.tilesGrid.add(new ReminderTileCell(16*gridStep,8*gridStep,4*gridStep));
 
-        this.scrollPanelWidth = 5 * gridStep;
+
+        this.scrollPanelWidth = 3 * gridStep;
+        this.scrollPanelHeight = 20 * gridStep;
         return  this.tilesGrid;
     }
 
@@ -167,7 +175,7 @@ public class ReminderScreenManager implements
         this.tilesPanel.removeView(rightScrollPanel);
 
         rightScrollPanel = new ScrollView(context);
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(scrollPanelWidth, ViewGroup.LayoutParams.MATCH_PARENT);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(scrollPanelWidth, scrollPanelHeight);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         rightScrollPanel.setLayoutParams(layoutParams);
