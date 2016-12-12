@@ -13,7 +13,7 @@ public class BrainasAppSettings {
     private static final int CHECK_CONDITIONS_START_TIME = 20000; //ms
     private static final int CHECK_CONDITIONS_INTERVAL = 20000; //ms
 
-    private static final boolean WRITE_TO_CUSTOM_LOG = true;
+    private static final boolean WRITE_TO_CUSTOM_LOG = false;
 
     public static int getSynchronizationSartTime() {
         Log.i(APP_GENERAL_SETTINGS, "Synchronization first start time is " + SYNCHRONIZATION_SART_TIME);
