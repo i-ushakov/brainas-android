@@ -15,6 +15,12 @@ android {
             storeFile file(System.env.ANDROID_KEYSTORE_PATH)
             storePassword System.env.ANDROID_KEYSTORE_PWD
         }
+        release {
+            keyAlias System.env.ANDROID_KEY_ALIAS
+            keyPassword System.env.ANDROID_KEY_PWD
+            storeFile file(System.env.ANDROID_KEYSTORE_PATH)
+            storePassword System.env.ANDROID_KEYSTORE_PWD
+        }
     }
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
@@ -31,10 +37,11 @@ android {
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             ndk {
-                debuggable = true
+                debuggable = false
             }
         }
 
