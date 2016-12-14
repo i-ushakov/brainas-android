@@ -29,8 +29,8 @@ android {
         applicationId "net.brainas.android.app"
         minSdkVersion 15
         targetSdkVersion 17
-        versionCode 1
-        versionName "0.1"
+        versionCode 3
+        versionName "0.1.2"
         // Enabling multidex support.
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

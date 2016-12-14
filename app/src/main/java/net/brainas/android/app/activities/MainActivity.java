@@ -147,7 +147,9 @@ public class MainActivity extends AppCompatActivity  implements AccountsManager.
             mProgressDialog.dismiss();
         }
         this.reminderScreenManager = null;
-        locationProvider.stopUpdates();
+        if(locationProvider != null) {
+            locationProvider.stopUpdates();
+        }
         locationProvider = null;
         app.close();
         finish();

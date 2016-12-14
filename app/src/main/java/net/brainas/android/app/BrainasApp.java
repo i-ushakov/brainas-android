@@ -358,7 +358,9 @@ public class BrainasApp extends Application implements AccountsManager.SingInObs
     }
 
     public void close() {
-        locationProvider.stopUpdates();
+        if (locationProvider != null) {
+            locationProvider.stopUpdates();
+        }
         locationProvider = null;
         activationManager.detachAllObservers();
         accountsManager.detachAllObservers();
