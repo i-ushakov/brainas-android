@@ -182,11 +182,7 @@ public class SynchronizationService extends Service {
             }
         });
 
-        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-            authAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, accessCode);
-        else {
-            authAsyncTask.execute(accessCode);
-        }
+        authAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, accessCode);
         userAccount.setAccessCode(null);
         AccountsManager.saveUserAccount(userAccount);
     }
