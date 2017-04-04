@@ -20,6 +20,8 @@ import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.AuthAsyncTask;
+import net.brainas.android.app.infrustructure.synchronization.asyncTasks.RefreshTokenAsyncTask;
+import net.brainas.android.app.infrustructure.synchronization.asyncTasks.SendTasksAsyncTask;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
@@ -27,7 +29,6 @@ import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.SyncSettingsWithServerTask;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
-import net.brainas.android.app.infrustructure.TasksSyncAsyncTask;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 
@@ -75,7 +76,8 @@ public class SynchronizationService extends Service {
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> syncThreadHandle = null;
-    private TasksSyncAsyncTask tasksSyncAsyncTask;
+    private RefreshTokenAsyncTask refreshTokenAsyncTask;
+    private SendTasksAsyncTask tasksSyncAsyncTask;
 
     private SyncHelper syncHelper;
     private AppDbHelper appDbHelper;
@@ -268,8 +270,22 @@ public class SynchronizationService extends Service {
             Log.i(TAG, allChangesInXMLFile.getName() + " was created");
             Log.i(TAG, Utils.printFileToString(allChangesInXMLFile));
 
-            tasksSyncAsyncTask = new TasksSyncAsyncTask();
-            tasksSyncAsyncTask.setListener(new TasksSyncAsyncTask.AllTasksSyncListener() {
+            refreshTokenAsyncTask = new RefreshTokenAsyncTask();
+            refreshTokenAsyncTask.setListener(new RefreshTokenAsyncTask.ResponseListener() {
+
+                @Override
+                public void onComplete(String response, Exception e) {
+                    refreshTokenAsyncTask.handleResponse(response);
+                }
+            });
+            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
+                refreshTokenAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userAccount);
+            else {
+                refreshTokenAsyncTask.execute(userAccount);
+            }
+
+            tasksSyncAsyncTask = new SendTasksAsyncTask();
+            tasksSyncAsyncTask.setListener(new SendTasksAsyncTask.AllTasksSyncListener() {
                 @Override
                 public void onComplete(String response, Exception e) {
                     handleResponseFromServer(response);

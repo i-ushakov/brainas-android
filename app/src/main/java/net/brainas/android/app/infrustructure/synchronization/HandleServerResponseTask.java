@@ -108,12 +108,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                 deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
                 updatedTasksFromServer = (ArrayList<Task>)syncDate.get("updatedTasks");
                 SynchronizationService.lastSyncTime = (String) syncDate.get("lastSyncTime");
-                if ((String) syncDate.get("accessToken") != null) {
-                    SynchronizationService.accessToken = (String) syncDate.get("accessToken");
-                    userAccount.setAccessToken(SynchronizationService.accessToken);
-                    AccountsManager.saveUserAccount(userAccount);
-                    Log.v(SYNC_TAG, "Access token was gotten :" + SynchronizationService.accessToken);
-                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -199,7 +193,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
         syncDate.put("synchronizedObjects", retriveSynchronizedObjects(responseXmlDocument));
 
         syncDate.put("lastSyncTime", retrieveTimeOfLastSync(responseXmlDocument));
-        syncDate.put("accessToken", retrieveAccessToken(responseXmlDocument));
 
         updatedTasks = retrieveAndSaveTasksFromServer(responseXmlDocument);
         syncDate.put("updatedTasks", updatedTasks);
@@ -221,9 +214,9 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
     public JSONObject retriveSynchronizedObjects(Document xmlDocument) {
         JSONObject synchronizedObjects = new JSONObject();
         ArrayList<Pair<Long,Long>> synchronizedTasks = new ArrayList<>();
-        Element synchronizedObjectsEl = (Element)xmlDocument.getElementsByTagName("synchronizedObjects").item(0);
+        Element synchronizedTasksEl = (Element)xmlDocument.getElementsByTagName("synchronizedTasks").item(0);
         // Synchronized Tasks
-        NodeList synchronizedTasksNL = synchronizedObjectsEl.getElementsByTagName("synchronizedTask");
+        NodeList synchronizedTasksNL = synchronizedTasksEl.getElementsByTagName("synchronizedTask");
         if (synchronizedTasksNL != null) {
             for (int i = 0; i < synchronizedTasksNL.getLength(); ++i) {
                 Element synchronizedTaskEl = (Element) synchronizedTasksNL.item(i);
@@ -235,7 +228,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         // Synchronized Conditions
         ArrayList<Pair<Long,Long>> synchronizedConditions = new ArrayList<Pair<Long,Long>>();
-        NodeList synchronizedConditionsND = synchronizedObjectsEl.getElementsByTagName("synchronizedCondition");
+        NodeList synchronizedConditionsND = synchronizedTasksEl.getElementsByTagName("synchronizedCondition");
         if (synchronizedConditionsND != null) {
             for (int i = 0; i < synchronizedConditionsND.getLength(); ++i) {
                 Element synchronizedConditionEl = (Element) synchronizedConditionsND.item(i);
@@ -248,7 +241,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         // Synchronized Events
         ArrayList<Pair<Long,Long>> synchronizedEvents = new ArrayList<Pair<Long,Long>>();
-        NodeList synchronizedEventsND = synchronizedObjectsEl.getElementsByTagName("synchronizedEvent");
+        NodeList synchronizedEventsND = synchronizedTasksEl.getElementsByTagName("synchronizedEvent");
         if (synchronizedEventsND != null) {
             for (int i = 0; i < synchronizedEventsND.getLength(); ++i) {
                 Element synchronizedEventEl = (Element) synchronizedEventsND.item(i);
@@ -273,7 +266,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
      * Retrieve TimeOfInitialSync from server's xml response
      *
      * @param xmlDocument - xml got from server
-     * @return accessToken
      */
     public String retrieveTimeOfLastSync(Document xmlDocument) {
         String lastSyncTime;
@@ -283,31 +275,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
             return lastSyncTime;
         } else {
             Log.v(SYNC_TAG, "We have a problem, we can't get a lastSyncTime from server");
-            return null;
-        }
-    }
-
-    /**
-     * Retrieving access token from xml response from server
-     *
-     * @param xmlDocument - xml-document that was got from server
-     * @return accessToken
-     */
-    public String retrieveAccessToken(Document xmlDocument) {
-        Log.i("TOKEN_TEST", "retrieveAccessToken mothod");
-        String accessToken;
-
-        Element accessTokenEl = (Element)xmlDocument.getElementsByTagName("accessToken").item(0);
-        if (accessTokenEl != null) {
-            accessToken = accessTokenEl.getTextContent();
-            if (!accessToken.equals("")) {
-                Log.i("TOKEN_TEST", "return accessToken = " + accessToken);
-                return accessToken;
-            } else {
-                return null;
-            }
-        } else {
-            Log.v(SYNC_TAG, "We have a problem, we can't get a accessToken from server");
             return null;
         }
     }
@@ -439,7 +406,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
      *
      * @param globalId
      * @param timeOfServerChanges
-     * @return accessToken
      */
     public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
         Task task = tasksManager.getTaskByGlobalId(globalId);
