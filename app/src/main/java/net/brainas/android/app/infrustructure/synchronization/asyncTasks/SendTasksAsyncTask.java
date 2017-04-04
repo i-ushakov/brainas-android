@@ -1,9 +1,11 @@
-package net.brainas.android.app.infrustructure;
+package net.brainas.android.app.infrustructure.synchronization.asyncTasks;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.NetworkHelper;
+import net.brainas.android.app.infrustructure.SyncHelper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,21 +14,19 @@ import java.util.List;
 /**
  * Created by Kit Ushakov on 5/9/2016.
  */
-public class TasksSyncAsyncTask extends AsyncTask<File, Void, String> {
-    static String TAG = "TasksSyncAsyncTask";
+public class SendTasksAsyncTask extends AsyncTask<File, Void, String> {
+    static String TAG = "SendTasksAsyncTask";
     private AllTasksSyncListener mListener = null;
     private Exception mError = null;
 
     @Override
     protected String doInBackground(File... files) {
         String response = null;
-        List<Task> updatedTasksFromServer;
-        ArrayList<Integer> deletedTasksFromServer;
         File allChangesInXMLFile;
         allChangesInXMLFile = files[0];
         // send changes to server for processing
         if (NetworkHelper.isNetworkActive()) {
-            response = SyncHelper.sendSyncRequest(allChangesInXMLFile);
+            response = SyncHelper.sendTasksRequest(allChangesInXMLFile);
         } else {
             Log.i(TAG, "Network is not available");
         }
@@ -49,7 +49,7 @@ public class TasksSyncAsyncTask extends AsyncTask<File, Void, String> {
         }
     }
 
-    public TasksSyncAsyncTask setListener(AllTasksSyncListener listener) {
+    public SendTasksAsyncTask setListener(AllTasksSyncListener listener) {
         this.mListener = listener;
         return this;
     }
