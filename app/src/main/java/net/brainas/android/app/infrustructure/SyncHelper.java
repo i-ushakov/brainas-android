@@ -161,7 +161,7 @@ public class SyncHelper {
 
         } catch (IOException e) {
             e.printStackTrace();
-            CLog.e(TAG, "Sending sync data to server has failed", e);
+            CLog.e(TAG, "Sending ACCESS TOKEN to server has failed", e);
             return null;
         } catch (CertificateException e) {
             e.printStackTrace();
