@@ -16,9 +16,9 @@ import com.google.common.io.Files;
 import net.brainas.android.app.AccountsManager;
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.BrainasAppSettings;
+import net.brainas.android.app.CLog;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
-import net.brainas.android.app.infrustructure.AppDbHelper;
 import net.brainas.android.app.infrustructure.AuthAsyncTask;
 import net.brainas.android.app.infrustructure.synchronization.asyncTasks.RefreshTokenAsyncTask;
 import net.brainas.android.app.infrustructure.synchronization.asyncTasks.SendTasksAsyncTask;
@@ -30,7 +30,6 @@ import net.brainas.android.app.infrustructure.SyncSettingsWithServerTask;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
-import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 
 import org.json.JSONException;
 
@@ -58,11 +57,8 @@ public class SynchronizationService extends Service {
     public static final String ERR_TYPE_NO_ACCESS_CODE = "NO_ACCESS_CODE";
     public static final String ERR_TYPE_INVALID_TOKEN = "INVALID_TOKEN";
 
-
-
     private static String TAG = "#SYNC_SERVICE";
     public static final String SERVICE_NAME = "synchronization";
-    public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
     public static String lastSyncTime = null;
     public static String accessToken = null;
@@ -71,7 +67,7 @@ public class SynchronizationService extends Service {
     public static Integer accountId = null;
 
     public BrainasApp app;
-    public static  UserAccount userAccount;
+    public static UserAccount userAccount;
 
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
@@ -80,7 +76,6 @@ public class SynchronizationService extends Service {
     private SendTasksAsyncTask tasksSyncAsyncTask;
 
     private SyncHelper syncHelper;
-    private AppDbHelper appDbHelper;
     private TaskDbHelper taskDbHelper;
     private TaskChangesDbHelper taskChangesDbHelper;
     private TasksManager tasksManager;
@@ -181,7 +176,7 @@ public class SynchronizationService extends Service {
                     return;
                 }
 
-                Log.i(TAG, "We still not have accessToken. Cannot exchange access CODE on TOKEN");
+                CLog.e(TAG, "We still not have accessToken. Cannot exchange access CODE on TOKEN", null);
                 notifyAboutServiceMustBeStopped(false, ERR_TYPE_CANNOT_EXCHANGE_CODE_ON_TOKEN);
                 return;
             }
@@ -270,76 +265,31 @@ public class SynchronizationService extends Service {
             Log.i(TAG, allChangesInXMLFile.getName() + " was created");
             Log.i(TAG, Utils.printFileToString(allChangesInXMLFile));
 
-            refreshTokenAsyncTask = new RefreshTokenAsyncTask();
-            refreshTokenAsyncTask.setListener(new RefreshTokenAsyncTask.ResponseListener() {
+            refreshTokenAsyncTask = RefreshTokenAsyncTask.build(userAccount);
+            refreshTokenAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-                @Override
-                public void onComplete(String response, Exception e) {
-                    refreshTokenAsyncTask.handleResponse(response);
-                }
-            });
-            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-                refreshTokenAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userAccount);
-            else {
-                refreshTokenAsyncTask.execute(userAccount);
-            }
+            tasksSyncAsyncTask = SendTasksAsyncTask.build(
+                    allChangesInXMLFile,
+                    userAccount,
+                    tasksManager,
+                    taskDbHelper,
+                    taskChangesDbHelper,
+                    accountId,
+                    this);
+            tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-            tasksSyncAsyncTask = new SendTasksAsyncTask();
-            tasksSyncAsyncTask.setListener(new SendTasksAsyncTask.AllTasksSyncListener() {
-                @Override
-                public void onComplete(String response, Exception e) {
-                    handleResponseFromServer(response);
-                    deleteChangesXML(allChangesInXMLFileFinal);
-                }});
-            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB)
-                tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, allChangesInXMLFile);
-            else {
-                tasksSyncAsyncTask.execute(allChangesInXMLFile);
-            }
             // we check in changes log, that we are sending these changes to server now
             taskChangesDbHelper.setStatusToSending(tasksChanges.keySet().toArray(new Long[tasksChanges.keySet().size()]));
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
-            deleteChangesXML(allChangesInXMLFile);
+            SendTasksAsyncTask.deleteChangesXML(allChangesInXMLFile);
             e.printStackTrace();
             return;
         }
     }
 
-    private void deleteChangesXML(File allChangesInXMLFile) {
-        if (allChangesInXMLFile != null) {
-            if (allChangesInXMLFile.exists()) {
-                allChangesInXMLFile.delete();
-            }
-        }
-    }
-    private void handleResponseFromServer (String response) {
-        if (response != null && response.equals(RESPONSE_STATUS_INVALID_TOKEN)) {
-            Log.e(TAG, "We have error on server: invalid access token");
-            Crashlytics.log(Log.ERROR, TAG, "We have error on server: invalid access token");
-            //notifyAboutServiceMustBeStopped(false, ERR_TYPE_INVALID_TOKEN);
-            return;
-        }
-
-        HandleServerResponseTask handleServerResponseTask = new HandleServerResponseTask();
-        handleServerResponseTask.setUserAccount(userAccount);
-        handleServerResponseTask.setTaskManager(tasksManager);
-        handleServerResponseTask.setTaskDbHelper(taskDbHelper);
-        handleServerResponseTask.setTaskChangesDbHelper(taskChangesDbHelper);
-        handleServerResponseTask.setListener(new HandleServerResponseTask.HandleServerResponseListener() {
-            @Override
-            public void onComplete(String jsonString, Exception e) {
-                // remove sending status from changes log after sync is completed
-                taskChangesDbHelper.removeAllSendingStatus(accountId); //TODO possibale logic error
-                // notify about updates
-                notifyAboutSyncronization();
-            }
-        });
-        handleServerResponseTask.execute(response);
-    }
-
-    private void notifyAboutSyncronization() {
-        Intent  intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION);
+    public void notifyAboutSyncronization() {
+        Intent intent = new Intent(BROADCAST_ACTION_SYNCHRONIZATION);
         //intent.putExtra("activatedTasksIds", TextUtils.join(", ", activatedTasksIds));
         Log.i(TAG, "Notify About Syncronization");
         sendBroadcast(intent);
