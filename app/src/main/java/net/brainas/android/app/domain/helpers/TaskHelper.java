@@ -35,7 +35,7 @@ public class TaskHelper {
             elementName = "task";
         }
         Element taskEl = doc.createElement(elementName);
-        taskEl.setAttribute("id", ((Long)task.getId()).toString());
+        taskEl.setAttribute("localId", ((Long)task.getId()).toString());
         taskEl.setAttribute("globalId", ((Long) task.getGlobalId()).toString());
 
         // message
@@ -96,6 +96,53 @@ public class TaskHelper {
         taskEl.appendChild(conditionsEl);
 
         return taskEl;
+    }
+
+    public static Element buildChangeOfTask(Document doc, Task task, String status, String dateTime) throws ParserConfigurationException {
+        Element changeOfTaskEl;
+        Element changedTaskEl;
+
+        changeOfTaskEl = doc.createElement("changeOfTask");
+        changeOfTaskEl.setAttribute("localId", Long.toString(task.getId()));
+        changeOfTaskEl.setAttribute("globalId",  Long.toString(task.getGlobalId()));
+        // Task (itself)
+        changedTaskEl = TaskHelper.taskToXML(doc, task, "task");
+        changeOfTaskEl.appendChild(changedTaskEl);
+        // Change data
+        Element changeEl = doc.createElement("change");
+        // status (CREATED, CHANGED...)
+        Element statusEl = doc.createElement("status");
+        statusEl.setTextContent(status);
+        changeEl.appendChild(statusEl);
+        // datetime of change
+        Element datetimeEl = doc.createElement("changeDatetime");
+        datetimeEl.setTextContent(dateTime);
+        changeEl.appendChild(datetimeEl);
+        changeOfTaskEl.appendChild(changeEl);
+
+        return changeOfTaskEl;
+    }
+
+    public static Element buildChangeOfDeletedTask(Document doc, Long localId, Long globalId, String status, String dateTime) {
+        Element changeOfTaskEl;
+
+        changeOfTaskEl = doc.createElement("changeOfTask");
+        changeOfTaskEl.setAttribute("localId", Long.toString(localId));
+        changeOfTaskEl.setAttribute("globalId",  Long.toString(globalId));
+
+        // Change data
+        Element changeEl = doc.createElement("change");
+        // status (CREATED, CHANGED...)
+        Element statusEl = doc.createElement("status");
+        statusEl.setTextContent(status);
+        changeEl.appendChild(statusEl);
+        // datetime of change
+        Element datetimeEl = doc.createElement("changeDatetime");
+        datetimeEl.setTextContent(dateTime);
+        changeEl.appendChild(datetimeEl);
+        changeOfTaskEl.appendChild(changeEl);
+
+        return changeOfTaskEl;
     }
 
     public String getEventInfo(Event event) {
