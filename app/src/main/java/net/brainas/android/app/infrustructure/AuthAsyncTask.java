@@ -13,7 +13,7 @@ import java.util.List;
  * Created by Kit Ushakov on 5/9/2016.
  */
 public class AuthAsyncTask extends AsyncTask<String, Void, String> {
-    static String TAG = "TasksSyncAsyncTask";
+    static String TAG = "AuthAsyncTask";
     private AuthAsyncTaskListener mListener = null;
     private Exception mError = null;
 
