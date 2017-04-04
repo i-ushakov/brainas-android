@@ -137,11 +137,11 @@ public class SyncHelper {
         return response;
     }
 
-    public static String sendSyncRequest(File allChangesInXML)  {
+    public static String refreshAccessTokenRequest() {
         String response = "";
         HttpsURLConnection connection = null;
         try {
-            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "get-tasks");
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "sync/refresh-token");
             connection.setRequestProperty( "Accept-Encoding", "" );
             System.setProperty("http.keepAlive", "false");
 
@@ -150,7 +150,73 @@ public class SyncHelper {
 
             request.writeBytes("--" + boundary + lineEnd);
 
-            if (SynchronizationService.lastSyncTime != null) {
+            request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
+            request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+            request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
+            request.writeBytes(lineEnd);
+            Log.i(TAG, "Sending token " + SynchronizationService.accessToken);
+            request.writeBytes(SynchronizationService.accessToken);
+            request.writeBytes(lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            CLog.e(TAG, "Sending sync data to server has failed", e);
+            return null;
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+            return null;
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ClassCastException e) {
+            Log.e(TAG, "Probably we have a problem with internet connection");
+            return null;
+        }
+
+        // parse server response
+        try {
+            if (((HttpsURLConnection)connection).getResponseCode() == 200) {
+                InputStream stream = ((HttpURLConnection) connection).getInputStream();
+                InputStreamReader isReader = new InputStreamReader(stream);
+                BufferedReader br = new BufferedReader(isReader);
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                    response += line;
+                }
+            } else {
+                CLog.e(TAG, "Token was sent but error on server occured", null);
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Getting response sync data from server has failed");
+            return null;
+        }
+        return response;
+    }
+
+    public static String sendTasksRequest(File allChangesInXML)  {
+        String response = "";
+        HttpsURLConnection connection = null;
+        try {
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "sync/send-tasks");
+            connection.setRequestProperty( "Accept-Encoding", "" );
+            System.setProperty("http.keepAlive", "false");
+
+            DataOutputStream request = new DataOutputStream(
+                    connection.getOutputStream());
+
+            request.writeBytes("--" + boundary + lineEnd);
+
+            /*if (SynchronizationService.lastSyncTime != null) {
                 // set initSync param
                 request.writeBytes("Content-Disposition: form-data; name=\"lastSyncTime\"" + lineEnd);
                 request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
@@ -159,7 +225,7 @@ public class SyncHelper {
                 request.writeBytes(SynchronizationService.lastSyncTime);
                 request.writeBytes(lineEnd);
                 request.writeBytes("--" + boundary + lineEnd);
-            }
+            }*/
 
             // set user identity token
             if (SynchronizationService.accessToken != null) {
@@ -178,7 +244,7 @@ public class SyncHelper {
 
             // attach file with all changes
             request.writeBytes("Content-Disposition: form-data; " +
-                    "name=\"" + "all_changes_xml" + "\"" +
+                    "name=\"" + "tasks_changes_xml" + "\"" +
                     "; filename=\"" + allChangesInXML.getName() + "\"" + lineEnd);
             request.writeBytes("Content-Type: text/xml" + lineEnd);
             request.writeBytes("Content-Length: " + allChangesInXML.length() + lineEnd);
@@ -257,30 +323,22 @@ public class SyncHelper {
                 Pair<String, String> change = (Pair<String, String>) pair.getValue();
 
                 Task task = tasksManager.getTaskByLocalId(localId);
-                Element changedTaskEl;
+                String status = change.first;
+                String dateTime = change.second;
                 if (task != null) {
-                    changedTaskEl = TaskHelper.taskToXML(doc, task, "changedTask");
+                    Element changeOfTaskEl = TaskHelper.buildChangeOfTask(doc, task, status, dateTime);
+                    changedTasksEl.appendChild(changeOfTaskEl);
                 } else {
                     Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(localId);
                     if (globalId != 0 && change.first.equals("DELETED")) {
-                        changedTaskEl = doc.createElement("changedTask");
-                        changedTaskEl.setAttribute("globalId", globalId.toString());
-                        changedTaskEl.setAttribute("id", Long.toString(localId));
+                        Element changeOfTaskEl = TaskHelper.buildChangeOfDeletedTask(doc, globalId, localId, status, dateTime);
+                        changedTasksEl.appendChild(changeOfTaskEl);
                     } else {
                         // We don't need send info about the deleted task, that is not known for server
                         taskChangesDbHelper.uncheckFromSync(localId);
                         continue;
                     }
                 }
-                Element changeEl = doc.createElement("change");
-                Element statusEl = doc.createElement("status");
-                statusEl.setTextContent(change.first);
-                changeEl.appendChild(statusEl);
-                Element datetimeEl = doc.createElement("changeDatetime");
-                datetimeEl.setTextContent(change.second);
-                changeEl.appendChild(datetimeEl);
-                changedTaskEl.appendChild(changeEl);
-                changedTasksEl.appendChild(changedTaskEl);
             }
 
         //Element foldersDriveIdsEl = doc.createElement("foldersIds");
