@@ -181,11 +181,7 @@ public class InfrustructureHelper {
             KeyManagementException {
         KeyStore trustStore = KeyStore.getInstance("BKS");
         InputStream trustStoreStream;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
-        } else {
-            trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server_v1);
-        }
+        trustStoreStream = (BrainasApp.getAppContext()).getResources().openRawResource(R.raw.server);
         trustStore.load(trustStoreStream, (BrainasApp.getAppContext()).getResources().getString(R.string.key_store_pass_for_cert).toCharArray());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
