@@ -69,7 +69,7 @@ public class SyncHelper {
         HttpsURLConnection connection = null;
 
         try {
-            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "authenticate-user");
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "connection/authenticate-user");
 
             DataOutputStream request = new DataOutputStream(
                     connection.getOutputStream());
@@ -331,7 +331,7 @@ public class SyncHelper {
                 } else {
                     Long globalId = taskChangesDbHelper.getGlobalIdOfDeletedTask(localId);
                     if (globalId != 0 && change.first.equals("DELETED")) {
-                        Element changeOfTaskEl = TaskHelper.buildChangeOfDeletedTask(doc, globalId, localId, status, dateTime);
+                        Element changeOfTaskEl = TaskHelper.buildChangeOfDeletedTask(doc, localId, globalId, status, dateTime);
                         changedTasksEl.appendChild(changeOfTaskEl);
                     } else {
                         // We don't need send info about the deleted task, that is not known for server
