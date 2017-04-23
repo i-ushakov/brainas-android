@@ -20,6 +20,7 @@ import net.brainas.android.app.CLog;
 import net.brainas.android.app.Utils;
 import net.brainas.android.app.domain.helpers.TasksManager;
 import net.brainas.android.app.infrustructure.AuthAsyncTask;
+import net.brainas.android.app.infrustructure.synchronization.asyncTasks.GetTasksAsyncTask;
 import net.brainas.android.app.infrustructure.synchronization.asyncTasks.RefreshTokenAsyncTask;
 import net.brainas.android.app.infrustructure.synchronization.asyncTasks.SendTasksAsyncTask;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
@@ -74,6 +75,7 @@ public class SynchronizationService extends Service {
     private ScheduledFuture<?> syncThreadHandle = null;
     private RefreshTokenAsyncTask refreshTokenAsyncTask;
     private SendTasksAsyncTask tasksSyncAsyncTask;
+    private GetTasksAsyncTask getTasksAsyncTask;
 
     private SyncHelper syncHelper;
     private TaskDbHelper taskDbHelper;
@@ -273,9 +275,18 @@ public class SynchronizationService extends Service {
                     accountId,
                     this);
             tasksSyncAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-            // we check in changes log, that we are sending these changes to server now
+            // we check in changes log, that we are sending these changes to server now // TODO  need to thinking about this
             taskChangesDbHelper.setStatusToSending(tasksChanges.keySet().toArray(new Long[tasksChanges.keySet().size()]));
+
+            getTasksAsyncTask = GetTasksAsyncTask.build(
+                    userAccount,
+                    tasksManager,
+                    taskDbHelper,
+                    taskChangesDbHelper,
+                    accountId,
+                    this);
+            getTasksAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         } catch (IOException | JSONException | ParserConfigurationException | TransformerException e) {
             Log.e(TAG, "Cannot create XML-file with changes");
             SendTasksAsyncTask.deleteChangesXML(allChangesInXMLFile);
