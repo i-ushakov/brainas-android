@@ -562,6 +562,7 @@ public class EditTaskActivity extends AppCompatActivity {
         Editable taskTitleEditable = editTitleField.getText();
         if (validate()) {
             String message = taskTitleEditable.toString().trim();
+            task = getTask(taskLocalId);
             if (task == null) {
                 task = new Task(userId, message);
                 task.setStatus(Task.STATUSES.TODO);
@@ -569,7 +570,7 @@ public class EditTaskActivity extends AppCompatActivity {
             if (!message.equals("")) {
                 task.setMessage(message);
             }
-            task = getTask(taskLocalId);
+
             tasksManager.saveTask(task);
             tasksManager.addToMappedTasks(task);
             taskLocalId = task.getId();
