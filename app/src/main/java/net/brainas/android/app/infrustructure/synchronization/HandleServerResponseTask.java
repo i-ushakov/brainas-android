@@ -107,7 +107,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
                 synchronizedObjects = (JSONObject)syncDate.get("synchronizedObjects");
                 deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
                 updatedTasksFromServer = (ArrayList<Task>)syncDate.get("updatedTasks");
-                SynchronizationService.lastSyncTime = (String) syncDate.get("lastSyncTime");
+                //SynchronizationService.lastSyncTime = (String) syncDate.get("lastSyncTime");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -291,8 +291,8 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         for (int i = 0; i < taskList.getLength(); ++i) {
             Element taskEl = (Element)taskList.item(i);
-            int globalId = Integer.parseInt(taskEl.getAttribute("global-id"));
-            String timeOfServerChanges = taskEl.getAttribute("time-changes");
+            int globalId = Integer.parseInt(taskEl.getAttribute("globalId"));
+            String timeOfServerChanges = taskEl.getAttribute("timeOfChange");
             if (!checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges)) {
                 continue;
             }
@@ -392,7 +392,7 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
         NodeList deletedTasksList = xmlDocument.getElementsByTagName(tagName);
         for (int i = 0; i < deletedTasksList.getLength(); ++i) {
             Element deletedTaskEl = (Element)deletedTasksList.item(i);
-            int globalId = Integer.parseInt(deletedTaskEl.getAttribute("global-id"));
+            int globalId = Integer.parseInt(deletedTaskEl.getAttribute("globalId"));
             //String timeChanges = deletedTaskEl.getAttribute("time-changes");
             //if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
             deletedTasks.add(globalId);
