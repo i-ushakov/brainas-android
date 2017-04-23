@@ -300,6 +300,88 @@ public class SyncHelper {
         return response;
     }
 
+    public static String getTasksRequest() {
+        String response = "";
+        HttpsURLConnection connection = null;
+        try {
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "sync/get-tasks");
+            connection.setRequestProperty( "Accept-Encoding", "" );
+            System.setProperty("http.keepAlive", "false");
+
+            DataOutputStream request = new DataOutputStream(
+                    connection.getOutputStream());
+
+            request.writeBytes("--" + boundary + lineEnd);
+
+            if (SynchronizationService.lastSyncTime != null) {
+                // set initSync param
+                request.writeBytes("Content-Disposition: form-data; name=\"lastSyncTime\"" + lineEnd);
+                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.lastSyncTime.length() + lineEnd);
+                request.writeBytes(lineEnd);
+                request.writeBytes(SynchronizationService.lastSyncTime);
+                request.writeBytes(lineEnd);
+                request.writeBytes("--" + boundary + lineEnd);
+            }
+
+            // set user identity token
+            if (SynchronizationService.accessToken != null) {
+                request.writeBytes("Content-Disposition: form-data; name=\"accessToken\"" + lineEnd);
+                request.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+                request.writeBytes("Content-Length: " + SynchronizationService.accessToken.length() + lineEnd);
+                request.writeBytes(lineEnd);
+                Log.i(TAG, "Sending token " + SynchronizationService.accessToken);
+                request.writeBytes(SynchronizationService.accessToken);
+                request.writeBytes(lineEnd);
+                request.writeBytes("--" + boundary + lineEnd);
+            } else {
+                Log.i(TAG, "NO ACCESS_TOKEN!!!"); // TODO Stop service and try to restart with new/may be old google ACCESS CODE
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            CLog.e(TAG, "Sending sync data to server has failed", e);
+            return null;
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+            return null;
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ClassCastException e) {
+            Log.e(TAG, "Probably we have a problem with internet connection");
+            return null;
+        }
+
+        // parse server response
+        try {
+            if (((HttpsURLConnection)connection).getResponseCode() == 200) {
+                InputStream stream = ((HttpURLConnection) connection).getInputStream();
+                InputStreamReader isReader = new InputStreamReader(stream);
+                BufferedReader br = new BufferedReader(isReader);
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                    response += line;
+                }
+            } else {
+                Log.e(TAG, "GetTasksRequest was send, but error on server is occured");
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Getting response sync data from server has failed");
+            return null;
+        }
+        return response;
+    }
+
     public String getAllChangesInXML(HashMap<Long, Pair<String,String>> tasksChanges)
             throws IOException, JSONException, ParserConfigurationException, TransformerException {
 
