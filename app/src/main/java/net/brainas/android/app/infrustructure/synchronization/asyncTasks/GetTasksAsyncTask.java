@@ -4,6 +4,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import net.brainas.android.app.BrainasApp;
 import net.brainas.android.app.CLog;
@@ -15,6 +17,7 @@ import net.brainas.android.app.domain.models.EventLocation;
 import net.brainas.android.app.domain.models.EventTime;
 import net.brainas.android.app.domain.models.Image;
 import net.brainas.android.app.domain.models.Task;
+import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
@@ -24,6 +27,7 @@ import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 import net.brainas.android.app.services.SynchronizationService;
 
+import org.json.JSONException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -39,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 /**
  * Created by Kit Ushakov on 5/9/2016.
@@ -53,6 +58,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
     private UserAccount userAccount;
     private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
+    private Integer accountId;
 
 
     public static GetTasksAsyncTask build(
@@ -91,18 +97,32 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         this.userAccount = userAccount;
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
+        this.accountId = accountId;
     };
 
     @Override
     protected String doInBackground(File... files) {
         String response = null;
-        // send changes to server for processing
         if (NetworkHelper.isNetworkActive()) {
-            response = SyncHelper.getTasksRequest();
+            File existsTasksInXmlFile = null;
+            try {
+                SyncHelper syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper);
+                String existsTasksInXml = syncHelper.getAllExisitsTasksInXML();
+                existsTasksInXmlFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(accountId), "exists_tasks_xml", "xml");
+                Files.write(existsTasksInXml, existsTasksInXmlFile, Charsets.UTF_8);
+                response = SyncHelper.getTasksRequest(existsTasksInXmlFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (TransformerException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            }
         } else {
             Log.i(TAG, "Network is not available");
         }
-
         return response;
     }
 
@@ -233,6 +253,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                 tasksManager.saveTask(task);
                 updatedTasks.add(task);
             }
+            SynchronizationService.lastSyncTime = retrieveTimeOfLastSync(xmlDocument);
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -240,6 +261,8 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 
     /**
@@ -264,5 +287,22 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         }
 
         return false;
+    }
+
+    /**
+     * Retrieve TimeOfInitialSync from server's xml response
+     *
+     * @param xmlDocument - xml got from server
+     */
+    public String retrieveTimeOfLastSync(Document xmlDocument) {
+        String lastSyncTime;
+        Element lastSyncTimeEl= (Element)xmlDocument.getElementsByTagName("lastSyncTime").item(0);
+        if (lastSyncTimeEl != null) {
+            lastSyncTime = lastSyncTimeEl.getTextContent();
+            return lastSyncTime;
+        } else {
+            Log.v(TAG, "We have a problem, we can't get a lastSyncTime from server");
+            return null;
+        }
     }
 }
