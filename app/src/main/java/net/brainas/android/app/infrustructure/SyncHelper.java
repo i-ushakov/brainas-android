@@ -300,7 +300,7 @@ public class SyncHelper {
         return response;
     }
 
-    public static String getTasksRequest() {
+    public static String getTasksRequest(File existsTasksInXml) {
         String response = "";
         HttpsURLConnection connection = null;
         try {
@@ -338,6 +338,21 @@ public class SyncHelper {
                 Log.i(TAG, "NO ACCESS_TOKEN!!!"); // TODO Stop service and try to restart with new/may be old google ACCESS CODE
                 return null;
             }
+
+            // attach file with all changes
+            request.writeBytes("Content-Disposition: form-data; " +
+                    "name=\"" + "exists_tasks_xml" + "\"" +
+                    "; filename=\"" + existsTasksInXml.getName() + "\"" + lineEnd);
+            request.writeBytes("Content-Type: text/xml" + lineEnd);
+            request.writeBytes("Content-Length: " + existsTasksInXml.length() + lineEnd);
+            request.writeBytes(lineEnd);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(existsTasksInXml));
+            byte[] buffer = new byte[(int) existsTasksInXml.length()];
+            bis.read(buffer);
+            request.write(buffer);
+            request.writeBytes(lineEnd);
+            request.writeBytes("--" + boundary + lineEnd);
+            bis.close();
         } catch (IOException e) {
             e.printStackTrace();
             CLog.e(TAG, "Sending sync data to server has failed", e);
@@ -435,6 +450,29 @@ public class SyncHelper {
 
         return allChangesInXML;
     }
+
+    public String getAllExisitsTasksInXML()
+            throws IOException, JSONException, ParserConfigurationException, TransformerException {
+
+        String allChangesInXML;
+
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+        Element root = doc.createElement("changes");
+        doc.appendChild(root);
+
+        Element existingTasks = doc.createElement("existingTasks");
+        existingTasks.setTextContent(getAllExistingTasksWithGlobalId().toString());
+        root.appendChild(existingTasks);
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        transformer.transform(new DOMSource(doc), result);
+        allChangesInXML = writer.toString();
+
+        return allChangesInXML;
+    }
+
 
     public JSONObject getAllExistingTasksWithGlobalId() {
         JSONObject existingTasks = new JSONObject();
