@@ -281,8 +281,8 @@ public class SynchronizationService extends Service {
             getTasksAsyncTask = GetTasksAsyncTask.build(
                     userAccount,
                     tasksManager,
-                    taskDbHelper,
                     taskChangesDbHelper,
+                    syncHelper,
                     accountId,
                     this);
             getTasksAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
