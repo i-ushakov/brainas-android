@@ -147,9 +147,6 @@ public class SendTasksAsyncTask extends AsyncTask<File, Void, String> {
             public void onComplete(String jsonString, Exception e) {
                 // remove sending status from changes log after sync is completed
                 taskChangesDbHelper.removeAllSendingStatus(accountId); //TODO possibale logic error
-                // notify about updates
-                // TODO Move this notivication and service object to GetTasksRequestTask
-                service.notifyAboutSyncronization();
             }
         });
         handleServerResponseTask.execute(response);
