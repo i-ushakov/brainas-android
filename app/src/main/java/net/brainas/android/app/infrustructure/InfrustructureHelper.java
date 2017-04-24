@@ -335,4 +335,12 @@ public class InfrustructureHelper {
             return null;
         }
     }
+
+    public static void deleteFile(File file) {
+        if (file != null) {
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+    }
 }
