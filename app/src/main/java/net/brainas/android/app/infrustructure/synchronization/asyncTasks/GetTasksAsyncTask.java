@@ -24,7 +24,6 @@ import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
 import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
-import net.brainas.android.app.infrustructure.synchronization.HandleServerResponseTask;
 import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
@@ -51,33 +50,35 @@ import javax.xml.transform.TransformerException;
 public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
     public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
-    protected static String TAG = "SendTasksAsyncTask";
+    protected static String TAG = "#SYNC_GET_TASKS";
 
-    private AllTasksSyncListener mListener = null;
+    private getTasksListener mListener = null;
     private Exception mError = null;
     private UserAccount userAccount;
     private TasksManager tasksManager;
     private TaskChangesDbHelper taskChangesDbHelper;
     private Integer accountId;
+    private SynchronizationService service;
+    private SyncHelper syncHelper;
 
 
     public static GetTasksAsyncTask build(
             UserAccount userAccount,
             TasksManager tasksManager,
-            TaskDbHelper taskDbHelper,
             TaskChangesDbHelper taskChangesDbHelper,
+            SyncHelper syncHelper,
             Integer accountId,
             SynchronizationService service) {
 
         final GetTasksAsyncTask getTasksAsyncTask = new GetTasksAsyncTask(
                 userAccount,
                 tasksManager,
-                taskDbHelper,
                 taskChangesDbHelper,
+                syncHelper,
                 accountId,
                 service);
 
-        getTasksAsyncTask.setListener(new GetTasksAsyncTask.AllTasksSyncListener() {
+        getTasksAsyncTask.setListener(new getTasksListener() {
             @Override
             public void onComplete(String response, Exception e) {
                 getTasksAsyncTask.handleResponse(response);
@@ -89,15 +90,17 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
     protected GetTasksAsyncTask(
             UserAccount userAccount,
             TasksManager tasksManager,
-            TaskDbHelper taskDbHelper,
             TaskChangesDbHelper taskChangesDbHelper,
+            SyncHelper syncHelper,
             Integer accountId,
             SynchronizationService service) {
 
         this.userAccount = userAccount;
         this.tasksManager = tasksManager;
         this.taskChangesDbHelper = taskChangesDbHelper;
+        this.syncHelper = syncHelper;
         this.accountId = accountId;
+        this.service = service;
     };
 
     @Override
@@ -106,11 +109,9 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         if (NetworkHelper.isNetworkActive()) {
             File existsTasksInXmlFile = null;
             try {
-                SyncHelper syncHelper = new SyncHelper(tasksManager, taskChangesDbHelper);
-                String existsTasksInXml = syncHelper.getAllExisitsTasksInXML();
-                existsTasksInXmlFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(accountId), "exists_tasks_xml", "xml");
-                Files.write(existsTasksInXml, existsTasksInXmlFile, Charsets.UTF_8);
+                existsTasksInXmlFile = createXmlWithExistTasks();
                 response = SyncHelper.getTasksRequest(existsTasksInXmlFile);
+                InfrustructureHelper.deleteFile(existsTasksInXmlFile);
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (TransformerException e) {
@@ -141,12 +142,12 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         }
     }
 
-    public GetTasksAsyncTask setListener(AllTasksSyncListener listener) {
+    public GetTasksAsyncTask setListener(getTasksListener listener) {
         this.mListener = listener;
         return this;
     }
 
-    public interface AllTasksSyncListener {
+    public interface getTasksListener {
         public void onComplete(String jsonString, Exception e);
     }
 
@@ -254,6 +255,8 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                 updatedTasks.add(task);
             }
             SynchronizationService.lastSyncTime = retrieveTimeOfLastSync(xmlDocument);
+            // notify about updates
+            service.notifyAboutSyncronization();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -261,8 +264,6 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     /**
@@ -301,8 +302,16 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
             lastSyncTime = lastSyncTimeEl.getTextContent();
             return lastSyncTime;
         } else {
-            Log.v(TAG, "We have a problem, we can't get a lastSyncTime from server");
+            CLog.e(TAG, "We have a problem, we can't get a lastSyncTime from server", null);
             return null;
         }
+    }
+
+    private File createXmlWithExistTasks() throws IOException, ParserConfigurationException, TransformerException, JSONException {
+        String existsTasksInXml = syncHelper.getAllExisitsTasksInXML();
+        File existsTasksInXmlFile = InfrustructureHelper.createFileInDir(InfrustructureHelper.getPathToSendDir(accountId), "exists_tasks_xml", "xml");
+        Files.write(existsTasksInXml, existsTasksInXmlFile, Charsets.UTF_8);
+        CLog.i(TAG, "Xml with exists tasks was created:" +  Utils.printFileToString(existsTasksInXmlFile));
+        return existsTasksInXmlFile;
     }
 }
