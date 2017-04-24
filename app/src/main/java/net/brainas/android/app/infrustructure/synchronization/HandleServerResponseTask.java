@@ -192,11 +192,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         syncDate.put("synchronizedObjects", retriveSynchronizedObjects(responseXmlDocument));
 
-        syncDate.put("lastSyncTime", retrieveTimeOfLastSync(responseXmlDocument));
-
-        updatedTasks = retrieveAndSaveTasksFromServer(responseXmlDocument);
-        syncDate.put("updatedTasks", updatedTasks);
-
         deletedTasks = retrieveDeletedTasksFromServer(responseXmlDocument, "deletedTask");
         syncDate.put("deletedTasks", deletedTasks);
 
@@ -262,120 +257,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
         return synchronizedObjects;
     }
 
-    /**
-     * Retrieve TimeOfInitialSync from server's xml response
-     *
-     * @param xmlDocument - xml got from server
-     */
-    public String retrieveTimeOfLastSync(Document xmlDocument) {
-        String lastSyncTime;
-        Element lastSyncTimeEl= (Element)xmlDocument.getElementsByTagName("lastSyncTime").item(0);
-        if (lastSyncTimeEl != null) {
-            lastSyncTime = lastSyncTimeEl.getTextContent();
-            return lastSyncTime;
-        } else {
-            Log.v(SYNC_TAG, "We have a problem, we can't get a lastSyncTime from server");
-            return null;
-        }
-    }
-
-    /**
-     * Retrieving an updated and created tasks from xml response from server
-     *
-     * @param xmlDocument - xml-document that was got from server
-     * @return updatedTasks
-     */
-    public ArrayList<Task> retrieveAndSaveTasksFromServer(Document xmlDocument) {
-        ArrayList<Task> updatedTasks = new ArrayList<>();
-        NodeList taskList = xmlDocument.getElementsByTagName("task");
-
-        for (int i = 0; i < taskList.getLength(); ++i) {
-            Element taskEl = (Element)taskList.item(i);
-            int globalId = Integer.parseInt(taskEl.getAttribute("globalId"));
-            String timeOfServerChanges = taskEl.getAttribute("timeOfChange");
-            if (!checkTheRelevanceOfTheChanges(globalId, timeOfServerChanges)) {
-                continue;
-            }
-
-            String message = taskEl.getElementsByTagName("message").item(0).getTextContent();
-            String description = taskEl.getElementsByTagName("description").item(0).getTextContent();
-            Task task = tasksManager.getTaskByGlobalId(globalId);
-            if (task == null) {
-                task = new Task(userAccount.getId(), message);
-                task.setGlobalId(globalId);
-                tasksManager.saveTask(task, false, false);
-            } else {
-                task.setMessage(message);
-            }
-            task.setDescription(description);
-
-            // Picture
-            Element pictureEl = (Element)taskEl.getElementsByTagName("picture").item(0);
-            if (pictureEl != null) {
-                Element pictureNameEl = (Element)pictureEl.getElementsByTagName("name").item(0);
-                if (pictureNameEl != null) {
-                    Image currentPicture = task.getPicture();
-                    if (currentPicture == null || !currentPicture.getName().equals(pictureNameEl.getTextContent()) || currentPicture.getBitmap() == null) {
-                        Image picture = new Image(pictureNameEl.getTextContent());
-                        Element pictureResourceIdEl = (Element)pictureEl.getElementsByTagName("resourceId").item(0);
-                        if (pictureResourceIdEl != null && pictureResourceIdEl.getTextContent() != null) {
-                            picture.setResourceId(pictureResourceIdEl.getTextContent());
-                        }
-                        if (picture.getDriveId() == null && picture.getResourceId() != null) {
-                            picture.setDriveId(GoogleDriveManager.getInstance(BrainasApp.getAppContext()).fetchDriveIdByResourceId(picture.getResourceId(), null));
-                        }
-                        task.setPicture(picture);
-                        //Bitmap pictureBitmap = InfrustructureHelper.getTaskPicture(task.getPicture().getName());
-                        //if (pictureBitmap == null) {
-                        GoogleDriveManager.getInstance(BrainasApp.getAppContext()).downloadPicture(picture, userAccount.getId());
-                        //}
-                    }
-                }
-            }
-
-            Element statusEl = (Element)taskEl.getElementsByTagName("status").item(0);
-            if (statusEl != null) {
-                task.setStatus(statusEl.getTextContent());
-            }
-
-            // Conditions
-            CopyOnWriteArrayList<Condition> conditions = new CopyOnWriteArrayList<Condition>();
-            NodeList conditionsNL = taskEl.getElementsByTagName("condition");
-            for (int j = 0; j < conditionsNL.getLength(); ++j) {
-                Element conditionEl = (Element)conditionsNL.item(j);
-                Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("id"));
-                Condition condition = new Condition(null, conditionGlobalId, task.getId());
-                NodeList events = conditionEl.getElementsByTagName("event");
-                Event event = null;
-                Element eventEl = null;
-                for(int k = 0; k < events.getLength(); ++k) {
-                    event = null;
-                    eventEl = (Element)events.item(k);
-                    String type = eventEl.getAttribute("type");
-                    int eventId = Integer.parseInt(eventEl.getAttribute("id"));
-                    switch (type) {
-                        case "GPS" :
-                            event = new EventLocation(null, eventId, null);
-                            event.fillInParamsFromXML(eventEl);
-                            break;
-
-                        case "TIME" :
-                            event = new EventTime(null, eventId, null);
-                            event.fillInParamsFromXML(eventEl);
-                            break;
-                    }
-                    if (event != null) {
-                        condition.addEvent(event);
-                    }
-                }
-                conditions.add(condition);
-            }
-            task.setConditions(conditions);
-            tasksManager.saveTask(task);
-            updatedTasks.add(task);
-        }
-        return updatedTasks;
-    }
 
     /**
      * Parsing the xml-document that was got from server
@@ -399,29 +280,5 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
             //}
         }
         return deletedTasks;
-    }
-
-    /**
-     * Comare dattime of server's changes with datetime of local last changes
-     *
-     * @param globalId
-     * @param timeOfServerChanges
-     */
-    public boolean checkTheRelevanceOfTheChanges(long globalId, String timeOfServerChanges) {
-        Task task = tasksManager.getTaskByGlobalId(globalId);
-        if (task != null) {
-            String timeOfLocalChanges = taskChangesDbHelper.getTimeOfLastChanges(task.getId());
-            if (timeOfLocalChanges != null) {
-                if (Utils.compareTwoDates(timeOfServerChanges, timeOfLocalChanges) > 0) {
-                    return true;
-                }
-            } else {
-                return true;
-            }
-        } else {
-            return true;
-        }
-
-        return false;
     }
 }
