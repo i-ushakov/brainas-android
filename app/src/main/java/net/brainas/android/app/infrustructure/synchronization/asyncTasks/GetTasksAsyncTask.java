@@ -81,7 +81,11 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         getTasksAsyncTask.setListener(new getTasksListener() {
             @Override
             public void onComplete(String response, Exception e) {
-                getTasksAsyncTask.handleResponse(response);
+                if (response != null) {
+                    getTasksAsyncTask.handleResponse(response);
+                } else {
+                    CLog.e(TAG, "Response from server is null", null);
+                }
             }});
 
         return getTasksAsyncTask;
@@ -106,7 +110,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
     @Override
     protected String doInBackground(File... files) {
         String response = null;
-        if (NetworkHelper.isNetworkActive()) {
+       if (NetworkHelper.isNetworkActive()) {
             File existsTasksInXmlFile = null;
             try {
                 existsTasksInXmlFile = createXmlWithExistTasks();
@@ -254,7 +258,16 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                 tasksManager.saveTask(task);
                 updatedTasks.add(task);
             }
+
+            // delete tasks in DB (that previously were deleted on server)
+            ArrayList<Integer> deletedTasksFromServer = retrieveDeletedTasksFromServer(xmlDocument, "deletedTask");
+            for(Integer deletedTaskId : deletedTasksFromServer) {
+                tasksManager.deleteTaskByGlobalId(deletedTaskId);
+            }
+
+            // save server time of sync
             SynchronizationService.lastSyncTime = retrieveTimeOfLastSync(xmlDocument);
+
             // notify about updates
             service.notifyAboutSyncronization();
         } catch (ParserConfigurationException e) {
@@ -262,6 +275,8 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         } catch (SAXException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -297,7 +312,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
      */
     public String retrieveTimeOfLastSync(Document xmlDocument) {
         String lastSyncTime;
-        Element lastSyncTimeEl= (Element)xmlDocument.getElementsByTagName("lastSyncTime").item(0);
+        Element lastSyncTimeEl= (Element)xmlDocument.getElementsByTagName("serverTime").item(0);
         if (lastSyncTimeEl != null) {
             lastSyncTime = lastSyncTimeEl.getTextContent();
             return lastSyncTime;
@@ -313,5 +328,29 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         Files.write(existsTasksInXml, existsTasksInXmlFile, Charsets.UTF_8);
         CLog.i(TAG, "Xml with exists tasks was created:" +  Utils.printFileToString(existsTasksInXmlFile));
         return existsTasksInXmlFile;
+    }
+
+    /**
+     * Parsing the xml-document that was got from server
+     * and retrieving list with global ids of deleted tasks.
+     * We check the relevance of server changes (deleting) before add to final list
+     *
+     * @param xmlDocument - xml-document that was got from server
+     * @param tagName - name of tag for deleted tasks in xml
+     * @return deletedTasks
+     * @throws JSONException
+     */
+    public ArrayList<Integer> retrieveDeletedTasksFromServer(Document xmlDocument, String tagName) throws JSONException {
+        ArrayList<Integer> deletedTasks = new ArrayList<Integer>();
+        NodeList deletedTasksList = xmlDocument.getElementsByTagName(tagName);
+        for (int i = 0; i < deletedTasksList.getLength(); ++i) {
+            Element deletedTaskEl = (Element)deletedTasksList.item(i);
+            int globalId = Integer.parseInt(deletedTaskEl.getAttribute("globalId"));
+            //String timeChanges = deletedTaskEl.getAttribute("time-changes");
+            //if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
+            deletedTasks.add(globalId);
+            //}
+        }
+        return deletedTasks;
     }
 }
