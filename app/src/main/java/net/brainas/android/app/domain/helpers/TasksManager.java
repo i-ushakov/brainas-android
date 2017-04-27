@@ -31,7 +31,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Created by Kit Ushakov on 11/9/2015.
  */
 public class TasksManager implements ResultCallback<Status> {
-    private static String TASK_MANAGER_TAG = "TASK_MANAGER";
+    public static final String DELETE_TASK_TAG = "#DELETE_TASK_TAG";
+    private static final String TASK_MANAGER_TAG = "TASK_MANAGER";
 
     private BrainasApp app;
     private TaskDbHelper taskDbHelper;

@@ -21,7 +21,6 @@ import net.brainas.android.app.infrustructure.InfrustructureHelper;
 import net.brainas.android.app.infrustructure.NetworkHelper;
 import net.brainas.android.app.infrustructure.SyncHelper;
 import net.brainas.android.app.infrustructure.TaskChangesDbHelper;
-import net.brainas.android.app.infrustructure.TaskDbHelper;
 import net.brainas.android.app.infrustructure.UserAccount;
 import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.services.SynchronizationService;
@@ -50,7 +49,8 @@ import javax.xml.transform.TransformerException;
 public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
     public static String RESPONSE_STATUS_INVALID_TOKEN = "INVALID_TOKEN";
 
-    protected static String TAG = "#SYNC_GET_TASKS";
+    public static final String TAG = "#SYNC_GET_TASKS";
+    public static final String SEND_TASKS_TAG = "#SEND_TASKS";
 
     private getTasksListener mListener = null;
     private Exception mError = null;
@@ -262,6 +262,8 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
             // delete tasks in DB (that previously were deleted on server)
             ArrayList<Integer> deletedTasksFromServer = retrieveDeletedTasksFromServer(xmlDocument, "deletedTask");
             for(Integer deletedTaskId : deletedTasksFromServer) {
+                CLog.i(TasksManager.DELETE_TASK_TAG + SEND_TASKS_TAG,
+                        "We have to delete task with global id: " + deletedTaskId);
                 tasksManager.deleteTaskByGlobalId(deletedTaskId);
             }
 
@@ -346,10 +348,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         for (int i = 0; i < deletedTasksList.getLength(); ++i) {
             Element deletedTaskEl = (Element)deletedTasksList.item(i);
             int globalId = Integer.parseInt(deletedTaskEl.getAttribute("globalId"));
-            //String timeChanges = deletedTaskEl.getAttribute("time-changes");
-            //if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
             deletedTasks.add(globalId);
-            //}
         }
         return deletedTasks;
     }
