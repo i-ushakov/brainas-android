@@ -81,8 +81,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
         JSONObject syncDate = null;
         JSONObject synchronizedObjects = null;
-        ArrayList<Integer> deletedTasksFromServer = null;
-        ArrayList<Task> updatedTasksFromServer = null;
         String response = params[0];
 
         // parse response from server
@@ -105,8 +103,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
 
             try {
                 synchronizedObjects = (JSONObject)syncDate.get("synchronizedObjects");
-                deletedTasksFromServer = (ArrayList<Integer>)syncDate.get("deletedTasks");
-                updatedTasksFromServer = (ArrayList<Task>)syncDate.get("updatedTasks");
                 //SynchronizationService.lastSyncTime = (String) syncDate.get("lastSyncTime");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -163,11 +159,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-            // delete tasks in DB (that previously were deleted on server)
-            for(Integer deletedTaskId : deletedTasksFromServer) {
-                tasksManager.deleteTaskByGlobalId(deletedTaskId);
-            }
             return null;
         }
         return null;
@@ -191,9 +182,6 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
         ArrayList<Integer> deletedTasks;
 
         syncDate.put("synchronizedObjects", retriveSynchronizedObjects(responseXmlDocument));
-
-        deletedTasks = retrieveDeletedTasksFromServer(responseXmlDocument, "deletedTask");
-        syncDate.put("deletedTasks", deletedTasks);
 
         return syncDate;
     }
@@ -255,30 +243,5 @@ public class HandleServerResponseTask extends AsyncTask<String, Void, Void> {
         }
 
         return synchronizedObjects;
-    }
-
-
-    /**
-     * Parsing the xml-document that was got from server
-     * and retrieving list with global ids of deleted tasks.
-     * We check the relevance of server changes (deleting) before add to final list
-     *
-     * @param xmlDocument - xml-document that was got from server
-     * @param tagName - name of tag for deleted tasks in xml
-     * @return deletedTasks
-     * @throws JSONException
-     */
-    public ArrayList<Integer> retrieveDeletedTasksFromServer(Document xmlDocument, String tagName) throws JSONException {
-        ArrayList<Integer> deletedTasks = new ArrayList<Integer>();
-        NodeList deletedTasksList = xmlDocument.getElementsByTagName(tagName);
-        for (int i = 0; i < deletedTasksList.getLength(); ++i) {
-            Element deletedTaskEl = (Element)deletedTasksList.item(i);
-            int globalId = Integer.parseInt(deletedTaskEl.getAttribute("globalId"));
-            //String timeChanges = deletedTaskEl.getAttribute("time-changes");
-            //if(checkTheRelevanceOfTheChanges(globalId, timeChanges)){
-            deletedTasks.add(globalId);
-            //}
-        }
-        return deletedTasks;
     }
 }
