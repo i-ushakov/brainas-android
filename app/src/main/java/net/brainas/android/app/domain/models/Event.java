@@ -22,7 +22,7 @@ public abstract class Event {
     protected boolean active;
 
     public enum TYPES {
-        GPS,
+        LOCATION,
         TIME;
         // May be we don't neeed this (we need only name())
         public String getLabel(Context context) {

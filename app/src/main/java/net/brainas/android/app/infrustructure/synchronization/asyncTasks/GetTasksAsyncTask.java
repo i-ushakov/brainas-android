@@ -238,7 +238,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                         String type = eventEl.getAttribute("type");
                         int eventId = Integer.parseInt(eventEl.getAttribute("id"));
                         switch (type) {
-                            case "GPS" :
+                            case "LOCATION" :
                                 event = new EventLocation(null, eventId, null);
                                 event.fillInParamsFromXML(eventEl);
                                 break;

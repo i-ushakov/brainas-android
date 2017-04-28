@@ -216,12 +216,12 @@ public class Task {
             for(Event evnet : events) {
                 Event.TYPES eventType = evnet.getType();
                 switch (eventType.name()) {
-                    case "GPS":
-                        if ((!triggeredEventsMap.containsKey(Event.TYPES.GPS) || triggeredEventsMap.get(Event.TYPES.GPS) == false)) {
+                    case "LOCATION":
+                        if ((!triggeredEventsMap.containsKey(Event.TYPES.LOCATION) || triggeredEventsMap.get(Event.TYPES.LOCATION) == false)) {
                             if (evnet.isTriggered(activationService)) {
-                                triggeredEventsMap.put(Event.TYPES.GPS, true);
+                                triggeredEventsMap.put(Event.TYPES.LOCATION, true);
                             } else {
-                                triggeredEventsMap.put(Event.TYPES.GPS, false);
+                                triggeredEventsMap.put(Event.TYPES.LOCATION, false);
                             }
                             break;
                         }

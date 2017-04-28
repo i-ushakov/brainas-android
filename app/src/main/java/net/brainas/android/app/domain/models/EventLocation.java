@@ -30,7 +30,7 @@ public class EventLocation extends Event {
     }
 
     public TYPES getType() {
-        return TYPES.GPS;
+        return TYPES.LOCATION;
     }
 
     public String getEventName() {

@@ -168,7 +168,7 @@ public class SyncHelperTest {
         // eventLocation
         when(eventLocation.getId()).thenReturn(901l);
         when(eventLocation.getGlobalId()).thenReturn(9001);
-        when(eventLocation.getType()).thenReturn(Event.TYPES.GPS);
+        when(eventLocation.getType()).thenReturn(Event.TYPES.LOCATION);
         when(eventLocation.getJSONStringWithParams()).thenReturn("{\"address\":\"ул. Фрунзе,  12,  Жуковский\",\"radius\":100,\"lng\":38.125401735306,\"lat\":55.599165616703}");
 
         // eventTime
@@ -194,7 +194,7 @@ public class SyncHelperTest {
                                 "<condition globalId=\"200\" localId=\"10\">" +
                                     "<events>" +
                                         "<event globalId=\"9001\" localId=\"901\">" +
-                                            "<type>GPS</type>" +
+                                            "<type>LOCATION</type>" +
                                             "<params>{\"address\":\"ул. Фрунзе,  12,  Жуковский\",\"radius\":100,\"lng\":38.125401735306,\"lat\":55.599165616703}</params>" +
                                         "</event>" +
                                         "<event globalId=\"9002\" localId=\"902\">" +
@@ -398,7 +398,7 @@ public class SyncHelperTest {
                                 "<description>" + task1Description + "</description>" +
                                 "<conditions>" +
                                     "<condition id='" + condition1GlobalId + "' task-id='11'>" +
-                                        "<event id=\"" + event1Id + "\" type='GPS'>" +
+                                        "<event id=\"" + event1Id + "\" type='LOCATION'>" +
                                             "<params>" +
                                                 "<address>" + event1Address + "</address>" +
                                                 "<radius>" + event1Radius + "</radius>" +
@@ -485,7 +485,7 @@ public class SyncHelperTest {
                 "<tasks>" +
                     "<created></created>" +
                     "<updated>" +
-                        "<task global-id=\"838\" time-changes=\"2016-05-09 10:16:04\"><message>1</message><description></description><conditions><condition id='341' task-id='838'><event type='GPS' id='411'><params><address>Красноярский край,  Россия,  662131</address><radius>100</radius><lng>89.736328125</lng><lat>57.231502991479</lat></params></event></condition></conditions><status>WAITING</status></task>" +
+                        "<task global-id=\"838\" time-changes=\"2016-05-09 10:16:04\"><message>1</message><description></description><conditions><condition id='341' task-id='838'><event type='LOCATION' id='411'><params><address>Красноярский край,  Россия,  662131</address><radius>100</radius><lng>89.736328125</lng><lat>57.231502991479</lat></params></event></condition></conditions><status>WAITING</status></task>" +
                         "<task global-id=\"839\" time-changes=\"2016-05-09 10:58:43\"><message>2</message><description></description><conditions></conditions><status>WAITING</status></task>" +
                         "<task global-id=\"840\" time-changes=\"2016-05-09 11:00:07\"><message>3</message><description></description><conditions></conditions><status>WAITING</status></task>" +
                     "</updated>" +

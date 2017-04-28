@@ -583,7 +583,7 @@ public class TaskDbHelper {
 
                     event = null;
                     switch (type) {
-                        case "GPS":
+                        case "LOCATION":
                             event = new EventLocation(id, globalId, condition);
                             break;
 

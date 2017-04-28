@@ -180,7 +180,7 @@ public class EditEventActivity extends EditTaskActivity
 
         Event.TYPES eventType = event.getType();
         switch (eventType.getLabel(this)) {
-            case "GPS" :
+            case "LOCATION" :
                 renderLocationEventContent();
                 break;
 
@@ -387,7 +387,7 @@ public class EditEventActivity extends EditTaskActivity
 
         Event.TYPES eventType = event.getType();
         switch (eventType.getLabel(this)) {
-            case "GPS" :
+            case "LOCATION" :
                 typeOfEventsSpinner.setSelection(adapter.getPosition("Location"));
                 break;
 
@@ -422,7 +422,7 @@ public class EditEventActivity extends EditTaskActivity
 
     private boolean validateEvent() {
         switch (event.getType().getLabel(this)) {
-            case "GPS":
+            case "LOCATION":
                 if (((EventLocation) event).getLat() != null &&
                         ((EventLocation) event).getLng() != null) {
                     return true;

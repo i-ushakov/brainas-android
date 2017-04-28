@@ -150,7 +150,7 @@ public class TaskHelper {
         Event.TYPES eventType = event.getType();
 
         switch (eventType.name()) {
-            case "GPS" :
+            case "LOCATION" :
                 String address = ((EventLocation) event).getAddress();
                 if (address != null && !address.equals("")) {
                     info = "Location: " + ((EventLocation) event).getAddress();
@@ -197,7 +197,7 @@ public class TaskHelper {
                 }
             }
         }
-        if (eventTypesOccurrence.containsKey(Event.TYPES.GPS)) {
+        if (eventTypesOccurrence.containsKey(Event.TYPES.LOCATION)) {
             imagesBlock.addView(eventTypeImage(R.drawable.gps_icon_in_circle, context));
         }
         if (eventTypesOccurrence.containsKey(Event.TYPES.TIME)) {
