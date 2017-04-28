@@ -76,20 +76,12 @@ public class TaskHelper {
                 conditionEl.setAttribute("localId", Long.toString(condition.getId()));
                 conditionEl.setAttribute("globalId", Long.toString(condition.getGlobalId()));
                 ArrayList<Event> events = condition.getEvents();
+                Event event = events.get(0);
+                conditionEl.setAttribute("type", event.getType().toString());
                 Element eventsEl = doc.createElement("events");
-                for (Event event : events) {
-                    Element eventEl = doc.createElement("event");
-                    eventEl.setAttribute("localId", Long.toString(event.getId()));
-                    eventEl.setAttribute("globalId", Long.toString(event.getGlobalId()));
-                    Element eventTypeEl = doc.createElement("type");
-                    eventTypeEl.setTextContent(event.getType().toString());
-                    eventEl.appendChild(eventTypeEl);
-                    Element eventParamsEl = doc.createElement("params");
-                    eventParamsEl.setTextContent(event.getJSONStringWithParams());
-                    eventEl.appendChild(eventParamsEl);
-                    eventsEl.appendChild(eventEl);
-                }
-                conditionEl.appendChild(eventsEl);
+                Element paramsEl = doc.createElement("params");
+                paramsEl.setTextContent(event.getJSONStringWithParams());
+                conditionEl.appendChild(paramsEl);
                 conditionsEl.appendChild(conditionEl);
             }
         }
