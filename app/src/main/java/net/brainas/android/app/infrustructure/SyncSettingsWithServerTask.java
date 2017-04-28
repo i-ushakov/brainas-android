@@ -54,7 +54,7 @@ public class SyncSettingsWithServerTask extends AsyncTask<String, String, String
         JSONObject settings = buildSettingsJson();
         HttpsURLConnection connection = null;
         try {
-            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "sync-settings");
+            connection = InfrustructureHelper.createHttpMultipartConn(SynchronizationManager.serverUrl + "sync/get-settings");
 
             DataOutputStream request = new DataOutputStream(
                     connection.getOutputStream());
