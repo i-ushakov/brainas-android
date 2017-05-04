@@ -38,15 +38,16 @@ public class EventLocation extends Event {
     }
 
     @Override
-    public void fillInParamsFromXML(Element eventEl) {
-        this.lat = Double.parseDouble(eventEl.getElementsByTagName("lat").item(0).getTextContent());
-        this.lng = Double.parseDouble(eventEl.getElementsByTagName("lng").item(0).getTextContent());
-        if (eventEl.getElementsByTagName("radius").item(0) != null) {
-            this.radius = Double.parseDouble(eventEl.getElementsByTagName("radius").item(0).getTextContent());
+    public void fillInParamsFromXML(JSONObject jsonParams) throws JSONException {
+        this.lat = jsonParams.getDouble("lat");
+        this.lng = jsonParams.getDouble("lng");
+
+        if (jsonParams.has("radius")) {
+            this.radius = jsonParams.getDouble("radius");
         }
-        if (eventEl.getElementsByTagName("address") != null) {
-            if ( eventEl.getElementsByTagName("address").item(0) != null)
-            this.address = eventEl.getElementsByTagName("address").item(0).getTextContent();
+
+        if (jsonParams.has("address")) {
+            this.address = jsonParams.getString("address");
         }
     }
 

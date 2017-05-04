@@ -26,6 +26,7 @@ import net.brainas.android.app.infrustructure.googleDriveApi.GoogleDriveManager;
 import net.brainas.android.app.services.SynchronizationService;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -227,31 +228,29 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                 NodeList conditionsNL = taskEl.getElementsByTagName("condition");
                 for (int j = 0; j < conditionsNL.getLength(); ++j) {
                     Element conditionEl = (Element)conditionsNL.item(j);
-                    Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("id"));
+                    Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("globalId"));
                     Condition condition = new Condition(null, conditionGlobalId, task.getId());
-                    NodeList events = conditionEl.getElementsByTagName("event");
                     Event event = null;
-                    Element eventEl = null;
-                    for(int k = 0; k < events.getLength(); ++k) {
                         event = null;
-                        eventEl = (Element)events.item(k);
-                        String type = eventEl.getAttribute("type");
-                        int eventId = Integer.parseInt(eventEl.getAttribute("id"));
+                        String type = conditionEl.getAttribute("type");
+                        int eventId = conditionGlobalId;
+                        String params = conditionEl.getElementsByTagName("params").item(0).getTextContent();
+                        JSONObject jsonParams = new JSONObject(params);
                         switch (type) {
                             case "LOCATION" :
                                 event = new EventLocation(null, eventId, null);
-                                event.fillInParamsFromXML(eventEl);
+                                event.fillInParamsFromXML(jsonParams);
                                 break;
 
                             case "TIME" :
                                 event = new EventTime(null, eventId, null);
-                                event.fillInParamsFromXML(eventEl);
+                                conditionEl.getElementsByTagName("params").item(0).getTextContent();
+                                event.fillInParamsFromXML(jsonParams);
                                 break;
                         }
                         if (event != null) {
                             condition.addEvent(event);
                         }
-                    }
                     conditions.add(condition);
                 }
                 task.setConditions(conditions);

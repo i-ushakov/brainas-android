@@ -7,6 +7,8 @@ import android.support.annotation.IntegerRes;
 import net.brainas.android.app.domain.helpers.ActivationManager;
 import net.brainas.android.app.services.ActivationService;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 /**
@@ -51,7 +53,7 @@ public abstract class Event {
         }
     }
 
-    abstract public void fillInParamsFromXML(Element xmlParams);
+    abstract public void fillInParamsFromXML(JSONObject jsonParams) throws JSONException;
 
     abstract public void fillInParamsFromJSONString(String params);
 

@@ -38,9 +38,9 @@ public class EventTime extends Event {
     }
 
     @Override
-    public void fillInParamsFromXML(Element eventEl) {
-        offset = Integer.parseInt(eventEl.getElementsByTagName("offset").item(0).getTextContent());
-        String datetimeStr = eventEl.getElementsByTagName("datetime").item(0).getTextContent();
+    public void fillInParamsFromXML(JSONObject jsonParams) throws JSONException {
+        offset = jsonParams.getInt("offset");
+        String datetimeStr = jsonParams.getString("datetime");
         datetime = getCalendarFromString(datetimeStr, offset);
     }
 
