@@ -145,6 +145,7 @@ public class AccountsManager implements
     private void userSingedIn(AppCompatActivity activity) {
         Log.i(AUTH_TAG, "User signed in as " + userAccount.getAccountName());
         //GoogleDriveManager.getInstance(activity).manageAppFolders();
+        this.attach(app.getSynchronizationManager());
         notifyAllObserversAboutSingIn();
         new CleanUnusedImages().setTasksManager(app.getTasksManager()).setAccountId(userAccount.getId()).execute();
     }
