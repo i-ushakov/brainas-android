@@ -33,8 +33,8 @@ import java.util.concurrent.ScheduledFuture;
 public class SynchronizationManager implements AccountsManager.SingInObserver {
     private static SynchronizationManager instance = null;
 
-    //public static String serverUrl = "https://192.168.1.101/backend/web/connection/";
-    public static String serverUrl = "https://brainas.net/backend/web/connection/";
+    //public static String serverUrl = "https://192.168.1.102/backend/web/";
+    public static String serverUrl = "https://brainas.net/backend/web/";
 
     final static String TAG = "#SYNC_MANAGER";
     final static Integer ALARM_CODE = 1102;
