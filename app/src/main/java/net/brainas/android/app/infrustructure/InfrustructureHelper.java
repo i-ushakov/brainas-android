@@ -223,7 +223,8 @@ public class InfrustructureHelper {
                 "192.168.1.103",
                 "192.168.1.104",
                 "192.168.1.105",
-                "brainas.net"
+                "brainas.net",
+                "brainas.ru"
         };
 
         @Override
