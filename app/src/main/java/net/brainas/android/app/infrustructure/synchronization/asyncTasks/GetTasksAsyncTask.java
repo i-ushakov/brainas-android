@@ -83,7 +83,7 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
             @Override
             public void onComplete(String response, Exception e) {
                 if (response != null) {
-                    getTasksAsyncTask.handleResponse(response);
+                    CLog.i(TAG, "Response from server is: " + response);
                 } else {
                     CLog.e(TAG, "Response from server is null", null);
                 }
@@ -129,6 +129,11 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
         } else {
             Log.i(TAG, "Network is not available");
         }
+
+        if (response != null) {
+            this.handleResponse(response);
+        }
+
         return response;
     }
 
@@ -231,26 +236,26 @@ public class GetTasksAsyncTask extends AsyncTask<File, Void, String> {
                     Integer conditionGlobalId = Integer.parseInt(conditionEl.getAttribute("globalId"));
                     Condition condition = new Condition(null, conditionGlobalId, task.getId());
                     Event event = null;
-                        event = null;
-                        String type = conditionEl.getAttribute("type");
-                        int eventId = conditionGlobalId;
-                        String params = conditionEl.getElementsByTagName("params").item(0).getTextContent();
-                        JSONObject jsonParams = new JSONObject(params);
-                        switch (type) {
-                            case "LOCATION" :
-                                event = new EventLocation(null, eventId, null);
-                                event.fillInParamsFromXML(jsonParams);
-                                break;
+                    event = null;
+                    String type = conditionEl.getAttribute("type");
+                    int eventId = conditionGlobalId;
+                    String params = conditionEl.getElementsByTagName("params").item(0).getTextContent();
+                    JSONObject jsonParams = new JSONObject(params);
+                    switch (type) {
+                        case "LOCATION" :
+                            event = new EventLocation(null, eventId, null);
+                            event.fillInParamsFromXML(jsonParams);
+                            break;
 
-                            case "TIME" :
-                                event = new EventTime(null, eventId, null);
-                                conditionEl.getElementsByTagName("params").item(0).getTextContent();
-                                event.fillInParamsFromXML(jsonParams);
-                                break;
-                        }
-                        if (event != null) {
-                            condition.addEvent(event);
-                        }
+                        case "TIME" :
+                            event = new EventTime(null, eventId, null);
+                            conditionEl.getElementsByTagName("params").item(0).getTextContent();
+                            event.fillInParamsFromXML(jsonParams);
+                            break;
+                    }
+                    if (event != null) {
+                        condition.addEvent(event);
+                    }
                     conditions.add(condition);
                 }
                 task.setConditions(conditions);
