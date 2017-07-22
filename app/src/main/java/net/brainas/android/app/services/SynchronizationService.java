@@ -61,6 +61,8 @@ public class SynchronizationService extends Service {
     private static String TAG = "#SYNC_SERVICE";
     public static final String SERVICE_NAME = "synchronization";
 
+    private static boolean isSynchronizationRunning = false;
+
     public static String lastSyncTime = null;
     public static String accessToken = null;
     public static String accessCode = null;
@@ -190,6 +192,13 @@ public class SynchronizationService extends Service {
     }
 
     private void startSynchronization() {
+
+        if (isSynchronizationRunning == true) {
+            return;
+        } else {
+            isSynchronizationRunning = true;
+        }
+
         new SyncSettingsWithServerTask(accessToken, new SyncSettingsWithServerTask.Callback() {
             @Override
             public void onSyncSuccess() {
@@ -246,6 +255,9 @@ public class SynchronizationService extends Service {
         lastSyncTime = null;
         accessToken = null;
         accessCode = null;
+
+        isSynchronizationRunning = false;
+
         notifyAboutServiceMustBeStopped(false, null);
     }
 
